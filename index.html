@@ -44,8 +44,8 @@ button,input,textarea,select{font-family:inherit;color:inherit}
 #fundo{position:fixed;inset:0;z-index:0;background-image:url('fundo.jpg');
   background-size:cover;background-position:center;background-repeat:no-repeat}
 #veu{position:fixed;inset:0;z-index:1;
-  background:linear-gradient(180deg,rgba(12,60,80,.52) 0%,rgba(12,60,80,.30) 30%,rgba(12,60,80,.42) 100%);
-  backdrop-filter:saturate(1.05) blur(.5px)}
+  background:linear-gradient(180deg,rgba(10,48,66,.58) 0%,rgba(10,48,66,.34) 22%,
+    rgba(10,48,66,.16) 46%,rgba(10,48,66,.20) 100%)}
 
 .app{position:relative;z-index:2;max-width:560px;margin:0 auto;height:100%;height:100svh;
   display:flex;flex-direction:column;overflow:hidden}
@@ -143,17 +143,19 @@ button,input,textarea,select{font-family:inherit;color:inherit}
 .tab.mais{min-width:44px;display:flex;align-items:center;justify-content:center;font-size:19px;color:var(--ink2)}
 
 /* ===== QUADRO — painéis como no print ===== */
-.board{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px 12px 128px;scrollbar-width:none}
+/* ===== QUADRO — painéis estreitos, foto aparecendo nas laterais ===== */
+.board{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px 0 128px;scrollbar-width:none}
 .board::-webkit-scrollbar{display:none}
 
-.lst{background:var(--painel);border-radius:12px;padding:10px 10px 6px;margin-bottom:14px;box-shadow:var(--shp)}
-.lhd{display:flex;align-items:center;gap:8px;padding:2px 4px 10px}
-.lhd .nm{font-size:15px;font-weight:700;flex:1;letter-spacing:-.015em}
+.lst{background:var(--painel);border-radius:12px;padding:9px 9px 5px;margin:0 auto 16px;
+  box-shadow:0 10px 30px rgba(9,30,66,.3);width:87%;max-width:430px}
+.lhd{display:flex;align-items:center;gap:8px;padding:2px 4px 9px}
+.lhd .nm{font-size:14.5px;font-weight:700;flex:1;letter-spacing:-.015em}
 .lhd .ct{font-size:11px;font-weight:700;color:var(--ink3)}
 .lhd .mn{background:none;border:none;color:var(--ink2);font-size:19px;padding:0 4px;line-height:.6;letter-spacing:.06em}
 
 /* cartão branco com rótulo textual */
-.cd{background:var(--surf);border-radius:9px;box-shadow:var(--sh);padding:11px 13px;margin-bottom:8px;transition:transform .14s}
+.cd{background:var(--surf);border-radius:9px;box-shadow:var(--sh);padding:10px 12px;margin-bottom:7px;transition:transform .14s}
 .cd:active{transform:scale(.99)}
 .tag{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:5px;margin-bottom:8px;letter-spacing:-.01em}
 .tag.azul{background:var(--azulr);color:var(--azulr-d)}
@@ -190,8 +192,10 @@ button,input,textarea,select{font-family:inherit;color:inherit}
   font-weight:600;color:var(--ink);border-radius:7px;display:flex;align-items:center;gap:8px}
 .addc:active{background:rgba(9,30,66,.06)}
 .addc .im{margin-left:auto;font-size:16px;opacity:.55}
-.addlst{width:100%;background:rgba(255,255,255,.9);border:none;border-radius:12px;padding:14px;
-  font-size:15px;font-weight:700;color:var(--ink);margin-bottom:12px;box-shadow:var(--shp)}
+.addlst{display:block;width:87%;max-width:430px;margin:0 auto 12px;
+  background:rgba(255,255,255,.9);border:none;border-radius:12px;padding:13px;
+  font-size:14.5px;font-weight:700;color:var(--ink);box-shadow:0 8px 24px rgba(9,30,66,.26)}
+.addlst.full{width:100%;max-width:none}
 
 /* barra RutAI */
 .iabar{position:absolute;left:0;right:0;bottom:0;max-width:560px;margin:0 auto;z-index:40;
@@ -344,6 +348,7 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
   border-radius:6px;padding:7px;font-size:11.5px;font-weight:700;text-decoration:none;display:block}
 .pop .bt .ig{background:#FCE7F3;color:#9D174D}
 
+#clima,#log,#desc{padding-left:12px;padding-right:12px}
 .wcard{background:var(--surf);border-radius:12px;box-shadow:var(--shp);padding:14px;margin-bottom:9px}
 .wcard .wl1{display:flex;align-items:center;gap:12px}
 .wcard .wl1 .e{font-size:34px;line-height:1}
@@ -583,7 +588,7 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
     <div class="resumo" id="it-resumo"></div>
     <label class="fl">Dias do roteiro</label>
     <div id="it-lista"></div>
-    <button class="addlst" style="margin-top:4px;box-shadow:var(--sh)" onclick="addDia()">＋ Adicionar dia ao fim</button>
+    <button class="addlst full" style="margin-top:4px;box-shadow:var(--sh)" onclick="addDia()">＋ Adicionar dia ao fim</button>
     <label class="fl">Data de início</label>
     <input class="fi" type="date" id="it-data" onchange="mudarInicio(this.value)">
     <label class="fl">Cidades disponíveis</label>
@@ -597,7 +602,7 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
     <label class="fl">Foto de fundo</label>
     <input class="fi" id="it-fundo" placeholder="URL de uma foto (vazio = fundo.jpg)" onchange="mudarFundo(this.value)">
     <label class="fl">Começar do zero</label>
-    <button class="addlst" style="box-shadow:var(--sh);margin:0" onclick="fechar('itin');abrirGerar()">
+    <button class="addlst full" style="box-shadow:var(--sh);margin:0" onclick="fechar('itin');abrirGerar()">
       ✦ Deixar a RutAI montar o roteiro inteiro</button>
     <div class="fbtns"><button class="sv" onclick="fechar('itin')">Concluído</button></div>
   </div>
