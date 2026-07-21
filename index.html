@@ -1,0 +1,2165 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ruta">
+<meta name="theme-color" content="#1B6F8C">
+<title>Ruta · Colômbia</title>
+<link rel="apple-touch-icon" href="icone.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icone.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icone-512.png">
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+<style>
+:root{
+  --painel:#F1F2F4;      /* painel da lista, como no Trello */
+  --surf:#FFFFFF;
+  --ink:#172B4D;--ink2:#44546F;--ink3:#8590A2;--line:#DCDFE4;
+  --azul:#0C66E4;--azul-t:#E9F2FE;
+  --ciano:#22C6E8;
+  --verde:#4BCE97;--verde-d:#216E4E;--verde-t:#DCFFF1;
+  --oro:#F5CD47;--oro-d:#7F5F01;--oro-t:#FFF7D6;
+  --coral:#F87168;--coral-d:#AE2A19;--coral-t:#FFECE8;
+  --roxo:#9F8FEF;--roxo-d:#5E4DB2;--roxo-t:#F3F0FF;
+  --azulr:#579DFF;--azulr-d:#09326C;
+  --sh:0 1px 1px rgba(9,30,66,.25),0 0 1px rgba(9,30,66,.13);
+  --shp:0 8px 26px rgba(9,30,66,.22);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
+html,body{height:100%;height:100svh;overflow:hidden}
+@supports(height:100dvh){html,body{height:100dvh}}
+body{color:var(--ink);font-family:'Inter',-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;
+  font-weight:500;letter-spacing:-.005em;background:#1B6F8C}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+button,input,textarea,select{font-family:inherit;color:inherit}
+
+/* ===== FUNDO FOTOGRÁFICO ===== */
+#fundo{position:fixed;inset:0;z-index:0;background-image:url('fundo.jpg');
+  background-size:cover;background-position:center;background-repeat:no-repeat}
+#veu{position:fixed;inset:0;z-index:1;
+  background:linear-gradient(180deg,rgba(12,60,80,.52) 0%,rgba(12,60,80,.30) 30%,rgba(12,60,80,.42) 100%);
+  backdrop-filter:saturate(1.05) blur(.5px)}
+
+.app{position:relative;z-index:2;max-width:560px;margin:0 auto;height:100%;height:100svh;
+  display:flex;flex-direction:column;overflow:hidden}
+@supports(height:100dvh){.app{height:100dvh}}
+.screen{display:none;flex:1;flex-direction:column;min-height:0}
+.screen.on{display:flex}
+
+/* ===== SPLASH ===== */
+#splash{position:fixed;inset:0;z-index:300;background:#fff;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:20px;transition:opacity .45s,visibility .45s}
+#splash.off{opacity:0;visibility:hidden;pointer-events:none}
+#splash .wrap{position:relative;width:210px;height:210px;display:flex;align-items:center;justify-content:center}
+#splash .pin{width:150px;height:150px;position:relative;z-index:3;
+  animation:pop .8s cubic-bezier(.2,1.5,.4,1) both, flutua 2.6s ease-in-out .85s infinite}
+#splash .anel{position:absolute;inset:12px;border-radius:50%;border:3px solid transparent;
+  border-top-color:#22C6E8;border-right-color:#F0483E;animation:gira 1.5s linear infinite;opacity:0;transition:opacity .4s}
+#splash .anel.on{opacity:.85}
+#splash .pt{position:absolute;width:9px;height:9px;border-radius:50%;top:50%;left:50%;animation:orbita 2s ease-in-out infinite}
+#splash .word{font-size:38px;font-weight:800;letter-spacing:-.04em;animation:sobe .55s ease .3s both}
+#splash .word .a{color:#1D6FA5}#splash .word .b{color:#F0483E}
+#splash .tag{font-size:14px;font-weight:600;color:var(--ink2);animation:sobe .55s ease .5s both}
+@keyframes pop{0%{transform:scale(.2) rotate(-12deg);opacity:0}60%{transform:scale(1.07) rotate(3deg);opacity:1}100%{transform:scale(1) rotate(0);opacity:1}}
+@keyframes flutua{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes sobe{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes gira{to{transform:rotate(360deg)}}
+@keyframes orbita{0%,100%{transform:translate(-50%,-50%) rotate(0) translateX(102px) scale(.6);opacity:.3}
+  50%{transform:translate(-50%,-50%) rotate(180deg) translateX(102px) scale(1);opacity:1}}
+@media(prefers-reduced-motion:reduce){#splash .pin,#splash .word,#splash .tag{animation:none}#splash .anel,#splash .pt{display:none}}
+
+/* ===== SAUDAÇÃO ===== */
+#ola{position:fixed;inset:0;z-index:250;display:none;flex-direction:column;
+  align-items:center;justify-content:center;padding:28px 24px;overflow-y:auto}
+#ola.on{display:flex}
+#ola::before{content:'';position:fixed;inset:0;background:var(--olabg,url('fundo.jpg')) center/cover;z-index:-2}
+#ola::after{content:'';position:fixed;inset:0;background:rgba(10,50,68,.62);z-index:-1}
+#ola .pin{width:74px;height:74px}
+#ola h2{font-size:26px;font-weight:800;letter-spacing:-.035em;text-align:center;margin-top:14px;
+  line-height:1.2;color:#fff;text-shadow:0 2px 14px rgba(0,0,0,.4)}
+#ola p{font-size:15px;color:rgba(255,255,255,.94);font-weight:500;text-align:center;margin-top:9px;
+  line-height:1.55;max-width:330px;text-shadow:0 1px 10px rgba(0,0,0,.5)}
+#ola .clima{margin-top:20px;background:rgba(255,255,255,.96);border-radius:14px;box-shadow:var(--shp);
+  padding:15px 17px;width:100%;max-width:340px;display:flex;align-items:center;gap:13px}
+#ola .clima .icg{font-size:36px;line-height:1}
+#ola .clima .cinfo{flex:1;min-width:0}
+#ola .clima .cinfo b{font-size:18px;font-weight:800;display:block;letter-spacing:-.02em}
+#ola .clima .cinfo span{font-size:12.5px;color:var(--ink2);font-weight:600;display:block;margin-top:2px;line-height:1.4}
+#ola .lista{width:100%;max-width:340px;margin-top:10px;display:flex;flex-direction:column;gap:8px}
+#ola .pl{background:rgba(255,255,255,.96);border-radius:12px;box-shadow:var(--shp);padding:12px 14px;
+  display:flex;align-items:center;gap:11px;text-align:left}
+#ola .pl .e{font-size:19px;flex-shrink:0}
+#ola .pl b{font-size:13.5px;font-weight:700;display:block}
+#ola .pl span{font-size:12px;color:var(--ink2);font-weight:500}
+#ola .nome{width:100%;max-width:340px;margin-top:16px;display:flex}
+#ola .nome input{flex:1;background:rgba(255,255,255,.96);border:2px solid transparent;border-radius:11px;
+  padding:14px;font-size:16px;font-weight:600;box-shadow:var(--shp)}
+#ola .nome input:focus{outline:none;border-color:var(--azul)}
+#ola .entrar{width:100%;max-width:340px;margin-top:11px;background:var(--azul);color:#fff;border:none;
+  border-radius:12px;padding:15px;font-size:16px;font-weight:700;box-shadow:var(--shp)}
+#ola .pular{background:none;border:none;color:rgba(255,255,255,.8);font-size:13.5px;font-weight:600;margin-top:11px}
+
+/* ===== CABEÇALHO sobre a foto ===== */
+.hd{flex-shrink:0;padding:calc(10px + env(safe-area-inset-top)) 14px 6px}
+.hd .r1{display:flex;align-items:center;gap:9px}
+.hd .r1 .pin{width:30px;height:30px;flex-shrink:0;filter:drop-shadow(0 2px 6px rgba(0,0,0,.35))}
+.hd h1{font-size:25px;font-weight:800;letter-spacing:-.03em;flex:1;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.45)}
+.hd .icb{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.92);border:none;
+  display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:var(--shp);flex-shrink:0}
+.hd .icb.pri{background:var(--azul);color:#fff;font-size:21px;font-weight:400}
+.hd .icb.sync{font-size:14px}
+.hd .icb.sync.on{background:var(--verde);color:#fff}
+.hd .sub{font-size:12px;color:rgba(255,255,255,.92);font-weight:600;margin-top:5px;
+  text-shadow:0 1px 8px rgba(0,0,0,.5)}
+.hd .sub b{color:#fff;font-weight:800}
+
+.wbar{display:flex;align-items:center;gap:8px;margin-top:8px;background:rgba(255,255,255,.94);
+  border-radius:10px;box-shadow:var(--sh);padding:8px 11px;font-size:12.5px;font-weight:600;color:var(--ink2)}
+.wbar .e{font-size:18px;line-height:1}
+.wbar b{color:var(--ink);font-weight:800}
+.wbar .al{margin-left:auto;background:var(--coral-t);color:var(--coral-d);font-size:11px;font-weight:800;
+  border-radius:6px;padding:3px 7px;white-space:nowrap}
+.wbar .rec{background:none;border:none;color:var(--azul);font-size:15px;padding:0 2px}
+
+/* tabs */
+.tabs{display:flex;gap:7px;overflow-x:auto;padding:10px 14px 2px;scrollbar-width:none;flex-shrink:0}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex-shrink:0;background:rgba(255,255,255,.9);border:none;border-radius:9px;padding:8px 11px;
+  box-shadow:var(--sh);text-align:left;min-width:78px}
+.tab .d{font-size:14px;font-weight:800;letter-spacing:-.02em;display:block;line-height:1.15}
+.tab .c{font-size:10px;font-weight:700;color:var(--ink3);display:block;margin-top:2px;white-space:nowrap}
+.tab .pb{display:block;height:3px;border-radius:2px;background:var(--line);margin-top:5px;overflow:hidden}
+.tab .pb i{display:block;height:100%;background:var(--verde-d);border-radius:2px}
+.tab.on{background:var(--azul)}
+.tab.on .d{color:#fff}.tab.on .c{color:rgba(255,255,255,.82)}
+.tab.on .pb{background:rgba(255,255,255,.3)}.tab.on .pb i{background:#fff}
+.tab.mais{min-width:44px;display:flex;align-items:center;justify-content:center;font-size:19px;color:var(--ink2)}
+
+/* ===== QUADRO — painéis como no print ===== */
+.board{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px 12px 128px;scrollbar-width:none}
+.board::-webkit-scrollbar{display:none}
+
+.lst{background:var(--painel);border-radius:12px;padding:10px 10px 6px;margin-bottom:14px;box-shadow:var(--shp)}
+.lhd{display:flex;align-items:center;gap:8px;padding:2px 4px 10px}
+.lhd .nm{font-size:15px;font-weight:700;flex:1;letter-spacing:-.015em}
+.lhd .ct{font-size:11px;font-weight:700;color:var(--ink3)}
+.lhd .mn{background:none;border:none;color:var(--ink2);font-size:19px;padding:0 4px;line-height:.6;letter-spacing:.06em}
+
+/* cartão branco com rótulo textual */
+.cd{background:var(--surf);border-radius:9px;box-shadow:var(--sh);padding:11px 13px;margin-bottom:8px;transition:transform .14s}
+.cd:active{transform:scale(.99)}
+.tag{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:5px;margin-bottom:8px;letter-spacing:-.01em}
+.tag.azul{background:var(--azulr);color:var(--azulr-d)}
+.tag.verde{background:var(--verde);color:var(--verde-d)}
+.tag.oro{background:var(--oro);color:var(--oro-d)}
+.tag.coral{background:var(--coral);color:var(--coral-d)}
+.tag.roxo{background:var(--roxo);color:var(--roxo-d)}
+.tag.ciano{background:var(--ciano);color:#0A4A58}
+.cd .l1{display:flex;align-items:flex-start;gap:11px}
+.cd .chk{width:23px;height:23px;border-radius:50%;border:2px solid #B3BAC5;background:none;flex-shrink:0;
+  font-size:13px;color:transparent;display:flex;align-items:center;justify-content:center;padding:0;margin-top:-1px}
+.cd.ok .chk{background:var(--verde-d);border-color:var(--verde-d);color:#fff}
+.cd .t{flex:1;font-size:16px;font-weight:600;line-height:1.3;letter-spacing:-.015em;padding-top:1px}
+.cd.ok .t{color:var(--ink3)}
+.cd .desc{margin-top:7px;padding-left:34px;display:flex;align-items:center;gap:6px}
+.cd .desc .gl{display:inline-block;width:15px;height:2px;background:#8C9BAB;border-radius:2px;position:relative}
+.cd .desc .gl::after{content:'';position:absolute;top:4px;left:0;width:9px;height:2px;background:#8C9BAB;border-radius:2px}
+.cd .badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;padding-left:34px;align-items:center}
+.bg{display:inline-flex;align-items:center;gap:3px;font-size:11.5px;font-weight:700;color:var(--ink2);
+  padding:2px 6px;border-radius:5px;background:var(--painel)}
+.bg.hora{background:var(--azul-t);color:#0055CC}
+.bg.rate{background:var(--oro-t);color:var(--oro-d)}
+.bg.ar{background:#CCF4FB;color:#0A4A58}
+.cd .links{display:flex;gap:6px;margin-top:9px;padding-left:34px;flex-wrap:wrap}
+.cd .lk{background:var(--azul-t);border:none;border-radius:6px;padding:5px 10px;
+  font-size:11.5px;font-weight:700;color:#0055CC}
+.cd .lk.ig{background:#FCE7F3;color:#9D174D}
+.cd .mv{display:flex;gap:6px;margin-top:9px;padding-top:9px;border-top:1px solid var(--painel)}
+.cd .mv button{flex:1;background:var(--painel);border:none;border-radius:6px;padding:7px;
+  font-size:11.5px;font-weight:700;color:var(--ink2)}
+.cd .mv button:disabled{opacity:.32}
+
+.addc{width:100%;background:none;border:none;text-align:left;padding:9px 5px;font-size:15px;
+  font-weight:600;color:var(--ink);border-radius:7px;display:flex;align-items:center;gap:8px}
+.addc:active{background:rgba(9,30,66,.06)}
+.addc .im{margin-left:auto;font-size:16px;opacity:.55}
+.addlst{width:100%;background:rgba(255,255,255,.9);border:none;border-radius:12px;padding:14px;
+  font-size:15px;font-weight:700;color:var(--ink);margin-bottom:12px;box-shadow:var(--shp)}
+
+/* barra RutAI */
+.iabar{position:absolute;left:0;right:0;bottom:0;max-width:560px;margin:0 auto;z-index:40;
+  padding:20px 12px 8px;pointer-events:none}
+.iabar .box{pointer-events:auto;background:var(--surf);border-radius:14px;box-shadow:0 6px 22px rgba(9,30,66,.3);
+  padding:7px 8px;display:flex;gap:8px;align-items:center}
+.iabar input{flex:1;border:none;background:none;font-size:15px;font-weight:500;padding:9px 6px}
+.iabar input::placeholder{color:var(--ink3)}
+.iabar .mic{width:40px;height:40px;border-radius:10px;border:none;background:#F0483E;color:#fff;font-size:18px;flex-shrink:0}
+.iabar .mic.rec{animation:pulso 1.1s infinite}
+@keyframes pulso{0%{box-shadow:0 0 0 0 rgba(240,72,62,.5)}70%{box-shadow:0 0 0 13px rgba(240,72,62,0)}100%{box-shadow:0 0 0 0 rgba(240,72,62,0)}}
+.iastat{pointer-events:auto;font-size:12px;font-weight:700;color:#fff;text-align:center;padding:0 0 8px;
+  display:none;text-shadow:0 1px 8px rgba(0,0,0,.6)}
+.iastat.on{display:block}
+
+/* nav */
+.nav{flex-shrink:0;padding:6px 12px calc(8px + env(safe-area-inset-bottom));position:relative;z-index:50}
+.nav .pill{background:rgba(255,255,255,.97);border-radius:999px;box-shadow:var(--shp);display:flex;padding:5px}
+.nav button{flex:1;background:none;border:none;border-radius:999px;padding:8px 2px;
+  display:flex;flex-direction:column;align-items:center;gap:2px;font-size:9.5px;font-weight:700;color:var(--ink2)}
+.nav button .i{font-size:17px;line-height:1}
+.nav button.on{background:var(--azul-t);color:var(--azul)}
+
+/* folhas */
+.sheet{position:fixed;left:0;right:0;bottom:0;max-width:560px;margin:0 auto;background:var(--painel);
+  border-radius:16px 16px 0 0;z-index:90;transform:translateY(105%);
+  transition:transform .32s cubic-bezier(.32,.72,0,1);display:flex;flex-direction:column;
+  box-shadow:0 -6px 30px rgba(9,30,66,.3);max-height:92%}
+.sheet.up{transform:none}
+.grab{width:36px;height:5px;background:var(--line);border-radius:3px;margin:9px auto 2px;flex-shrink:0}
+.shd{display:flex;align-items:center;gap:10px;padding:8px 16px 12px;flex-shrink:0}
+.shd h3{font-size:18px;font-weight:800;letter-spacing:-.02em;flex:1}
+.shd .x{background:var(--surf);border:none;width:32px;height:32px;border-radius:50%;font-size:15px;color:var(--ink2);box-shadow:var(--sh)}
+.sbody{flex:1;overflow-y:auto;padding:0 16px 20px;-webkit-overflow-scrolling:touch}
+
+#rutai{height:88%}
+.fsc{flex:1;overflow-y:auto;padding:4px 16px 12px;display:flex;flex-direction:column;gap:10px}
+.bal{max-width:88%;padding:12px 14px;border-radius:14px;font-size:14.5px;line-height:1.5;font-weight:500}
+.bal.eu{background:var(--azul);color:#fff;align-self:flex-end;border-bottom-right-radius:4px;font-weight:600}
+.bal.ia{background:var(--surf);box-shadow:var(--sh);align-self:flex-start;border-bottom-left-radius:4px}
+.bal.ia b{font-weight:800}
+.prop{background:var(--surf);box-shadow:var(--sh);border-radius:10px;padding:12px;margin-top:9px;border-left:4px solid var(--verde-d)}
+.prop .ph{font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--verde-d);margin-bottom:7px}
+.prop .pi{font-size:13.5px;font-weight:500;line-height:1.5;padding:7px 0;border-bottom:1px solid var(--painel);
+  display:flex;align-items:flex-start;gap:9px}
+.prop .pi:last-of-type{border:none}
+.prop .pi .cbx{width:20px;height:20px;border-radius:50%;border:2px solid #B3BAC5;background:none;flex-shrink:0;
+  font-size:11px;color:transparent;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.prop .pi.sel .cbx{background:var(--verde-d);border-color:var(--verde-d);color:#fff}
+.prop .pi .tx{flex:1}
+.prop .pb2{display:flex;gap:7px;margin-top:11px}
+.prop .pb2 button{flex:1;border:none;border-radius:8px;padding:11px;font-size:13px;font-weight:700}
+.prop .pb2 .sim{background:var(--verde-d);color:#fff}
+.prop .pb2 .nao{background:var(--painel);color:var(--ink2)}
+.sugs{display:flex;gap:7px;overflow-x:auto;padding:0 16px 9px;scrollbar-width:none;flex-shrink:0}
+.sugs::-webkit-scrollbar{display:none}
+.sugs button{flex-shrink:0;background:var(--surf);box-shadow:var(--sh);border:none;border-radius:999px;
+  padding:8px 13px;font-size:12.5px;font-weight:600;color:var(--ink2);white-space:nowrap}
+.ffoot{padding:9px 12px calc(11px + env(safe-area-inset-bottom));flex-shrink:0;display:flex;gap:8px;align-items:center}
+.ffoot .mic{width:44px;height:44px;border-radius:11px;border:none;background:#F0483E;color:#fff;font-size:19px;flex-shrink:0}
+.ffoot .mic.rec{animation:pulso 1.1s infinite}
+.ffoot input{flex:1;background:var(--surf);border:none;border-radius:12px;padding:13px 15px;font-size:15px;font-weight:500;box-shadow:var(--sh)}
+.ffoot .snd{background:var(--azul);border:none;color:#fff;border-radius:11px;padding:13px 15px;font-size:14px;font-weight:700}
+
+.fl{display:block;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--ink2);margin:14px 0 6px}
+.fi{width:100%;background:var(--surf);border:2px solid transparent;border-radius:8px;padding:12px;
+  font-size:15px;font-weight:500;box-shadow:var(--sh)}
+.fi:focus{outline:none;border-color:var(--azul)}
+textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
+.frow{display:flex;gap:9px}.frow>div{flex:1}
+.chips{display:flex;gap:7px;flex-wrap:wrap}
+.chip{background:var(--surf);border:2px solid transparent;border-radius:8px;padding:9px 13px;
+  font-size:13.5px;font-weight:700;color:var(--ink2);box-shadow:var(--sh)}
+.chip.on{border-color:var(--azul);color:var(--azul);background:var(--azul-t)}
+.swatch{width:38px;height:26px;border-radius:6px;border:3px solid transparent}
+.swatch.on{border-color:var(--ink)}
+.tgl{display:flex;align-items:center;gap:10px;background:var(--surf);box-shadow:var(--sh);border-radius:8px;padding:11px 12px}
+.tgl .tx{flex:1;font-size:13.5px;font-weight:600}
+.tgl input{width:20px;height:20px;accent-color:var(--azul)}
+.fbtns{display:flex;gap:8px;margin-top:22px}
+.fbtns button{flex:1;border:none;border-radius:9px;padding:14px;font-size:15px;font-weight:700}
+.fbtns .sv{background:var(--azul);color:#fff}
+.fbtns .cn{background:var(--surf);color:var(--ink2);box-shadow:var(--sh)}
+.fbtns .dl{background:var(--coral-t);color:var(--coral-d);flex:0 0 52px}
+
+.dline{background:var(--surf);border-radius:10px;box-shadow:var(--sh);padding:11px 12px;margin-bottom:8px;
+  display:flex;align-items:center;gap:10px}
+.dline .n{width:30px;height:30px;border-radius:8px;background:var(--painel);display:flex;align-items:center;
+  justify-content:center;font-size:13px;font-weight:800;flex-shrink:0}
+.dline .info{flex:1;min-width:0}
+.dline .info b{font-size:14.5px;font-weight:700;display:block}
+.dline .info span{font-size:12px;color:var(--ink3);font-weight:600}
+.dline select{background:var(--painel);border:none;border-radius:7px;padding:8px 9px;font-size:13px;font-weight:700;max-width:118px}
+.dline .rm{background:none;border:none;color:var(--ink3);font-size:17px;padding:2px 4px}
+.resumo{background:var(--azul-t);border-radius:10px;padding:13px;font-size:13.5px;font-weight:600;
+  color:#0055CC;line-height:1.5;margin:6px 0 14px}
+.aviso{background:var(--oro-t);border-radius:10px;padding:13px;font-size:13px;font-weight:600;
+  color:var(--oro-d);line-height:1.55;margin-top:12px}
+
+.sec{font-size:11.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#fff;
+  margin:18px 4px 9px;display:flex;align-items:center;gap:8px;text-shadow:0 1px 8px rgba(0,0,0,.5)}
+.sec:first-child{margin-top:4px}
+.sec::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.35)}
+.lcd{background:var(--surf);border-radius:10px;box-shadow:var(--shp);padding:12px;margin-bottom:8px}
+.lcd .l1{display:flex;align-items:center;gap:10px}
+.lcd .ic{width:34px;height:34px;border-radius:8px;background:var(--azul-t);color:var(--azul);
+  display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.lcd .l1 .t{flex:1;font-size:14.5px;font-weight:700}
+.lcd .l1 .cod{font-size:11.5px;font-weight:700;color:var(--ink2);background:var(--painel);border-radius:6px;padding:3px 7px}
+.lcd .gr{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:11px;padding-top:11px;border-top:1px solid var(--painel)}
+.lcd .f span{display:block;font-size:9.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3);margin-bottom:2px}
+.lcd .f b{font-size:13px;font-weight:700}
+.lcd .full{grid-column:span 2}
+.btnf{width:100%;background:var(--azul-t);border:none;border-radius:8px;padding:11px;font-size:13px;font-weight:700;color:var(--azul)}
+
+/* ===== MAPA ===== */
+.mfil{display:flex;gap:6px;overflow-x:auto;margin-top:9px;scrollbar-width:none;padding-bottom:2px}
+.mfil::-webkit-scrollbar{display:none}
+.mfil button{flex-shrink:0;background:rgba(255,255,255,.92);border:none;border-radius:8px;padding:7px 11px;
+  font-size:12px;font-weight:700;color:var(--ink2);box-shadow:var(--sh);white-space:nowrap}
+.mfil button.on{background:var(--azul);color:#fff}
+#mapwrap{flex:1;position:relative;margin:10px 12px calc(12px + env(safe-area-inset-bottom));
+  border-radius:14px;overflow:hidden;box-shadow:var(--shp);min-height:0}
+#map{position:absolute;inset:0;background:#DCE6E8}
+.mlegenda{position:absolute;left:10px;bottom:10px;z-index:500;background:rgba(255,255,255,.95);
+  border-radius:10px;padding:9px 11px;box-shadow:var(--shp);font-size:11.5px;font-weight:700;
+  max-width:60%;line-height:1.7}
+.mlegenda .lg{display:flex;align-items:center;gap:7px}
+.mlegenda .pt2{width:11px;height:11px;border-radius:50%;flex-shrink:0;border:2px solid #fff;
+  box-shadow:0 0 0 1px rgba(0,0,0,.2)}
+.mvazio{position:absolute;inset:0;z-index:600;background:rgba(255,255,255,.96);display:flex;
+  flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:30px;text-align:center}
+.mvazio .e{font-size:40px}
+.mvazio b{font-size:16px;font-weight:800}
+.mvazio p{font-size:13.5px;color:var(--ink2);font-weight:500;line-height:1.55;max-width:280px}
+.mvazio button{background:var(--azul);color:#fff;border:none;border-radius:10px;padding:12px 18px;
+  font-size:14px;font-weight:700;margin-top:4px}
+.pino{background:none;border:none}
+.pino .b{width:30px;height:30px;border-radius:50% 50% 50% 4px;transform:rotate(-45deg);
+  display:flex;align-items:center;justify-content:center;box-shadow:0 3px 8px rgba(0,0,0,.35);
+  border:2.5px solid #fff}
+.pino .b span{transform:rotate(45deg);font-size:12px;font-weight:800;color:#fff}
+.pino.feito .b{opacity:.5}
+.leaflet-popup-content-wrapper{border-radius:11px}
+.leaflet-popup-content{margin:11px 13px;font-family:'Inter',sans-serif}
+.pop b{font-size:14.5px;font-weight:800;display:block;letter-spacing:-.015em}
+.pop .m{font-size:12px;color:var(--ink2);font-weight:600;margin-top:3px;display:block}
+.pop .bt{display:flex;gap:6px;margin-top:9px}
+.pop .bt a,.pop .bt button{flex:1;text-align:center;background:var(--azul-t);color:#0055CC;border:none;
+  border-radius:6px;padding:7px;font-size:11.5px;font-weight:700;text-decoration:none;display:block}
+.pop .bt .ig{background:#FCE7F3;color:#9D174D}
+
+.wcard{background:var(--surf);border-radius:12px;box-shadow:var(--shp);padding:14px;margin-bottom:9px}
+.wcard .wl1{display:flex;align-items:center;gap:12px}
+.wcard .wl1 .e{font-size:34px;line-height:1}
+.wcard .wl1 .txt{flex:1}
+.wcard .wl1 .txt b{font-size:16px;font-weight:800;display:block}
+.wcard .wl1 .txt span{font-size:12.5px;color:var(--ink2);font-weight:600}
+.wcard .wl1 .tp{text-align:right}
+.wcard .wl1 .tp b{font-size:21px;font-weight:800;display:block;letter-spacing:-.03em}
+.wcard .wl1 .tp span{font-size:11.5px;color:var(--ink3);font-weight:700}
+.wcard .horas{display:flex;gap:6px;overflow-x:auto;margin-top:12px;padding-top:12px;border-top:1px solid var(--painel);scrollbar-width:none}
+.wcard .horas::-webkit-scrollbar{display:none}
+.wcard .h1x{flex-shrink:0;text-align:center;min-width:48px}
+.wcard .h1x .hh{font-size:10.5px;font-weight:700;color:var(--ink3)}
+.wcard .h1x .ee{font-size:17px;margin:3px 0}
+.wcard .h1x .tt{font-size:12px;font-weight:800}
+.wcard .h1x .pp{font-size:9.5px;font-weight:700;color:var(--azul)}
+.wnota{background:var(--oro-t);border-radius:8px;padding:11px;font-size:12.5px;font-weight:600;
+  color:var(--oro-d);line-height:1.5;margin-top:11px}
+
+#toast{position:fixed;top:calc(66px + env(safe-area-inset-top));left:50%;
+  transform:translateX(-50%) translateY(-140px);background:var(--ink);color:#fff;font-size:13.5px;
+  font-weight:600;padding:11px 18px;border-radius:8px;z-index:400;transition:transform .3s;
+  max-width:88%;text-align:center;line-height:1.4;box-shadow:0 6px 20px rgba(9,30,66,.4)}
+#toast.on{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div id="fundo"></div><div id="veu"></div>
+
+<!-- ===================== SPLASH ===================== -->
+<div id="splash">
+  <div class="wrap">
+    <div class="anel"></div>
+    <span class="pt" style="background:#22C6E8;animation-delay:0s"></span>
+    <span class="pt" style="background:#F0483E;animation-delay:-1s"></span>
+    <svg class="pin" viewBox="0 0 100 128" aria-hidden="true">
+      <defs>
+        <linearGradient id="gc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4FE3F5"/><stop offset="1" stop-color="#1596B8"/></linearGradient>
+        <linearGradient id="gr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF6A5E"/><stop offset="1" stop-color="#D91F1F"/></linearGradient>
+      </defs>
+      <path d="M50 2C26 2 8 20 8 44c0 30 33 60 42 82 9-22 42-52 42-82C92 20 74 2 50 2z" fill="url(#gc)"/>
+      <path d="M50 2c24 0 42 18 42 42 0 30-33 60-42 82V2z" fill="url(#gr)"/>
+      <circle cx="50" cy="44" r="30" fill="#12384F"/><circle cx="50" cy="44" r="23" fill="#0E7C93"/>
+      <g fill="#fff"><rect x="47.5" y="17" width="5" height="8" rx="1"/><rect x="47.5" y="63" width="5" height="8" rx="1"/>
+        <rect x="23" y="41.5" width="8" height="5" rx="1"/><rect x="69" y="41.5" width="8" height="5" rx="1"/></g>
+      <path d="M30 26 L52 46 L44 54Z" fill="#F0483E"/><path d="M70 62 L48 42 L56 34Z" fill="#EDEFF2"/>
+      <circle cx="50" cy="44" r="4" fill="#fff"/>
+    </svg>
+  </div>
+  <div class="word"><span class="a">Rut</span><span class="b">a</span></div>
+  <div class="tag">Colômbia, do jeito de vocês</div>
+</div>
+
+<!-- ===================== SAUDAÇÃO ===================== -->
+<div id="ola">
+  <svg class="pin" viewBox="0 0 100 128" aria-hidden="true">
+    <path d="M50 2C26 2 8 20 8 44c0 30 33 60 42 82 9-22 42-52 42-82C92 20 74 2 50 2z" fill="#22C6E8"/>
+    <path d="M50 2c24 0 42 18 42 42 0 30-33 60-42 82V2z" fill="#F0483E"/>
+    <circle cx="50" cy="44" r="30" fill="#12384F"/><circle cx="50" cy="44" r="23" fill="#0E7C93"/>
+    <path d="M30 26 L52 46 L44 54Z" fill="#F0483E"/><path d="M70 62 L48 42 L56 34Z" fill="#EDEFF2"/>
+    <circle cx="50" cy="44" r="4" fill="#fff"/>
+  </svg>
+  <h2 id="ola-h">Bom dia</h2>
+  <p id="ola-p">—</p>
+  <div class="clima" id="ola-clima" style="display:none">
+    <div class="icg" id="ola-cic">☀️</div>
+    <div class="cinfo"><b id="ola-ct">—</b><span id="ola-cs">—</span></div>
+  </div>
+  <div class="lista" id="ola-lista"></div>
+  <div class="nome" id="ola-nome">
+    <input id="ola-in" placeholder="Como podemos chamar vocês?" maxlength="24" autocomplete="off">
+  </div>
+  <button class="entrar" onclick="entrarApp()">Abrir o quadro</button>
+  <button class="pular" onclick="entrarApp(true)">Agora não</button>
+</div>
+
+<div id="toast"></div>
+
+<div class="app">
+  <!-- ============ QUADRO ============ -->
+  <section class="screen on" id="s-board">
+    <div class="hd">
+      <div class="r1">
+        <svg class="pin" viewBox="0 0 100 128"><path d="M50 2C26 2 8 20 8 44c0 30 33 60 42 82 9-22 42-52 42-82C92 20 74 2 50 2z" fill="#22C6E8"/><path d="M50 2c24 0 42 18 42 42 0 30-33 60-42 82V2z" fill="#F0483E"/><circle cx="50" cy="44" r="30" fill="#12384F"/><circle cx="50" cy="44" r="23" fill="#0E7C93"/><path d="M30 26 L52 46 L44 54Z" fill="#F0483E"/><path d="M70 62 L48 42 L56 34Z" fill="#EDEFF2"/></svg>
+        <h1>Ruta</h1>
+        <button class="icb" onclick="verTela('s-log')">✈</button>
+        <button class="icb sync" id="btn-sync" onclick="abrirSync()">☁</button>
+        <button class="icb" onclick="abrirItinerario()">⚙</button>
+        <button class="icb pri" onclick="novoItem()">＋</button>
+      </div>
+      <div class="sub" id="sub-hd">—</div>
+      <div class="wbar" id="wbar" style="display:none"></div>
+    </div>
+    <div class="tabs" id="tabs"></div>
+    <div class="board" id="board"></div>
+    <div class="iabar">
+      <div class="iastat" id="iastat"></div>
+      <div class="box">
+        <button class="mic" id="mic1">🎙️</button>
+        <input id="ask1" placeholder="Fale com a RutAI: mova, sugira, ajuste…">
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="s-clima">
+    <div class="hd"><div class="r1"><h1>Clima</h1>
+      <button class="icb" onclick="buscarClima(true)">↻</button></div>
+      <div class="sub" id="clima-sub">Previsão por dia do roteiro</div></div>
+    <div class="board" id="clima"></div>
+  </section>
+
+  <section class="screen" id="s-mapa">
+    <div class="hd"><div class="r1"><h1>Mapa</h1>
+      <button class="icb" onclick="ajustarMapa()">⤢</button></div>
+      <div class="sub" id="mapa-sub">Toque num pino para abrir o cartão</div>
+      <div class="mfil" id="mfil"></div>
+    </div>
+    <div id="mapwrap"><div id="map"></div>
+      <div class="mlegenda" id="mlegenda"></div></div>
+  </section>
+
+  <section class="screen" id="s-log">
+    <div class="hd"><div class="r1">
+      <button class="icb" onclick="verTela('s-board')">‹</button>
+      <h1>Logística</h1>
+      <button class="icb pri" onclick="novoLog()">＋</button></div>
+      <div class="sub">Voos, hospedagem e documentos · toque para editar</div></div>
+    <div class="board" id="log"></div>
+  </section>
+
+  <section class="screen" id="s-desc">
+    <div class="hd"><div class="r1"><h1>Descobrir</h1></div>
+      <div class="sub">Bem avaliados · toque para encaixar no dia aberto</div></div>
+    <div class="board" id="desc"></div>
+  </section>
+
+  <nav class="nav">
+    <div class="pill">
+      <button class="on" data-s="s-board"><span class="i">▦</span>Quadro</button>
+      <button data-s="s-mapa"><span class="i">🗺</span>Mapa</button>
+      <button data-s="s-clima"><span class="i">☀</span>Clima</button>
+      <button data-s="s-desc"><span class="i">◎</span>Achar</button>
+      <button id="btn-ia"><span class="i">✦</span>RutAI</button>
+    </div>
+  </nav>
+</div>
+
+<!-- ============ RutAI ============ -->
+<div class="sheet" id="rutai">
+  <div class="grab"></div>
+  <div class="shd">
+    <svg width="34" height="34" viewBox="0 0 100 128" style="flex-shrink:0">
+      <path d="M50 2C26 2 8 20 8 44c0 30 33 60 42 82 9-22 42-52 42-82C92 20 74 2 50 2z" fill="#22C6E8"/>
+      <path d="M50 2c24 0 42 18 42 42 0 30-33 60-42 82V2z" fill="#F0483E"/>
+      <circle cx="50" cy="44" r="30" fill="#12384F"/><circle cx="50" cy="44" r="23" fill="#0E7C93"/>
+      <path d="M30 26 L52 46 L44 54Z" fill="#F0483E"/><path d="M70 62 L48 42 L56 34Z" fill="#EDEFF2"/>
+    </svg>
+    <div style="flex:1"><h3 style="font-size:17px">RutAI</h3>
+      <p id="ia-st" style="font-size:12px;color:var(--verde-d);font-weight:700">pronta para ajustar o roteiro</p></div>
+    <button class="x" onclick="fechar('rutai')">✕</button>
+  </div>
+  <div class="fsc" id="fsc"></div>
+  <div class="sugs" id="sugs"></div>
+  <div class="ffoot">
+    <button class="mic" id="mic2">🎙️</button>
+    <input id="ask2" placeholder="Fale ou escreva…">
+    <button class="snd" id="snd2">Enviar</button>
+  </div>
+</div>
+
+<!-- ============ CARTÃO ============ -->
+<div class="sheet" id="item">
+  <div class="grab"></div>
+  <div class="shd"><h3 id="i-tit">Novo cartão</h3><button class="x" onclick="fechar('item')">✕</button></div>
+  <div class="sbody">
+    <label class="fl">Título</label>
+    <input class="fi" id="i-t" placeholder="Ex.: Comuna 13 com guia local">
+    <label class="fl">Rótulo</label>
+    <div class="chips" id="i-listas"></div>
+    <div class="frow">
+      <div><label class="fl">Hora</label><input class="fi" id="i-h" placeholder="09:30"></div>
+      <div><label class="fl">Duração</label><input class="fi" id="i-d" placeholder="3h"></div>
+    </div>
+    <div class="frow">
+      <div><label class="fl">Nota Google</label><input class="fi" id="i-r" placeholder="4,7"></div>
+      <div><label class="fl">Bairro</label><input class="fi" id="i-b" placeholder="El Poblado"></div>
+    </div>
+    <label class="fl">Descrição</label>
+    <textarea class="fi" id="i-n" placeholder="Reserva feita? Preço? Quem sugeriu?"></textarea>
+    <label class="fl">Endereço ou nome no mapa</label>
+    <input class="fi" id="i-end" placeholder="Ex.: Calle 26 #10-30, Getsemaní">
+    <div class="frow" style="margin-top:8px">
+      <button class="chip" style="flex:1;justify-content:center" onclick="buscarCoord()">📍 Localizar no mapa</button>
+      <button class="chip" style="flex:0 0 auto" onclick="abrirNoMaps()">↗</button>
+    </div>
+    <div id="i-coord" style="font-size:12px;font-weight:700;color:var(--ink2);margin-top:7px;line-height:1.5"></div>
+    <label class="fl">Instagram</label>
+    <input class="fi" id="i-ig" placeholder="@perfil ou o link completo">
+    <label class="fl">Depende do tempo</label>
+    <div class="tgl"><div class="tx">É ao ar livre — a RutAI remaneja se chover</div>
+      <input type="checkbox" id="i-ar"></div>
+    <label class="fl">Dia</label>
+    <select class="fi" id="i-dia"></select>
+    <div class="fbtns">
+      <button class="cn" onclick="fechar('item')">Cancelar</button>
+      <button class="dl" id="i-del" onclick="apagarItem()">🗑</button>
+      <button class="sv" onclick="salvarItem()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ LISTA ============ -->
+<div class="sheet" id="lista">
+  <div class="grab"></div>
+  <div class="shd"><h3 id="l-tit">Nova lista</h3><button class="x" onclick="fechar('lista')">✕</button></div>
+  <div class="sbody">
+    <label class="fl">Nome da lista</label>
+    <input class="fi" id="l-n" placeholder="Ex.: Reservas pendentes">
+    <label class="fl">Cor do rótulo</label>
+    <div class="chips" id="l-cores"></div>
+    <label class="fl">Texto do rótulo no cartão</label>
+    <input class="fi" id="l-rot" placeholder="Ex.: Almoço (deixe vazio para não mostrar)">
+    <div id="l-info" style="margin-top:16px;font-size:13px;color:var(--ink2);font-weight:600;line-height:1.5"></div>
+    <div class="fbtns">
+      <button class="cn" onclick="fechar('lista')">Cancelar</button>
+      <button class="dl" id="l-del" onclick="apagarLista()">🗑</button>
+      <button class="sv" onclick="salvarLista()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ITINERÁRIO ============ -->
+<div class="sheet" id="itin">
+  <div class="grab"></div>
+  <div class="shd"><h3>Itinerário</h3><button class="x" onclick="fechar('itin')">✕</button></div>
+  <div class="sbody">
+    <div class="resumo" id="it-resumo"></div>
+    <label class="fl">Dias do roteiro</label>
+    <div id="it-lista"></div>
+    <button class="addlst" style="margin-top:4px;box-shadow:var(--sh)" onclick="addDia()">＋ Adicionar dia ao fim</button>
+    <label class="fl">Data de início</label>
+    <input class="fi" type="date" id="it-data" onchange="mudarInicio(this.value)">
+    <label class="fl">Cidades disponíveis</label>
+    <div id="it-cid"></div>
+    <div class="frow" style="margin-top:9px">
+      <input class="fi" id="it-nova" placeholder="Nova cidade">
+      <button class="chip" style="flex:0 0 auto;padding:12px 16px" onclick="addCidade()">Criar</button>
+    </div>
+    <label class="fl">Quem está viajando</label>
+    <input class="fi" id="it-quem" placeholder="Nome do casal" onchange="mudarNome(this.value)">
+    <label class="fl">Foto de fundo</label>
+    <input class="fi" id="it-fundo" placeholder="URL de uma foto (vazio = fundo.jpg)" onchange="mudarFundo(this.value)">
+    <label class="fl">Começar do zero</label>
+    <button class="addlst" style="box-shadow:var(--sh);margin:0" onclick="fechar('itin');abrirGerar()">
+      ✦ Deixar a RutAI montar o roteiro inteiro</button>
+    <div class="fbtns"><button class="sv" onclick="fechar('itin')">Concluído</button></div>
+  </div>
+</div>
+
+<!-- ============ LOGÍSTICA ============ -->
+<div class="sheet" id="logi">
+  <div class="grab"></div>
+  <div class="shd"><h3 id="g-tit">Novo registro</h3><button class="x" onclick="fechar('logi')">✕</button></div>
+  <div class="sbody">
+    <label class="fl">Tipo</label>
+    <div class="chips" id="g-tipo">
+      <button class="chip on" data-v="voos" onclick="trocarTipoLog(this)">✈ Voo</button>
+      <button class="chip" data-v="hoteis" onclick="trocarTipoLog(this)">⌂ Hospedagem</button>
+      <button class="chip" data-v="docs" onclick="trocarTipoLog(this)">▤ Documento</button>
+    </div>
+    <div id="g-campos"></div>
+    <label class="fl">Anotações</label>
+    <textarea class="fi" id="g-obs2" placeholder="O que mais precisam lembrar sobre isso"></textarea>
+    <div class="fbtns">
+      <button class="cn" onclick="fechar('logi')">Cancelar</button>
+      <button class="dl" id="g-del" onclick="apagarLog()">🗑</button>
+      <button class="sv" onclick="salvarLog()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ GERAR ROTEIRO ============ -->
+<div class="sheet" id="gerar">
+  <div class="grab"></div>
+  <div class="shd"><h3>Montar o roteiro do zero</h3><button class="x" onclick="fechar('gerar')">✕</button></div>
+  <div class="sbody">
+    <div class="resumo">Diga como querem viajar e a RutAI monta o roteiro inteiro — dias, cidades e cartões.
+      Ela mostra tudo para vocês confirmarem antes de qualquer coisa entrar no quadro.</div>
+    <label class="fl">Quantos dias</label>
+    <input class="fi" type="number" id="g-dias" value="9" min="2" max="21">
+    <label class="fl">Cidades, na ordem</label>
+    <input class="fi" id="g-cid" placeholder="Bogotá, Medellín, Cartagena">
+    <label class="fl">Data de início</label>
+    <input class="fi" type="date" id="g-data">
+    <label class="fl">Ritmo</label>
+    <div class="chips" id="g-ritmo">
+      <button class="chip" data-v="tranquilo" onclick="selChip(this,'g-ritmo')">Tranquilo</button>
+      <button class="chip on" data-v="equilibrado" onclick="selChip(this,'g-ritmo')">Equilibrado</button>
+      <button class="chip" data-v="intenso" onclick="selChip(this,'g-ritmo')">Intenso</button>
+    </div>
+    <label class="fl">O que mais interessa</label>
+    <div class="chips" id="g-int">
+      <button class="chip on" data-v="cultura e história" onclick="multiChip(this)">Cultura</button>
+      <button class="chip on" data-v="gastronomia" onclick="multiChip(this)">Comida</button>
+      <button class="chip" data-v="natureza e trilhas" onclick="multiChip(this)">Natureza</button>
+      <button class="chip" data-v="praia e mar" onclick="multiChip(this)">Praia</button>
+      <button class="chip" data-v="vida noturna e música" onclick="multiChip(this)">Noite</button>
+      <button class="chip" data-v="compras e artesanato" onclick="multiChip(this)">Compras</button>
+      <button class="chip" data-v="arquitetura e fotografia" onclick="multiChip(this)">Fotografia</button>
+      <button class="chip on" data-v="programas românticos para casal" onclick="multiChip(this)">Casal</button>
+    </div>
+    <label class="fl">Observações</label>
+    <textarea class="fi" id="g-obs" placeholder="Ex.: chegamos de madrugada, um de nós tem joelho sensível, queremos uma noite livre em Medellín"></textarea>
+    <div class="fbtns">
+      <button class="cn" onclick="fechar('gerar')">Cancelar</button>
+      <button class="sv" onclick="gerarRoteiro()">Montar roteiro</button>
+    </div>
+    <div class="aviso" id="g-est"><b>Precisa da RutAI na nuvem.</b> Esta função monta o roteiro com o Claude —
+      configure a Cloud Function no ☁ do topo. Sem ela, o botão fica indisponível.</div>
+  </div>
+</div>
+
+<!-- ============ SINCRONIZAÇÃO ============ -->
+<div class="sheet" id="sync">
+  <div class="grab"></div>
+  <div class="shd"><h3>Quadro compartilhado</h3><button class="x" onclick="fechar('sync')">✕</button></div>
+  <div class="sbody">
+    <div class="resumo" id="sy-est">—</div>
+    <label class="fl">Código do quadro</label>
+    <input class="fi" id="sy-cod" placeholder="Ex.: colombia-2026-a7k3" autocomplete="off">
+    <p style="font-size:12.5px;color:var(--ink2);font-weight:600;line-height:1.5;margin-top:7px">
+      Todos os aparelhos que usarem este código veem o mesmo quadro. Quem editar, atualiza o dos outros.</p>
+    <label class="fl">Endereço do Firebase</label>
+    <input class="fi" id="sy-url" placeholder="https://SEU-PROJETO-default-rtdb.firebaseio.com" autocomplete="off">
+    <p style="font-size:12.5px;color:var(--ink2);font-weight:600;line-height:1.5;margin-top:7px">
+      É o endereço do Realtime Database do seu projeto. Sem ele, o quadro fica só neste aparelho.</p>
+    <div class="fbtns">
+      <button class="cn" onclick="desligarSync()">Desligar</button>
+      <button class="sv" onclick="ligarSync()">Ligar sincronia</button>
+    </div>
+    <div class="aviso">
+      <b>Como funciona.</b> O quadro inteiro é gravado como um registro só, sob o código escolhido.
+      A cada 8 segundos o app confere se outro aparelho mudou alguma coisa e traz a versão mais recente.
+      Se dois aparelhos editarem ao mesmo tempo, vale a edição mais recente — combinem quem mexe em quê.
+    </div>
+
+    <label class="fl">RutAI com conversa livre</label>
+    <input class="fi" id="sy-fn" placeholder="https://…cloudfunctions.net/rutai" autocomplete="off">
+    <p style="font-size:12.5px;color:var(--ink2);font-weight:600;line-height:1.5;margin-top:7px">
+      Endereço da Cloud Function que conversa com o Claude. Com ele, a RutAI entende pedidos em linguagem
+      solta. Sem ele, ela continua funcionando com o interpretador que roda no próprio aparelho.</p>
+    <div class="fbtns">
+      <button class="cn" onclick="testarIA()">Testar conexão</button>
+      <button class="sv" onclick="salvarFn()">Salvar endereço</button>
+    </div>
+    <div id="sy-fnest" style="margin-top:12px;font-size:12.5px;font-weight:700;line-height:1.5"></div>
+  </div>
+</div>
+
+<script>
+/* ==========================================================
+   SPLASH
+   ========================================================== */
+(function(){
+  const el=document.getElementById('splash');if(!el)return;
+  const anel=el.querySelector('.anel');
+  setTimeout(()=>anel&&anel.classList.add('on'),240);
+  let fim=false;
+  const fechar=()=>{if(fim)return;fim=true;el.classList.add('off');
+    setTimeout(()=>{try{el.remove();}catch(e){}},600);
+    try{mostrarSaudacao();}catch(e){}};
+  const rapido=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  setTimeout(fechar,rapido?400:2500);setTimeout(fechar,6000);
+  el.addEventListener('click',fechar);el.addEventListener('touchend',fechar);
+  window.addEventListener('error',fechar);
+})();
+
+/* ==========================================================
+   RUTA v4
+   ========================================================== */
+const KEY='ruta_v4';
+const CORES=['azul','ciano','verde','oro','coral','roxo'];
+const HEX={azul:'#579DFF',ciano:'#22C6E8',verde:'#4BCE97',oro:'#F5CD47',coral:'#F87168',roxo:'#9F8FEF'};
+const DIAS_SEM=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+let uid=Date.now(), id=()=>'x'+(++uid);
+let S=null, diaAtivo=0;
+
+const GEO={
+  'Bogotá':[4.711,-74.072],'Medellín':[6.244,-75.581],'Cartagena':[10.391,-75.479],
+  'Santa Marta':[11.241,-74.199],'Cali':[3.452,-76.532],'Barranquilla':[10.968,-74.781],
+  'San Andrés':[12.583,-81.700],'Guatapé':[6.233,-75.159],'Salento':[4.637,-75.570],
+  'Villa de Leyva':[5.634,-73.524],'Tayrona':[11.310,-74.070]
+};
+
+/* ---------- semente ---------- */
+function semente(){
+  const cid={bog:'Bogotá',med:'Medellín',car:'Cartagena'};
+  const listas=[
+    {id:'l1',n:'Âncora do dia',c:'azul',rot:''},
+    {id:'l2',n:'Passeios',c:'ciano',rot:'Passeio'},
+    {id:'l3',n:'Comer & beber',c:'oro',rot:'Refeição'},
+    {id:'l4',n:'Flexível',c:'coral',rot:'Flexível'}
+  ];
+  const C=(t,l,o={})=>Object.assign({id:id(),t,l,ok:false,h:'',dur:'',rate:'',bai:'',nota:'',ar:false},o);
+  const dias=[
+    {cid:'bog',cards:[
+      C('Chegada em El Dorado + traslado','l1',{lat:4.7016,lng:-74.1469,h:'14:00',dur:'1h',nota:'Confirmar motorista pelo hotel. Táxi oficial só no balcão.'}),
+      C('Check-in em La Candelaria','l1',{lat:4.597,lng:-74.075,h:'16:00'}),
+      C('Caminhada pela Plaza de Bolívar','l2',{lat:4.5981,lng:-74.0758,h:'17:30',dur:'1h30',rate:'4,6',bai:'La Candelaria',ar:true}),
+      C('Jantar leve — dia de altitude','l3',{lat:4.5975,lng:-74.074,h:'20:00',nota:'2.640 m. Coma leve, beba água, evite álcool hoje.'})]},
+    {cid:'bog',cards:[
+      C('Monserrate cedo','l1',{lat:4.6058,lng:-74.0557,h:'08:00',dur:'3h',rate:'4,7',ar:true,nota:'Fila cresce depois das 10h. Domingo tem missa.'}),
+      C('Museu do Ouro','l2',{lat:4.6018,lng:-74.0722,h:'12:00',dur:'2h',rate:'4,7',bai:'Centro'}),
+      C('Almoço: ajiaco santafereño','l3',{lat:4.5985,lng:-74.0745,h:'14:30',rate:'4,5'}),
+      C('Museu Botero','l4',{lat:4.5977,lng:-74.0733,dur:'1h30',rate:'4,8',nota:'Entrada gratuita. Cabe aqui ou no dia 3.'})]},
+    {cid:'bog',cards:[
+      C('Bike tour pela cidade','l1',{lat:4.599,lng:-74.073,h:'09:30',dur:'4h',rate:'4,8',ar:true}),
+      C('Mercado de Paloquemao','l2',{lat:4.6183,lng:-74.093,h:'07:00',dur:'2h',rate:'4,6',nota:'Frutas que não existem no Brasil. Vá cedo.'}),
+      C('Zona G para jantar','l3',{lat:4.642,lng:-74.062,h:'20:00',bai:'Zona G',rate:'4,6'}),
+      C('Catedral de Sal de Zipaquirá','l4',{lat:5.019,lng:-74.009,dur:'6h',rate:'4,7',nota:'Bate-volta. Precisa de um dia quase inteiro.'})]},
+    {cid:'med',cards:[
+      C('Voo Bogotá → Medellín','l1',{lat:6.1645,lng:-75.4231,h:'10:00',dur:'1h',nota:'Chegar 2h antes. Voo doméstico.'}),
+      C('Check-in em El Poblado','l1',{lat:6.2088,lng:-75.568,h:'14:00'}),
+      C('Tarde em Provenza','l2',{lat:6.2094,lng:-75.5688,h:'16:00',dur:'3h',rate:'4,6',bai:'El Poblado',ar:true}),
+      C('Jantar em Provenza','l3',{lat:6.2092,lng:-75.569,h:'20:00',rate:'4,7'})]},
+    {cid:'med',cards:[
+      C('Comuna 13 com guia local','l1',{lat:6.25,lng:-75.615,h:'09:00',dur:'4h',rate:'4,8',ar:true,nota:'Guia da própria comunidade. Reservar na véspera.'}),
+      C('Pueblito Paisa no pôr do sol','l2',{lat:6.232,lng:-75.581,h:'17:30',dur:'2h',rate:'4,5',ar:true}),
+      C('Mercado del Río','l3',{lat:6.223,lng:-75.576,h:'20:00',rate:'4,6'}),
+      C('Metrocable Linha K','l4',{lat:6.281,lng:-75.547,dur:'2h',rate:'4,7',ar:true,nota:'Encaixa junto da Comuna 13 ou sozinho.'})]},
+    {cid:'med',cards:[
+      C('Guatapé e Pedra do Peñol','l1',{lat:6.22,lng:-75.177,h:'07:30',dur:'10h',rate:'4,8',ar:true,nota:'740 degraus. Dia inteiro fora de Medellín.'}),
+      C('Almoço à beira da represa','l3',{lat:6.233,lng:-75.159,h:'13:00',rate:'4,5'}),
+      C('Noite tranquila em Laureles','l4',{lat:6.245,lng:-75.593,nota:'Se o dia render, encaixar aqui.'})]},
+    {cid:'car',cards:[
+      C('Voo Medellín → Cartagena','l1',{lat:10.4424,lng:-75.513,h:'09:00',dur:'1h30'}),
+      C('Check-in na Ciudad Amurallada','l1',{lat:10.4236,lng:-75.551,h:'13:00'}),
+      C('Muralhas ao pôr do sol','l2',{lat:10.427,lng:-75.553,h:'17:30',dur:'2h',rate:'4,8',ar:true,nota:'Café del Mar lota. Vá pelo trecho de Santo Domingo.'}),
+      C('Jantar em Getsemaní','l3',{lat:10.42,lng:-75.545,h:'20:30',rate:'4,7',bai:'Getsemaní'})]},
+    {cid:'car',cards:[
+      C('Ilhas do Rosário — dia inteiro','l1',{lat:10.178,lng:-75.748,h:'08:00',dur:'9h',rate:'4,6',ar:true,nota:'Fechar com operadora avaliada. Evitar venda de rua no cais.'}),
+      C('Pôr do sol no Café del Mar','l4',{lat:10.4272,lng:-75.5548,rate:'4,3',ar:true}),
+      C('Jantar de despedida','l3',{lat:10.4225,lng:-75.5495,h:'20:30',rate:'4,8'})]},
+    {cid:'car',cards:[
+      C('Castelo de San Felipe','l2',{lat:10.4222,lng:-75.5395,h:'09:00',dur:'2h',rate:'4,7',ar:true}),
+      C('Manhã livre + compras','l4',{lat:10.424,lng:-75.548,dur:'3h'}),
+      C('Traslado ao aeroporto','l1',{lat:10.4424,lng:-75.513,h:'15:00',nota:'Voo internacional: 3h de antecedência.'})]}
+  ].map(d=>Object.assign({id:id()},d));
+  return {cid,listas,dias,log:sementeLog(),inicio:'',quem:'',visto:false,fundo:'',v:0};
+}
+function sementeLog(){return{
+  voos:[
+    {id:id(),t:'GRU → BOG',cod:'ida',f:{Data:'Dia 1',Duração:'6h30'},obs:'Preencher com o voo real quando comprar.'},
+    {id:id(),t:'BOG → MDE',cod:'interno',f:{Data:'Dia 4'},obs:''},
+    {id:id(),t:'MDE → CTG',cod:'interno',f:{Data:'Dia 7'},obs:''},
+    {id:id(),t:'CTG → GRU',cod:'volta',f:{Data:'Dia 9'},obs:''}],
+  hoteis:[
+    {id:id(),t:'Bogotá · La Candelaria',cod:'3 noites',f:{'Check-in':'Dia 1','Check-out':'Dia 4'},obs:''},
+    {id:id(),t:'Medellín · El Poblado',cod:'3 noites',f:{'Check-in':'Dia 4','Check-out':'Dia 7'},obs:''},
+    {id:id(),t:'Cartagena · Amurallada',cod:'3 noites',f:{'Check-in':'Dia 7','Check-out':'Dia 9'},obs:''}],
+  docs:[
+    {id:id(),t:'Passaportes',cod:'2 pax',f:{Validade:'Conferir 6 meses de validade'},obs:'Salvar uma cópia digital offline no celular.'},
+    {id:id(),t:'Seguro viagem',cod:'',f:{},obs:'Guardar a apólice e o telefone de emergência aqui.'},
+    {id:id(),t:'Pesos colombianos',cod:'COP',f:{Onde:'Sacar em caixa de banco, nunca de rua'},obs:'Avisar o banco da viagem antes de sair.'}]
+};}
+
+const CAT=[
+  {t:'Museu Botero',lat:4.5977,lng:-74.0733,c:'bog',l:'l2',rate:'4,8',dur:'1h30',bai:'La Candelaria',ar:false,nota:'Entrada gratuita. Acervo doado pelo próprio Botero.'},
+  {t:'Catedral de Sal de Zipaquirá',lat:5.019,lng:-74.009,c:'bog',l:'l2',rate:'4,7',dur:'6h',bai:'Zipaquirá',ar:false,nota:'Bate-volta de dia inteiro, 50 km ao norte.'},
+  {t:'Mercado de Paloquemao',lat:4.6183,lng:-74.093,c:'bog',l:'l2',rate:'4,6',dur:'2h',bai:'Centro',ar:false,nota:'Ir antes das 8h. Prove lulo, guanábana e mangostino.'},
+  {t:'Chorro de Quevedo ao entardecer',lat:4.5963,lng:-74.0703,c:'bog',l:'l4',rate:'4,4',dur:'1h30',bai:'La Candelaria',ar:true,nota:'Berço da cidade. Chicha e música na praça.'},
+  {t:'Andrés Carne de Res',lat:4.862,lng:-74.057,c:'bog',l:'l3',rate:'4,6',dur:'4h',bai:'Chía',ar:false,nota:'Jantar-espetáculo. Só em noite sem compromisso no dia seguinte.'},
+  {t:'Metrocable Linha K + Parque Arví',lat:6.281,lng:-75.534,c:'med',l:'l2',rate:'4,7',dur:'4h',bai:'Santo Domingo',ar:true,nota:'Vista da cidade inteira. Leve casaco no Arví.'},
+  {t:'Jardim Botânico de Medellín',lat:6.271,lng:-75.565,c:'med',l:'l4',rate:'4,6',dur:'2h',bai:'Norte',ar:true,nota:'Gratuito. Bom encaixe de meio-período.'},
+  {t:'Praça Botero e Museu de Antioquia',lat:6.2518,lng:-75.5686,c:'med',l:'l2',rate:'4,6',dur:'2h30',bai:'Centro',ar:false},
+  {t:'Aula de salsa em Laureles',lat:6.245,lng:-75.593,c:'med',l:'l4',rate:'4,9',dur:'2h',bai:'Laureles',ar:false,nota:'Aula para casal. Reservar com um dia de antecedência.'},
+  {t:'Mercado del Río',lat:6.223,lng:-75.576,c:'med',l:'l3',rate:'4,6',dur:'2h',bai:'Ciudad del Río',ar:false},
+  {t:'Playa Blanca — Barú',lat:10.172,lng:-75.681,c:'car',l:'l2',rate:'4,4',dur:'8h',ar:true,nota:'Ir por terra evita o cais lotado. Areia mais clara que Rosário.'},
+  {t:'Cidade murada à noite, a pé',lat:10.4236,lng:-75.551,c:'car',l:'l4',rate:'4,9',dur:'2h',bai:'Centro Histórico',ar:true,nota:'Melhor programa gratuito da viagem. Depois das 19h.'},
+  {t:'Convento de La Popa',lat:10.413,lng:-75.529,c:'car',l:'l2',rate:'4,6',dur:'2h',ar:true,nota:'Vista completa da baía. Subir de táxi.'},
+  {t:'Chalupa ao pôr do sol',lat:10.418,lng:-75.549,c:'car',l:'l4',rate:'4,7',dur:'2h',ar:true,nota:'Alternativa ao Café del Mar, com menos gente.'},
+  {t:'Ceviche em Getsemaní',lat:10.42,lng:-75.545,c:'car',l:'l3',rate:'4,7',dur:'1h30',bai:'Getsemaní',ar:false},
+  {t:'Museu do Ouro Zenú',lat:10.4232,lng:-75.5497,c:'car',l:'l2',rate:'4,5',dur:'1h',bai:'Centro Histórico',ar:false,nota:'Pequeno, gratuito e com ar-condicionado. Salvação em dia de chuva.'}
+];
+
+/* ---------- persistência ---------- */
+function carregar(){
+  try{const s=JSON.parse(localStorage.getItem(KEY));
+    if(s&&s.dias&&s.listas){S=s;if(!S.cid)S.cid={};if(S.v==null)S.v=0;normalizar();return;}}catch(e){}
+  S=semente();
+}
+/* garante que estados salvos por versões anteriores continuem funcionando */
+function normalizar(){
+  if(!S.log)S.log=sementeLog();
+  ['voos','hoteis','docs'].forEach(t=>{
+    if(!Array.isArray(S.log[t]))S.log[t]=[];
+    S.log[t].forEach(x=>{if(!x.id)x.id=id();if(!x.f)x.f={};if(x.obs==null)x.obs='';
+      if(x.cod==='—')x.cod='';
+      Object.keys(x.f).forEach(k=>{if(x.f[k]==='—')delete x.f[k];});});
+  });
+  S.dias.forEach(d=>{if(!Array.isArray(d.cards))d.cards=[];
+    d.cards.forEach(c=>{if(c.lat===undefined)c.lat=null;if(c.lng===undefined)c.lng=null;
+      if(c.end===undefined)c.end='';if(c.ig===undefined)c.ig='';});});
+  S.listas.forEach(l=>{if(l.rot===undefined)l.rot='';});
+}
+function salvar(local){
+  S.v=Date.now();
+  try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
+  if(!local)enviarNuvem();
+}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');
+  clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('on'),2800);}
+const esc=s=>(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const nomeCid=k=>(S.cid&&S.cid[k])||k;
+const listaDe=lid=>S.listas.find(l=>l.id===lid);
+
+function dataDoDia(i){
+  if(!S.inicio)return null;
+  const d=new Date(S.inicio+'T12:00:00');if(isNaN(d))return null;
+  d.setDate(d.getDate()+i);return d;
+}
+function rotuloDia(i){
+  const d=dataDoDia(i);
+  if(!d)return 'Dia '+(i+1);
+  const dd=String(d.getDate()).padStart(2,'0'),mm=String(d.getMonth()+1).padStart(2,'0');
+  return DIAS_SEM[d.getDay()]+' '+dd+'/'+mm;
+}
+function rotuloCurto(i){
+  const d=dataDoDia(i);
+  return d?DIAS_SEM[d.getDay()]+' '+d.getDate()+'/'+(d.getMonth()+1):DIAS_SEM[(i+6)%7];
+}
+function isoDia(i){const d=dataDoDia(i);return d?d.toISOString().slice(0,10):null;}
+
+/* ==========================================================
+   SINCRONIZAÇÃO — Firebase Realtime Database via REST
+   ========================================================== */
+let SY={url:'',cod:'',ligado:false,fn:''};
+try{const s=JSON.parse(localStorage.getItem('ruta_sync'));if(s)SY=Object.assign(SY,s);}catch(e){}
+let puxando=false,timerSync=null;
+function urlNuvem(){
+  if(!SY.url||!SY.cod)return null;
+  const base=SY.url.replace(/\/+$/,'');
+  return `${base}/quadros/${encodeURIComponent(SY.cod)}.json`;
+}
+function marcaSync(){
+  const b=document.getElementById('btn-sync');
+  if(b)b.classList.toggle('on',SY.ligado);
+}
+async function enviarNuvem(){
+  const u=urlNuvem();if(!u||!SY.ligado||puxando)return;
+  try{await fetch(u,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(S)});}
+  catch(e){}
+}
+async function puxarNuvem(silencioso){
+  const u=urlNuvem();if(!u||!SY.ligado)return;
+  try{
+    const r=await fetch(u+'?t='+Date.now());
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const j=await r.json();
+    if(j&&j.dias&&j.v&&j.v>(S.v||0)){
+      puxando=true;S=j;normalizar();
+      try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
+      if(diaAtivo>=S.dias.length)diaAtivo=S.dias.length-1;
+      render();renderClima();puxando=false;
+      if(!silencioso)toast('Quadro atualizado pelo outro aparelho.');
+    }else if(!j&&!silencioso){
+      await enviarNuvem();toast('Quadro enviado para a nuvem.');
+    }
+  }catch(e){if(!silencioso)toast('Não consegui falar com o Firebase. Confira o endereço.');}
+}
+function abrirSync(){
+  document.getElementById('sy-cod').value=SY.cod||'';
+  document.getElementById('sy-url').value=SY.url||'';
+  document.getElementById('sy-fn').value=SY.fn||'';
+  document.getElementById('sy-est').innerHTML=SY.ligado
+    ? `Sincronia <b>ligada</b> no código <b>${esc(SY.cod)}</b>. As mudanças chegam a cada 8 segundos.`
+    : `Sincronia <b>desligada</b>. O quadro está guardado só neste aparelho.`;
+  document.getElementById('sy-fnest').innerHTML=SY.fn
+    ? `<span style="color:var(--verde-d)">✓ RutAI em modo conversa livre.</span>`
+    : `<span style="color:var(--ink2)">RutAI em modo local: entende os pedidos previstos, sem precisar de internet.</span>`;
+  abrir('sync');
+}
+function ligarSync(){
+  const cod=document.getElementById('sy-cod').value.trim();
+  const url=document.getElementById('sy-url').value.trim();
+  if(!cod||!url){toast('Preencha o código e o endereço do Firebase.');return;}
+  SY.cod=cod;SY.url=url;SY.ligado=true;
+  try{localStorage.setItem('ruta_sync',JSON.stringify(SY));}catch(e){}
+  marcaSync();fechar('sync');toast('Sincronia ligada. Buscando o quadro…');
+  puxarNuvem();iniciarTimer();
+}
+function desligarSync(){
+  SY.ligado=false;
+  try{localStorage.setItem('ruta_sync',JSON.stringify(SY));}catch(e){}
+  clearInterval(timerSync);marcaSync();fechar('sync');toast('Sincronia desligada.');
+}
+function salvarFn(){
+  SY.fn=document.getElementById('sy-fn').value.trim();
+  try{localStorage.setItem('ruta_sync',JSON.stringify(SY));}catch(e){}
+  document.getElementById('sy-fnest').innerHTML=SY.fn
+    ? `<span style="color:var(--verde-d)">✓ RutAI em modo conversa livre.</span>`
+    : `<span style="color:var(--ink2)">RutAI voltou ao modo local.</span>`;
+  document.getElementById('ia-st').textContent=SY.fn?'conversa livre':'pronta para ajustar o roteiro';
+  toast(SY.fn?'RutAI em modo conversa livre.':'RutAI em modo local.');
+}
+async function testarIA(){
+  const u=document.getElementById('sy-fn').value.trim();
+  const est=document.getElementById('sy-fnest');
+  if(!u){est.innerHTML='<span style="color:var(--coral-d)">Cole o endereço da função antes de testar.</span>';return;}
+  est.innerHTML='<span style="color:var(--ink2)">Testando…</span>';
+  try{
+    const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({system:'Responda apenas: ok',messages:[{role:'user',content:'teste'}],max_tokens:16})});
+    if(!r.ok){
+      let det='';try{const e=await r.json();det=e.error||'';}catch(_){}
+      throw new Error('HTTP '+r.status+(det?' · '+det:''));
+    }
+    await r.json();
+    est.innerHTML='<span style="color:var(--verde-d)">✓ Função respondeu. Toque em Salvar endereço.</span>';
+  }catch(e){
+    const m=String(e.message||e);
+    let dica='';
+    if(/404/.test(m))dica='Endereço errado. Copie a "Function URL" no console do Firebase.';
+    else if(/401|403/.test(m))dica='A função existe mas negou o acesso. Deixe-a pública (allUsers).';
+    else if(/500/.test(m))dica='Erro dentro da função — normalmente a chave da Anthropic. Veja os logs.';
+    else if(/Failed to fetch|Load failed|NetworkError/.test(m))dica='Não alcancei a função. Pode ser CORS ou endereço inexistente.';
+    est.innerHTML=`<span style="color:var(--coral-d)">${esc(m)}</span>`+(dica?`<br><span style="color:var(--ink2)">${dica}</span>`:'');
+  }
+}
+function iniciarTimer(){
+  clearInterval(timerSync);
+  if(SY.ligado)timerSync=setInterval(()=>puxarNuvem(true),8000);
+}
+
+/* ==========================================================
+   CLIMA — Open-Meteo
+   ========================================================== */
+const WMO={0:['☀️','Céu limpo'],1:['🌤️','Sol entre nuvens'],2:['⛅','Parcialmente nublado'],3:['☁️','Nublado'],
+  45:['🌫️','Neblina'],48:['🌫️','Neblina com geada'],
+  51:['🌦️','Garoa fraca'],53:['🌦️','Garoa'],55:['🌧️','Garoa forte'],
+  56:['🌧️','Garoa congelante'],57:['🌧️','Garoa congelante forte'],
+  61:['🌦️','Chuva fraca'],63:['🌧️','Chuva'],65:['🌧️','Chuva forte'],
+  66:['🌧️','Chuva congelante'],67:['🌧️','Chuva congelante forte'],
+  71:['🌨️','Neve fraca'],73:['🌨️','Neve'],75:['❄️','Neve forte'],77:['❄️','Grãos de neve'],
+  80:['🌦️','Pancadas fracas'],81:['🌧️','Pancadas de chuva'],82:['⛈️','Pancadas fortes'],
+  85:['🌨️','Pancadas de neve'],86:['🌨️','Pancadas de neve fortes'],
+  95:['⛈️','Trovoada'],96:['⛈️','Trovoada com granizo'],99:['⛈️','Trovoada com granizo forte']};
+const wIcon=c=>(WMO[c]||['🌡️','—'])[0];
+const wTxt=c=>(WMO[c]||['🌡️','Sem dado'])[1];
+let CLIMA={},climaCarregando=false;
+
+async function buscarClima(forcar){
+  if(climaCarregando)return;
+  const cidades=[...new Set(S.dias.map(d=>nomeCid(d.cid)))].filter(n=>GEO[n]);
+  if(!cidades.length){document.getElementById('clima-sub').textContent=
+    'Sem coordenadas para as cidades atuais.';renderClima();return;}
+  const agora=Date.now();
+  if(!forcar){
+    try{const c=JSON.parse(localStorage.getItem('ruta_clima'));
+      if(c&&agora-c.quando<3*3600e3){CLIMA=c.dados;renderClima();renderWbar();renderTabs();return;}}catch(e){}
+  }
+  climaCarregando=true;
+  document.getElementById('clima-sub').textContent='Buscando a previsão…';
+  try{
+    for(const nome of cidades){
+      const [la,lo]=GEO[nome];
+      const url=`https://api.open-meteo.com/v1/forecast?latitude=${la}&longitude=${lo}`+
+        `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum`+
+        `&hourly=weather_code,temperature_2m,precipitation_probability`+
+        `&timezone=America%2FBogota&forecast_days=16`;
+      const r=await fetch(url);if(!r.ok)throw new Error('HTTP '+r.status);
+      const j=await r.json();const dias={},horas={};
+      (j.daily.time||[]).forEach((iso,i)=>{dias[iso]={cod:j.daily.weather_code[i],
+        max:Math.round(j.daily.temperature_2m_max[i]),min:Math.round(j.daily.temperature_2m_min[i]),
+        prob:j.daily.precipitation_probability_max[i],mm:j.daily.precipitation_sum[i]};});
+      (j.hourly.time||[]).forEach((t,i)=>{const iso=t.slice(0,10);
+        (horas[iso]=horas[iso]||[]).push({h:t.slice(11,16),cod:j.hourly.weather_code[i],
+          t:Math.round(j.hourly.temperature_2m[i]),p:j.hourly.precipitation_probability[i]});});
+      CLIMA[nome]={dias,horas};
+    }
+    try{localStorage.setItem('ruta_clima',JSON.stringify({quando:agora,dados:CLIMA}));}catch(e){}
+    document.getElementById('clima-sub').textContent='Open-Meteo · atualizado agora';
+    if(forcar)toast('Previsão atualizada.');
+  }catch(e){
+    document.getElementById('clima-sub').textContent='Não consegui buscar a previsão. Precisa de internet e HTTPS.';
+  }
+  climaCarregando=false;renderClima();renderWbar();renderTabs();
+}
+function climaDoDia(i){
+  const iso=isoDia(i);if(!iso)return null;
+  const c=CLIMA[nomeCid(S.dias[i].cid)];
+  if(!c||!c.dias[iso])return null;
+  return Object.assign({iso,cidade:nomeCid(S.dias[i].cid)},c.dias[iso]);
+}
+function chuvaNoDia(i){const c=climaDoDia(i);return c&&(c.prob>=55||c.mm>=4);}
+
+function renderWbar(){
+  const el=document.getElementById('wbar');const c=climaDoDia(diaAtivo);
+  if(!c){
+    if(!S.inicio){el.style.display='flex';
+      el.innerHTML=`<span class="e">📅</span><span>Informe a <b>data de início</b> para ver a previsão.</span>
+        <button class="rec" onclick="abrirItinerario()">›</button>`;return;}
+    el.style.display='none';return;
+  }
+  el.style.display='flex';
+  const al=chuvaNoDia(diaAtivo)?`<span class="al">${c.prob}% de chuva</span>`:'';
+  el.innerHTML=`<span class="e">${wIcon(c.cod)}</span>
+    <span>${esc(wTxt(c.cod))} · <b>${c.max}°</b>/${c.min}°</span>${al}
+    <button class="rec" onclick="verClima()">›</button>`;
+}
+function verClima(){
+  document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('on'));
+  document.querySelector('.nav button[data-s="s-clima"]').classList.add('on');
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  document.getElementById('s-clima').classList.add('on');renderClima();
+}
+function renderClima(){
+  const el=document.getElementById('clima');if(!el)return;
+  if(!S.inicio){
+    el.innerHTML=`<div class="wcard"><div class="wl1"><div class="e">📅</div>
+      <div class="txt"><b>Falta a data de início</b><span>Sem ela não dá para casar a previsão com cada dia.</span></div></div>
+      <button class="btnf" style="margin-top:12px" onclick="abrirItinerario()">Informar a data agora</button></div>`;return;
+  }
+  let h='';
+  S.dias.forEach((d,i)=>{
+    const c=climaDoDia(i),iso=isoDia(i);
+    const hs=((CLIMA[nomeCid(d.cid)]||{}).horas||{})[iso]||[];
+    const filtro=hs.filter(x=>['07:00','10:00','13:00','16:00','19:00','22:00'].includes(x.h));
+    if(!c){h+=`<div class="wcard"><div class="wl1"><div class="e">🌡️</div>
+      <div class="txt"><b>Dia ${i+1} · ${esc(nomeCid(d.cid))}</b>
+      <span>${esc(rotuloDia(i))} — sem previsão (além de 16 dias ou cidade sem coordenada).</span></div></div></div>`;return;}
+    const ar=d.cards.filter(x=>x.ar);
+    const risco=chuvaNoDia(i)&&ar.length;
+    h+=`<div class="wcard">
+      <div class="wl1"><div class="e">${wIcon(c.cod)}</div>
+        <div class="txt"><b>Dia ${i+1} · ${esc(nomeCid(d.cid))}</b>
+          <span>${esc(rotuloDia(i))} · ${esc(wTxt(c.cod))} · ${c.prob}% de chuva</span></div>
+        <div class="tp"><b>${c.max}°</b><span>mín ${c.min}°</span></div></div>
+      ${filtro.length?`<div class="horas">${filtro.map(x=>`<div class="h1x">
+        <div class="hh">${x.h}</div><div class="ee">${wIcon(x.cod)}</div>
+        <div class="tt">${x.t}°</div><div class="pp">${x.p}%</div></div>`).join('')}</div>`:''}
+      ${risco?`<div class="wnota">${ar.length} cartão(ões) ao ar livre com ${c.prob}% de chuva.
+        <br><b>Peça à RutAI:</b> "chove no dia ${i+1}, remaneja".</div>`:''}
+    </div>`;
+  });
+  el.innerHTML=h;
+}
+
+/* ---------- render ---------- */
+function pctGeral(){let t=0,f=0;S.dias.forEach(d=>d.cards.forEach(c=>{t++;if(c.ok)f++;}));return t?Math.round(f/t*100):0;}
+function contarCidades(){
+  const m={};S.dias.forEach(d=>m[d.cid]=(m[d.cid]||0)+1);
+  return Object.entries(m).map(([k,v])=>`${nomeCid(k)} ${v}d`).join(' · ');
+}
+function renderHd(){
+  document.getElementById('sub-hd').innerHTML=
+    (S.quem?`<b>${esc(S.quem)}</b> · `:'')+`<b>${S.dias.length} dias</b> · ${esc(contarCidades())} · <b>${pctGeral()}%</b>`
+    +(SY.ligado?' · ☁ em dupla':'');
+}
+function renderTabs(){
+  const h=S.dias.map((d,i)=>{
+    const tot=d.cards.length,fe=d.cards.filter(c=>c.ok).length;
+    const p=tot?Math.round(fe/tot*100):0;const c=climaDoDia(i);
+    return `<button class="tab ${i===diaAtivo?'on':''}" onclick="irDia(${i})">
+      <span class="d">Dia ${i+1} ${c?wIcon(c.cod):''}</span>
+      <span class="c">${esc(rotuloCurto(i))} · ${esc(nomeCid(d.cid).slice(0,3))}</span>
+      <span class="pb"><i style="width:${p}%"></i></span></button>`;}).join('');
+  document.getElementById('tabs').innerHTML=h+`<button class="tab mais" onclick="abrirItinerario()">＋</button>`;
+}
+function renderBoard(){
+  if(diaAtivo>=S.dias.length)diaAtivo=S.dias.length-1;
+  const d=S.dias[diaAtivo];
+  let h='';
+  /* PAINEL PRINCIPAL — como no print: título = data, cartões dentro */
+  S.listas.forEach(L=>{
+    const cs=d.cards.filter(c=>c.l===L.id);
+    if(!cs.length&&L.id!==S.listas[0].id&&!cs.length){} /* mostra todas mesmo vazias */
+    h+=`<section class="lst">
+      <div class="lhd"><span class="nm">${esc(L.n)}</span><span class="ct">${cs.length}</span>
+        <button class="mn" onclick="editarLista('${L.id}')">•••</button></div>`;
+    h+=cs.map(c=>cardHTML(c,L)).join('');
+    h+=`<button class="addc" onclick="novoItem('${L.id}')">＋ Adicionar cartão<span class="im">🖼</span></button></section>`;
+  });
+  h+=`<button class="addlst" onclick="novaLista()">＋ Adicionar outra lista</button>`;
+  document.getElementById('board').innerHTML=h;
+}
+function cardHTML(c,L){
+  const bg=[];
+  if(c.h)bg.push(`<span class="bg hora">🕐 ${esc(c.h)}</span>`);
+  if(c.rate)bg.push(`<span class="bg rate">★ ${esc(c.rate)}</span>`);
+  if(c.dur)bg.push(`<span class="bg">⏱ ${esc(c.dur)}</span>`);
+  if(c.bai)bg.push(`<span class="bg">📍 ${esc(c.bai)}</span>`);
+  if(c.ar)bg.push(`<span class="bg ar">ao ar livre</span>`);
+  const ant=diaAtivo>0,prox=diaAtivo<S.dias.length-1;
+  const lk=[];
+  if(c.lat||c.end)lk.push(`<button class="lk" onclick="irMapa('${c.id}')">📍 Mapa</button>`);
+  if(c.ig)lk.push(`<button class="lk ig" onclick="abrirIG('${c.id}')">◎ Instagram</button>`);
+  return `<article class="cd ${c.ok?'ok':''}">
+    ${L.rot?`<span class="tag ${L.c}">${esc(L.rot)}</span>`:''}
+    <div class="l1">
+      <button class="chk" onclick="marcar('${c.id}')">✓</button>
+      <span class="t" onclick="editarItem('${c.id}')">${esc(c.t)}</span></div>
+    ${c.nota?`<div class="desc"><span class="gl"></span></div>`:''}
+    ${bg.length?`<div class="badges">${bg.join('')}</div>`:''}
+    ${lk.length?`<div class="links">${lk.join('')}</div>`:''}
+    <div class="mv">
+      <button ${ant?'':'disabled'} onclick="mover('${c.id}',-1)">◀ ${esc(rotuloCurto(diaAtivo-1))}</button>
+      <button ${prox?'':'disabled'} onclick="mover('${c.id}',1)">${esc(rotuloCurto(diaAtivo+1))} ▶</button>
+    </div></article>`;
+}
+function render(){renderHd();renderTabs();renderBoard();renderWbar();marcaSync();salvar(true);}
+function irDia(i){diaAtivo=i;render();document.getElementById('board').scrollTop=0;}
+
+function achar(cid){for(const d of S.dias){const c=d.cards.find(x=>x.id===cid);if(c)return{d,c};}return null;}
+function marcar(cid){const r=achar(cid);if(!r)return;r.c.ok=!r.c.ok;salvar();render();}
+function mover(cid,delta){
+  const alvo=diaAtivo+delta;if(alvo<0||alvo>S.dias.length-1)return;
+  const d=S.dias[diaAtivo],i=d.cards.findIndex(x=>x.id===cid);if(i<0)return;
+  const [c]=d.cards.splice(i,1);S.dias[alvo].cards.push(c);
+  const muda=d.cid!==S.dias[alvo].cid;salvar();render();
+  toast(`"${c.t}" → Dia ${alvo+1}`+(muda?` (${nomeCid(S.dias[alvo].cid)})`:''));
+}
+function abrir(n){document.getElementById(n).classList.add('up');}
+function fechar(n){document.getElementById(n).classList.remove('up');}
+
+/* ---------- cartão ---------- */
+let itemEd=null;
+function pintaListasChips(sel){
+  document.getElementById('i-listas').innerHTML=S.listas.map(l=>
+    `<button class="chip ${l.id===sel?'on':''}" data-l="${l.id}" onclick="selLista('${l.id}')">
+      <span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${HEX[l.c]};margin-right:6px"></span>${esc(l.n)}</button>`).join('');
+}
+function selLista(lid){document.querySelectorAll('#i-listas .chip').forEach(b=>b.classList.toggle('on',b.dataset.l===lid));}
+function listaSel(){const b=document.querySelector('#i-listas .chip.on');return b?b.dataset.l:S.listas[0].id;}
+function pintaDias(sel){
+  document.getElementById('i-dia').innerHTML=S.dias.map((d,i)=>
+    `<option value="${i}" ${i===sel?'selected':''}>Dia ${i+1} · ${esc(rotuloCurto(i))} · ${esc(nomeCid(d.cid))}</option>`).join('');
+}
+let coordEd={lat:null,lng:null};
+function mostraCoord(){
+  const el=document.getElementById('i-coord');
+  el.innerHTML=coordEd.lat
+    ? `<span style="color:var(--verde-d)">✓ Marcado no mapa (${coordEd.lat.toFixed(4)}, ${coordEd.lng.toFixed(4)})</span>`
+    : `<span style="color:var(--ink3)">Sem posição. Toque em Localizar para aparecer no mapa.</span>`;
+}
+async function buscarCoord(){
+  const q=document.getElementById('i-end').value.trim()||document.getElementById('i-t').value.trim();
+  if(!q){toast('Escreva o endereço ou o nome do lugar.');return;}
+  const cid=nomeCid(S.dias[parseInt(document.getElementById('i-dia').value)||0].cid);
+  const el=document.getElementById('i-coord');
+  el.innerHTML='<span style="color:var(--ink2)">Procurando…</span>';
+  try{
+    const u='https://nominatim.openstreetmap.org/search?format=json&limit=1&q='+
+      encodeURIComponent(q+', '+cid+', Colombia');
+    const r=await fetch(u,{headers:{'Accept':'application/json'}});
+    const j=await r.json();
+    if(!j.length){el.innerHTML='<span style="color:var(--coral-d)">Não encontrei. Tente o endereço completo.</span>';return;}
+    coordEd={lat:parseFloat(j[0].lat),lng:parseFloat(j[0].lon)};
+    if(!document.getElementById('i-end').value.trim())
+      document.getElementById('i-end').value=(j[0].display_name||'').split(',').slice(0,3).join(',');
+    mostraCoord();
+  }catch(e){el.innerHTML='<span style="color:var(--coral-d)">Falha na busca. Precisa de internet.</span>';}
+}
+function abrirNoMaps(){
+  const q=document.getElementById('i-end').value.trim()||document.getElementById('i-t').value.trim();
+  if(!q&&!coordEd.lat){toast('Escreva o endereço primeiro.');return;}
+  const alvo=coordEd.lat?`${coordEd.lat},${coordEd.lng}`:q;
+  window.open('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(alvo),'_blank');
+}
+function novoItem(lid){
+  itemEd=null;coordEd={lat:null,lng:null};
+  document.getElementById('i-tit').textContent='Novo cartão';
+  ['i-t','i-h','i-d','i-r','i-b','i-n','i-end','i-ig'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('i-ar').checked=false;mostraCoord();
+  pintaListasChips(typeof lid==='string'?lid:S.listas[0].id);pintaDias(diaAtivo);
+  document.getElementById('i-del').style.display='none';
+  abrir('item');setTimeout(()=>document.getElementById('i-t').focus(),150);
+}
+function editarItem(cid){
+  const r=achar(cid);if(!r)return;itemEd=cid;
+  document.getElementById('i-tit').textContent='Editar cartão';
+  document.getElementById('i-t').value=r.c.t;
+  document.getElementById('i-h').value=r.c.h||'';
+  document.getElementById('i-d').value=r.c.dur||'';
+  document.getElementById('i-r').value=r.c.rate||'';
+  document.getElementById('i-b').value=r.c.bai||'';
+  document.getElementById('i-n').value=r.c.nota||'';
+  document.getElementById('i-end').value=r.c.end||'';
+  document.getElementById('i-ig').value=r.c.ig||'';
+  document.getElementById('i-ar').checked=!!r.c.ar;
+  coordEd={lat:r.c.lat||null,lng:r.c.lng||null};mostraCoord();
+  pintaListasChips(r.c.l);pintaDias(S.dias.indexOf(r.d));
+  document.getElementById('i-del').style.display='block';abrir('item');
+}
+function salvarItem(){
+  const t=document.getElementById('i-t').value.trim();
+  if(!t){toast('Escreva o título do cartão.');return;}
+  const dados={t,h:document.getElementById('i-h').value.trim(),dur:document.getElementById('i-d').value.trim(),
+    rate:document.getElementById('i-r').value.trim(),bai:document.getElementById('i-b').value.trim(),
+    nota:document.getElementById('i-n').value.trim(),ar:document.getElementById('i-ar').checked,l:listaSel(),
+    end:document.getElementById('i-end').value.trim(),ig:document.getElementById('i-ig').value.trim(),
+    lat:coordEd.lat,lng:coordEd.lng};
+  const destino=parseInt(document.getElementById('i-dia').value);
+  if(itemEd){const r=achar(itemEd);Object.assign(r.c,dados);
+    const atual=S.dias.indexOf(r.d);
+    if(atual!==destino){r.d.cards.splice(r.d.cards.indexOf(r.c),1);S.dias[destino].cards.push(r.c);}}
+  else S.dias[destino].cards.push(Object.assign({id:id(),ok:false},dados));
+  diaAtivo=destino;fechar('item');salvar();render();toast(itemEd?'Cartão atualizado.':'Cartão criado.');
+}
+function apagarItem(){
+  if(!itemEd||!confirm('Apagar este cartão?'))return;
+  for(const d of S.dias){const i=d.cards.findIndex(x=>x.id===itemEd);if(i>=0){d.cards.splice(i,1);break;}}
+  fechar('item');salvar();render();toast('Cartão removido.');
+}
+
+/* ---------- lista ---------- */
+let listaEd=null;
+function pintaCores(sel){
+  document.getElementById('l-cores').innerHTML=CORES.map(c=>
+    `<button class="swatch ${c===sel?'on':''}" data-c="${c}" style="background:${HEX[c]}" onclick="selCor('${c}')"></button>`).join('');
+}
+function selCor(c){document.querySelectorAll('#l-cores .swatch').forEach(b=>b.classList.toggle('on',b.dataset.c===c));}
+function corSel(){const b=document.querySelector('#l-cores .swatch.on');return b?b.dataset.c:'azul';}
+function novaLista(){
+  listaEd=null;document.getElementById('l-tit').textContent='Nova lista';
+  document.getElementById('l-n').value='';document.getElementById('l-rot').value='';pintaCores('roxo');
+  document.getElementById('l-info').textContent=
+    'A lista aparece em todos os dias — é assim que os cartões transitam entre dias sem perder a categoria.';
+  document.getElementById('l-del').style.display='none';
+  abrir('lista');setTimeout(()=>document.getElementById('l-n').focus(),150);
+}
+function editarLista(lid){
+  const L=listaDe(lid);if(!L)return;listaEd=lid;
+  document.getElementById('l-tit').textContent='Editar lista';
+  document.getElementById('l-n').value=L.n;
+  document.getElementById('l-rot').value=L.rot||'';pintaCores(L.c);
+  const n=S.dias.reduce((a,d)=>a+d.cards.filter(c=>c.l===lid).length,0);
+  document.getElementById('l-info').innerHTML=`Esta lista tem <b>${n}</b> cartão(ões) em todo o roteiro.`;
+  document.getElementById('l-del').style.display=S.listas.length>1?'block':'none';abrir('lista');
+}
+function salvarLista(){
+  const n=document.getElementById('l-n').value.trim();
+  if(!n){toast('Dê um nome à lista.');return;}
+  const rot=document.getElementById('l-rot').value.trim();
+  if(listaEd){const L=listaDe(listaEd);L.n=n;L.c=corSel();L.rot=rot;}
+  else S.listas.push({id:id(),n,c:corSel(),rot});
+  fechar('lista');salvar();render();toast(listaEd?'Lista atualizada.':'Lista criada.');
+}
+function apagarLista(){
+  if(!listaEd)return;
+  const n=S.dias.reduce((a,d)=>a+d.cards.filter(c=>c.l===listaEd).length,0);
+  if(!confirm(n?`Apagar a lista e seus ${n} cartão(ões)?`:'Apagar esta lista?'))return;
+  S.dias.forEach(d=>d.cards=d.cards.filter(c=>c.l!==listaEd));
+  S.listas=S.listas.filter(l=>l.id!==listaEd);
+  fechar('lista');salvar();render();toast('Lista removida.');
+}
+
+/* ---------- itinerário ---------- */
+function abrirItinerario(){renderItin();abrir('itin');}
+function renderItin(){
+  document.getElementById('it-resumo').innerHTML=
+    `<b>${S.dias.length} dias</b> — ${esc(contarCidades())}.<br>
+     Troque a cidade de qualquer dia no seletor: os cartões continuam onde estão.`;
+  document.getElementById('it-lista').innerHTML=S.dias.map((d,i)=>{
+    const c=climaDoDia(i);
+    return `<div class="dline"><div class="n">${i+1}</div>
+      <div class="info"><b>${esc(rotuloDia(i))} ${c?wIcon(c.cod):''}</b><span>${d.cards.length} cartão(ões)</span></div>
+      <select onchange="trocarCidade(${i},this.value)">
+        ${Object.keys(S.cid).map(k=>`<option value="${k}" ${k===d.cid?'selected':''}>${esc(S.cid[k])}</option>`).join('')}
+      </select><button class="rm" onclick="removerDia(${i})">🗑</button></div>`;}).join('');
+  document.getElementById('it-cid').innerHTML=Object.entries(S.cid).map(([k,v])=>{
+    const n=S.dias.filter(d=>d.cid===k).length;
+    return `<div class="dline"><div class="n" style="background:var(--roxo-t);color:var(--roxo-d)">${n}</div>
+      <div class="info"><b>${esc(v)}</b><span>${n} dia(s)${GEO[v]?'':' · sem previsão'}</span></div>
+      <button class="rm" onclick="removerCidade('${k}')">🗑</button></div>`;}).join('');
+  document.getElementById('it-data').value=S.inicio||'';
+  document.getElementById('it-quem').value=S.quem||'';
+  document.getElementById('it-fundo').value=S.fundo||'';
+}
+function trocarCidade(i,k){S.dias[i].cid=k;salvar();renderItin();render();buscarClima();
+  toast(`Dia ${i+1} agora é em ${nomeCid(k)}.`);}
+function addDia(){
+  const ult=S.dias[S.dias.length-1];
+  S.dias.push({id:id(),cid:ult?ult.cid:Object.keys(S.cid)[0],cards:[]});
+  salvar();renderItin();render();toast(`Dia ${S.dias.length} adicionado.`);
+}
+function removerDia(i){
+  if(S.dias.length<=1){toast('O roteiro precisa de pelo menos um dia.');return;}
+  const d=S.dias[i];
+  if(d.cards.length&&!confirm(`O Dia ${i+1} tem ${d.cards.length} cartão(ões). Remover mesmo assim?`))return;
+  S.dias.splice(i,1);if(diaAtivo>=S.dias.length)diaAtivo=S.dias.length-1;
+  salvar();renderItin();render();toast('Dia removido.');
+}
+function addCidade(){
+  const inp=document.getElementById('it-nova'),n=inp.value.trim();
+  if(!n){toast('Escreva o nome da cidade.');return;}
+  S.cid['c'+(++uid)]=n;inp.value='';salvar();renderItin();buscarClima(true);
+  toast(GEO[n]?`${n} adicionada, com previsão.`:`${n} adicionada. Sem previsão para esta cidade.`);
+}
+function removerCidade(k){
+  const n=S.dias.filter(d=>d.cid===k).length;
+  if(n){toast(`${nomeCid(k)} está em ${n} dia(s). Troque a cidade desses dias primeiro.`);return;}
+  if(Object.keys(S.cid).length<=1){toast('Mantenha ao menos uma cidade.');return;}
+  delete S.cid[k];salvar();renderItin();render();toast('Cidade removida.');
+}
+function mudarInicio(v){S.inicio=v;salvar();renderItin();render();buscarClima(true);
+  toast(v?'Datas aplicadas ao roteiro.':'Datas removidas.');}
+function mudarNome(v){S.quem=v.trim();salvar();renderHd();}
+function mudarFundo(v){
+  S.fundo=v.trim();salvar();aplicarFundo();
+  toast(S.fundo?'Fundo trocado.':'Fundo padrão restaurado.');
+}
+function aplicarFundo(){
+  const u=S.fundo||'fundo.jpg';
+  document.getElementById('fundo').style.backgroundImage=`url('${u}')`;
+  const ola=document.getElementById('ola');
+  if(ola)ola.style.setProperty('--olabg',`url('${u}')`);
+}
+
+/* ---------- logística / descobrir ---------- */
+/* ==========================================================
+   LOGÍSTICA — voos, hospedagem e documentos
+   ========================================================== */
+const LOGDEF={
+  voos:{nome:'Voo',ic:'✈',sec:'Voos',
+    campos:[
+      {k:'t',l:'Trecho',ph:'GRU → BOG',obrig:true},
+      {k:'cod',l:'Voo',ph:'AV 123'},
+      {k:'Data',l:'Data e hora de partida',ph:'Sáb 14/03 · 06:20'},
+      {k:'Chegada',l:'Chegada',ph:'09:50'},
+      {k:'Duração',l:'Duração',ph:'6h30'},
+      {k:'Localizador',l:'Localizador',ph:'ABC123'},
+      {k:'Assentos',l:'Assentos',ph:'12A e 12B'},
+      {k:'Bagagem',l:'Bagagem',ph:'1 despachada por pessoa'}
+    ]},
+  hoteis:{nome:'Hospedagem',ic:'⌂',sec:'Hospedagem',
+    campos:[
+      {k:'t',l:'Nome e cidade',ph:'Casa India Catalina · Cartagena',obrig:true},
+      {k:'cod',l:'Noites',ph:'3 noites'},
+      {k:'Check-in',l:'Check-in',ph:'Sex 20/03 · 15:00'},
+      {k:'Check-out',l:'Check-out',ph:'Seg 23/03 · 12:00'},
+      {k:'Endereço',l:'Endereço',ph:'Calle del Curato #38-89'},
+      {k:'Reserva',l:'Código da reserva',ph:'BK-99887'},
+      {k:'Telefone',l:'Telefone',ph:'+57 5 664 0000'},
+      {k:'Valor',l:'Valor',ph:'COP 1.200.000'}
+    ]},
+  docs:{nome:'Documento',ic:'▤',sec:'Documentos e dinheiro',
+    campos:[
+      {k:'t',l:'O que é',ph:'Seguro viagem',obrig:true},
+      {k:'cod',l:'Referência',ph:'2 pax'},
+      {k:'Número',l:'Número / apólice',ph:'—'},
+      {k:'Validade',l:'Validade',ph:'12/2028'},
+      {k:'Emergência',l:'Contato de emergência',ph:'+55 11 0000-0000'},
+      {k:'Onde',l:'Onde está guardado',ph:'Cópia no e-mail e na mochila'}
+    ]}
+};
+function renderLog(){
+  const bl=(tipo)=>{
+    const D=LOGDEF[tipo],arr=S.log[tipo]||[];
+    let h=`<div class="sec">${D.sec}</div>`;
+    if(!arr.length){
+      h+=`<div class="lcd" style="text-align:center;padding:22px">
+        <div style="font-size:30px">${D.ic}</div>
+        <div style="font-size:14px;font-weight:700;margin-top:8px">Nada cadastrado</div>
+        <div style="font-size:13px;color:var(--ink2);font-weight:500;margin-top:4px;line-height:1.5">
+          Toque em ＋ no topo para adicionar ${D.nome.toLowerCase()}.</div></div>`;
+      return h;
+    }
+    h+=arr.map(x=>{
+      const f=Object.entries(x.f||{}).filter(([k,v])=>v&&String(v).trim()&&v!=='—');
+      return `<div class="lcd" onclick="editarLog('${tipo}','${x.id}')">
+        <div class="l1"><div class="ic">${D.ic}</div>
+          <div class="t">${esc(x.t)}</div>
+          ${x.cod?`<div class="cod">${esc(x.cod)}</div>`:''}</div>
+        ${f.length?`<div class="gr">${f.map(([k,v])=>
+          `<div class="f"><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('')}</div>`:''}
+        ${x.obs?`<div style="font-size:13px;color:var(--ink2);font-weight:500;line-height:1.5;
+          margin-top:10px;padding-top:10px;border-top:1px solid var(--painel)">${esc(x.obs)}</div>`:''}
+      </div>`;}).join('');
+    h+=`<button class="lcd" style="width:100%;text-align:left;border:none;font-size:13.5px;
+      font-weight:700;color:var(--azul);padding:13px" onclick="novoLog('${tipo}')">
+      ＋ Adicionar ${D.nome.toLowerCase()}</button>`;
+    return h;
+  };
+  document.getElementById('log').innerHTML=bl('voos')+bl('hoteis')+bl('docs');
+}
+let logEd=null,logTipo='voos';
+function trocarTipoLog(b){
+  document.querySelectorAll('#g-tipo .chip').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');logTipo=b.dataset.v;
+  pintaCamposLog(logEd?acharLog(logEd):null);
+}
+function pintaCamposLog(reg){
+  const D=LOGDEF[logTipo];
+  document.getElementById('g-campos').innerHTML=D.campos.map(c=>{
+    const v=reg?(c.k==='t'?reg.t:c.k==='cod'?reg.cod:(reg.f||{})[c.k]||''):'';
+    return `<label class="fl">${esc(c.l)}${c.obrig?' *':''}</label>
+      <input class="fi" data-k="${c.k}" value="${esc(v)}" placeholder="${esc(c.ph)}">`;
+  }).join('');
+}
+function acharLog(lid){
+  for(const t of Object.keys(LOGDEF)){
+    const x=(S.log[t]||[]).find(y=>y.id===lid);
+    if(x)return x;
+  }
+  return null;
+}
+function novoLog(tipo){
+  logEd=null;logTipo=(typeof tipo==='string'&&LOGDEF[tipo])?tipo:'voos';
+  document.getElementById('g-tit').textContent='Novo registro';
+  document.querySelectorAll('#g-tipo .chip').forEach(b=>b.classList.toggle('on',b.dataset.v===logTipo));
+  document.getElementById('g-obs2').value='';
+  document.getElementById('g-del').style.display='none';
+  pintaCamposLog(null);abrir('logi');
+  setTimeout(()=>{const i=document.querySelector('#g-campos input');if(i)i.focus();},150);
+}
+function editarLog(tipo,lid){
+  const reg=acharLog(lid);if(!reg)return;
+  logEd=lid;logTipo=tipo;
+  document.getElementById('g-tit').textContent='Editar '+LOGDEF[tipo].nome.toLowerCase();
+  document.querySelectorAll('#g-tipo .chip').forEach(b=>b.classList.toggle('on',b.dataset.v===tipo));
+  document.getElementById('g-obs2').value=reg.obs||'';
+  document.getElementById('g-del').style.display='block';
+  pintaCamposLog(reg);abrir('logi');
+}
+function salvarLog(){
+  const ins=[...document.querySelectorAll('#g-campos input')];
+  const vals={};ins.forEach(i=>vals[i.dataset.k]=i.value.trim());
+  if(!vals.t){toast('Preencha o primeiro campo.');return;}
+  const f={};
+  LOGDEF[logTipo].campos.forEach(c=>{if(c.k!=='t'&&c.k!=='cod'&&vals[c.k])f[c.k]=vals[c.k];});
+  const reg={t:vals.t,cod:vals.cod||'',f,obs:document.getElementById('g-obs2').value.trim()};
+  if(logEd){
+    /* pode ter mudado de tipo: remove de onde estava e grava no tipo atual */
+    let antigo=null;
+    Object.keys(LOGDEF).forEach(t=>{
+      const i=(S.log[t]||[]).findIndex(x=>x.id===logEd);
+      if(i>=0){antigo=S.log[t][i];if(t!==logTipo)S.log[t].splice(i,1);}
+    });
+    if(antigo&&(S.log[logTipo]||[]).some(x=>x.id===logEd))Object.assign(antigo,reg);
+    else{S.log[logTipo]=S.log[logTipo]||[];S.log[logTipo].push(Object.assign({id:logEd},reg));}
+  }else{
+    S.log[logTipo]=S.log[logTipo]||[];
+    S.log[logTipo].push(Object.assign({id:id()},reg));
+  }
+  fechar('logi');salvar();renderLog();toast(logEd?'Registro atualizado.':'Registro criado.');
+}
+function apagarLog(){
+  if(!logEd||!confirm('Apagar este registro?'))return;
+  Object.keys(LOGDEF).forEach(t=>{
+    const i=(S.log[t]||[]).findIndex(x=>x.id===logEd);
+    if(i>=0)S.log[t].splice(i,1);
+  });
+  fechar('logi');salvar();renderLog();toast('Registro removido.');
+}
+function renderDesc(){
+  const cs=Object.keys(S.cid).filter(k=>CAT.some(x=>x.c===k));
+  document.getElementById('desc').innerHTML=cs.map(c=>
+    `<div class="sec">${esc(nomeCid(c))}</div>`+
+    CAT.filter(x=>x.c===c).map(x=>`<div class="lcd">
+      <div class="l1"><div class="ic" style="background:var(--oro-t);color:var(--oro-d)">★</div>
+        <div class="t">${esc(x.t)}</div><div class="cod">${esc(x.rate)}</div></div>
+      ${x.nota?`<div style="font-size:13px;color:var(--ink2);line-height:1.45;margin-top:9px;font-weight:500">${esc(x.nota)}</div>`:''}
+      <div class="gr"><div class="f"><span>Duração</span><b>${esc(x.dur||'—')}</b></div>
+        <div class="f"><span>Local</span><b>${x.ar?'Ao ar livre':'Coberto'}</b></div>
+        <div class="f full"><button class="btnf" onclick="addDoCat('${esc(x.t).replace(/'/g,"\\'")}')">Adicionar ao Dia ${diaAtivo+1}</button></div>
+      </div></div>`).join('')).join('')||'<div class="wcard">Sem sugestões para as cidades atuais.</div>';
+}
+function addDoCat(nome){
+  const x=CAT.find(y=>y.t===nome);if(!x)return;
+  const d=S.dias[diaAtivo];
+  if(x.c!==d.cid&&!confirm(`${x.t} fica em ${nomeCid(x.c)}, mas o Dia ${diaAtivo+1} é em ${nomeCid(d.cid)}. Adicionar mesmo assim?`))return;
+  d.cards.push({id:id(),t:x.t,l:listaDe(x.l)?x.l:S.listas[0].id,ok:false,h:'',dur:x.dur||'',
+    rate:x.rate||'',bai:x.bai||'',nota:x.nota||'',ar:!!x.ar,
+    lat:x.lat||null,lng:x.lng||null,end:'',ig:''});
+  salvar();render();renderDesc();toast(`Adicionado ao Dia ${diaAtivo+1}.`);
+}
+
+function verTela(id){
+  document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('on'));
+  const b=document.querySelector(`.nav button[data-s="${id}"]`);if(b)b.classList.add('on');
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  if(id==='s-log')renderLog();
+  if(id==='s-desc')renderDesc();
+  if(id==='s-clima')renderClima();
+  if(id==='s-mapa')renderMapa();
+}
+document.querySelectorAll('.nav button').forEach(b=>b.addEventListener('click',()=>{
+  if(b.id==='btn-ia'){abrirIA();return;}
+  verTela(b.dataset.s);
+}));
+
+/* ==========================================================
+   MAPA INTERATIVO — Leaflet + OpenStreetMap
+   ========================================================== */
+let MAP=null,camada=null,mFiltro='todos';
+const CORDIA=['#0C66E4','#F0483E','#22A06B','#E8A317','#8270DB','#0F8B8D','#E8503A','#5BA83F','#9C27B0',
+  '#FF6F00','#00838F','#6A1B9A','#C62828','#2E7D32','#1565C0','#EF6C00'];
+function corDoDia(i){return CORDIA[i%CORDIA.length];}
+function pontos(){
+  const out=[];
+  S.dias.forEach((d,i)=>d.cards.forEach(c=>{
+    if(c.lat&&c.lng)out.push({dia:i,c,cidade:nomeCid(d.cid)});
+  }));
+  return out;
+}
+function irMapa(cid){
+  const r=achar(cid);if(!r)return;
+  if(!r.c.lat){
+    if(r.c.end){window.open('https://www.google.com/maps/search/?api=1&query='+
+      encodeURIComponent(r.c.end+', '+nomeCid(r.d.cid)+', Colombia'),'_blank');return;}
+    toast('Este cartão ainda não tem posição. Abra e toque em Localizar.');return;
+  }
+  mFiltro='todos';verTela('s-mapa');
+  setTimeout(()=>{
+    if(!MAP)return;
+    MAP.setView([r.c.lat,r.c.lng],16,{animate:true});
+    (camada?camada.getLayers():[]).forEach(l=>{if(l._rutaId===cid)l.openPopup();});
+  },420);
+}
+function abrirIG(cid){
+  const r=achar(cid);if(!r||!r.c.ig)return;
+  let u=r.c.ig.trim();
+  if(/^https?:\/\//i.test(u))window.open(u,'_blank');
+  else window.open('https://instagram.com/'+u.replace(/^@/,''),'_blank');
+}
+function renderMapa(){
+  const wrap=document.getElementById('mapwrap');
+  const pts=pontos();
+  /* filtros: todos + cada dia que tenha ponto */
+  const comPtos=[...new Set(pts.map(p=>p.dia))].sort((a,b)=>a-b);
+  document.getElementById('mfil').innerHTML=
+    `<button class="${mFiltro==='todos'?'on':''}" onclick="filtrarMapa('todos')">Viagem inteira</button>`+
+    comPtos.map(i=>`<button class="${mFiltro===i?'on':''}" onclick="filtrarMapa(${i})">Dia ${i+1}</button>`).join('');
+  document.getElementById('mapa-sub').textContent=
+    pts.length?`${pts.length} lugar(es) marcado(s) · toque num pino`:'Nenhum lugar marcado ainda';
+
+  const antigo=wrap.querySelector('.mvazio');if(antigo)antigo.remove();
+  if(!pts.length){
+    const v=document.createElement('div');v.className='mvazio';
+    v.innerHTML=`<div class="e">🗺️</div><b>O mapa está vazio</b>
+      <p>Abra um cartão, escreva o endereço e toque em <b>Localizar no mapa</b>. O pino aparece aqui,
+      com a cor do dia.</p><button onclick="verTela('s-board')">Voltar ao quadro</button>`;
+    wrap.appendChild(v);
+    if(MAP){MAP.remove();MAP=null;}
+    return;
+  }
+  if(typeof L==='undefined'){
+    const v=document.createElement('div');v.className='mvazio';
+    v.innerHTML=`<div class="e">📡</div><b>Mapa não carregou</b>
+      <p>O mapa precisa de internet na primeira abertura. Confira a conexão e volte a esta aba.</p>
+      <button onclick="renderMapa()">Tentar de novo</button>`;
+    wrap.appendChild(v);return;
+  }
+  if(!MAP){
+    MAP=L.map('map',{zoomControl:true,attributionControl:true});
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+      {maxZoom:19,attribution:'&copy; OpenStreetMap &copy; CARTO'}).addTo(MAP);
+  }
+  if(camada){MAP.removeLayer(camada);}
+  camada=L.layerGroup().addTo(MAP);
+
+  const vis=mFiltro==='todos'?pts:pts.filter(p=>p.dia===mFiltro);
+  /* linhas ligando a ordem do dia */
+  const porDia={};
+  vis.forEach(p=>(porDia[p.dia]=porDia[p.dia]||[]).push(p));
+  Object.entries(porDia).forEach(([dia,arr])=>{
+    const ord=arr.slice().sort((a,b)=>(a.c.h||'99').localeCompare(b.c.h||'99'));
+    if(ord.length>1)L.polyline(ord.map(p=>[p.c.lat,p.c.lng]),
+      {color:corDoDia(+dia),weight:3,opacity:.55,dashArray:'6,7'}).addTo(camada);
+    ord.forEach((p,k)=>{
+      const cor=corDoDia(p.dia);
+      const ic=L.divIcon({className:'pino'+(p.c.ok?' feito':''),iconSize:[30,30],iconAnchor:[15,28],
+        html:`<div class="b" style="background:${cor}"><span>${k+1}</span></div>`});
+      const mk=L.marker([p.c.lat,p.c.lng],{icon:ic}).addTo(camada);
+      mk._rutaId=p.c.id;
+      const meta=[p.c.h,p.c.dur,p.c.rate?'★ '+p.c.rate:''].filter(Boolean).join(' · ');
+      const igU=p.c.ig?(/^https?:\/\//i.test(p.c.ig)?p.c.ig:'https://instagram.com/'+p.c.ig.replace(/^@/,'')):'';
+      mk.bindPopup(`<div class="pop"><b>${esc(p.c.t)}</b>
+        <span class="m">Dia ${p.dia+1} · ${esc(p.cidade)}${meta?' · '+esc(meta):''}</span>
+        ${p.c.end?`<span class="m">${esc(p.c.end)}</span>`:''}
+        <div class="bt">
+          <a href="https://www.google.com/maps/dir/?api=1&destination=${p.c.lat},${p.c.lng}" target="_blank">Como chegar</a>
+          ${igU?`<a class="ig" href="${esc(igU)}" target="_blank">Instagram</a>`:''}
+        </div></div>`);
+    });
+  });
+  /* legenda */
+  const dias=[...new Set(vis.map(p=>p.dia))].sort((a,b)=>a-b).slice(0,6);
+  document.getElementById('mlegenda').innerHTML=dias.map(i=>
+    `<div class="lg"><span class="pt2" style="background:${corDoDia(i)}"></span>Dia ${i+1} · ${esc(nomeCid(S.dias[i].cid))}</div>`).join('')
+    +(([...new Set(vis.map(p=>p.dia))].length>6)?'<div class="lg" style="color:var(--ink3)">e mais…</div>':'');
+  setTimeout(()=>{MAP.invalidateSize();ajustarMapa();},120);
+}
+function filtrarMapa(v){mFiltro=v;renderMapa();}
+function ajustarMapa(){
+  if(!MAP||!camada)return;
+  const ms=camada.getLayers().filter(l=>l.getLatLng);
+  if(!ms.length)return;
+  MAP.fitBounds(L.latLngBounds(ms.map(l=>l.getLatLng())),{padding:[46,46],maxZoom:15});
+}
+
+/* ==========================================================
+   RutAI
+   ========================================================== */
+const SUGS=['Vai chover no dia 2?','Esse dia está cheio demais','O que cabe hoje?',
+  'Onde jantar bem aqui?','Quero um dia a mais em Cartagena','Resumo do dia'];
+const SUGS_LIVRE=['Estamos cansados, deixa o dia 3 mais leve','Um jantar romântico com vista',
+  'Trocar o passeio da tarde por algo coberto','O que fazer perto do hotel à noite?',
+  'Encaixar uma aula de salsa','Refaça o dia 5 pensando em fotografia'];
+function abrirIA(){
+  abrir('rutai');
+  const livre=!!SY.fn;
+  document.getElementById('ia-st').textContent=livre?'conversa livre':'pronta para ajustar o roteiro';
+  if(!document.getElementById('fsc').children.length){
+    const nm=S.quem?`, ${S.quem}`:'';
+    diz('ia',`${saudacaoTexto()}${nm}. Sou a <b>RutAI</b>.<br><br>`+
+      (livre
+        ? `Podem falar do jeito que vier — <b>"a gente tá cansado, deixa a tarde livre"</b>, <b>"um lugar bom pra jantar sem gente demais"</b>. Eu leio o quadro e a previsão, monto a proposta, e vocês marcam o que aceitam antes de qualquer coisa mudar.`
+        : `Falem comigo por voz ou texto — <b>"chove no dia 2"</b>, <b>"esse dia está cheio"</b>, <b>"mais um dia em Cartagena"</b>. Eu monto a proposta, vocês marcam o que aceitam e só então o quadro muda.`));
+  }
+  document.getElementById('sugs').innerHTML=(livre?SUGS_LIVRE:SUGS).map(s=>
+    `<button onclick="perguntar('${s.replace(/'/g,"\\'")}')">${esc(s)}</button>`).join('');
+}
+function diz(quem,html){
+  const s=document.getElementById('fsc');const b=document.createElement('div');
+  b.className='bal '+quem;b.innerHTML=html;s.appendChild(b);s.scrollTop=s.scrollHeight;return b;
+}
+let plano=null;
+function interpretar(txt){
+  const t=txt.toLowerCase();
+  const m=t.match(/dia\s*(\d+)/);
+  const alvo=(m&&parseInt(m[1])-1>=0&&parseInt(m[1])-1<S.dias.length)?parseInt(m[1])-1:diaAtivo;
+  const d=S.dias[alvo];
+  const flexId=(S.listas.find(l=>/flex/i.test(l.n))||S.listas[S.listas.length-1]).id;
+  const novoCard=x=>({id:id(),t:x.t,l:listaDe(x.l)?x.l:flexId,ok:false,h:'',dur:x.dur||'',
+    rate:x.rate||'',bai:x.bai||'',nota:x.nota||'',ar:!!x.ar});
+
+  if(/vai chover|previs|tempo (no|do|em)|clima (no|do|de)|faz sol|temperatura|quantos graus/.test(t)){
+    const c=climaDoDia(alvo);
+    if(!c)return{fala:S.inicio
+      ?`Não tenho previsão para o Dia ${alvo+1}. Ou está além dos 16 dias, ou a cidade não tem coordenada.`
+      :`Preciso da <b>data de início</b> da viagem. Está no ⚙ do topo.`,plano:null};
+    const ar=d.cards.filter(x=>x.ar);
+    let f=`<b>Dia ${alvo+1} · ${esc(c.cidade)}</b><br>${wIcon(c.cod)} ${esc(wTxt(c.cod))}<br>
+      Máxima <b>${c.max}°</b>, mínima ${c.min}° · <b>${c.prob}%</b> de chance de chuva.`;
+    if(chuvaNoDia(alvo)&&ar.length){
+      f+=`<br><br>Tem ${ar.length} cartão(ões) ao ar livre nesse dia. Quer que eu remaneje?`;
+      return{fala:f,plano:planoChuva(alvo)};
+    }
+    f+=ar.length?`<br><br>Os ${ar.length} cartão(ões) ao ar livre devem ficar tranquilos.`
+      :`<br><br>Não há nada ao ar livre marcado nesse dia.`;
+    return{fala:f,plano:null};
+  }
+  if(/chov|chuva|clima ruim|tempo ruim|frio demais|calor demais|molhad/.test(t)){
+    const p=planoChuva(alvo);
+    if(!p)return{fala:`No Dia ${alvo+1} não vi nada ao ar livre para remanejar.`,plano:null};
+    const c=climaDoDia(alvo);
+    return{fala:`Vamos proteger o Dia ${alvo+1}.${c?` A previsão dá ${c.prob}% de chuva.`:''} Marque o que aceitam:`,plano:p};
+  }
+  if(/cheio|pesad|apertad|corrid|muita coisa|cansa|folga|tranquil|leve|alivi|descans/.test(t)){
+    const flex=d.cards.filter(c=>c.l===flexId||!c.h);
+    if(!flex.length)return{fala:`O Dia ${alvo+1} tem ${d.cards.length} cartões, todos com hora marcada. Digam qual âncora posso mexer.`,plano:null};
+    const dest=alvo+1<S.dias.length?alvo+1:alvo-1;
+    return{fala:`O Dia ${alvo+1} está com ${d.cards.length} cartões. Os flexíveis dão para empurrar:`,
+      plano:{titulo:`Aliviar o Dia ${alvo+1}`,itens:flex.map(c=>({
+        txt:`Mover <b>${esc(c.t)}</b> para o Dia ${dest+1}`,
+        acao:()=>{const i=d.cards.findIndex(x=>x.id===c.id);if(i<0)return;
+          const [x]=d.cards.splice(i,1);S.dias[dest].cards.push(x);}}))}};
+  }
+  if(/mais um dia|um dia a mais|estender|mais tempo|acrescent.*dia|adicionar.*dia/.test(t)){
+    const chave=Object.keys(S.cid).find(k=>t.includes(S.cid[k].toLowerCase()));
+    const cid=chave||d.cid;
+    const idxs=S.dias.map((x,i)=>x.cid===cid?i:-1).filter(i=>i>=0);
+    if(!idxs.length)return{fala:`Não achei dias em ${esc(nomeCid(cid))} no roteiro.`,plano:null};
+    const ult=idxs[idxs.length-1];
+    return{fala:`Posso inserir um dia extra em <b>${esc(nomeCid(cid))}</b>, depois do Dia ${ult+1}. O roteiro passa a ter ${S.dias.length+1} dias.`,
+      plano:{titulo:'Estender a estadia',itens:[{
+        txt:`Novo dia vazio em <b>${esc(nomeCid(cid))}</b> na posição ${ult+2}`,
+        acao:()=>S.dias.splice(ult+1,0,{id:id(),cid,cards:[]})}]}};
+  }
+  if(/menos um dia|tirar um dia|encurtar|reduzir.*dia|cortar.*dia/.test(t)){
+    const chave=Object.keys(S.cid).find(k=>t.includes(S.cid[k].toLowerCase()));
+    const cid=chave||d.cid;
+    const idxs=S.dias.map((x,i)=>x.cid===cid?i:-1).filter(i=>i>=0);
+    if(idxs.length<2)return{fala:`${esc(nomeCid(cid))} tem só ${idxs.length} dia. Tirar deixaria a cidade de fora.`,plano:null};
+    const vazio=idxs.find(i=>!S.dias[i].cards.length);
+    const alvoRem=vazio!==undefined?vazio:idxs[idxs.length-1];
+    const qtd=S.dias[alvoRem].cards.length;
+    return{fala:`Posso remover o Dia ${alvoRem+1} de ${esc(nomeCid(cid))}.`+
+      (qtd?` Ele tem ${qtd} cartão(ões) — levo todos para o dia anterior da mesma cidade.`:' Ele está vazio.'),
+      plano:{titulo:'Encurtar a estadia',itens:[{
+        txt:`Remover o <b>Dia ${alvoRem+1}</b>`+(qtd?` e realocar ${qtd} cartão(ões)`:''),
+        acao:()=>{if(qtd){const ant=idxs.filter(i=>i<alvoRem).pop();
+            S.dias[ant!==undefined?ant:idxs[0]].cards.push(...S.dias[alvoRem].cards);}
+          S.dias.splice(alvoRem,1);if(diaAtivo>=S.dias.length)diaAtivo=S.dias.length-1;}}]}};
+  }
+  if(/jantar|almoç|comer|restaurante|comida|fome|\bbar\b|beber/.test(t)){
+    const cand=CAT.filter(x=>x.c===d.cid&&x.l==='l3');
+    if(!cand.length)return{fala:`Não tenho lugar de comida catalogado para ${esc(nomeCid(d.cid))}. Digam o nome e eu crio o cartão.`,plano:null};
+    return{fala:`Bem avaliados para comer em ${esc(nomeCid(d.cid))}. Marque o que quiserem no Dia ${alvo+1}:`,
+      plano:{titulo:'Comer & beber',itens:cand.map(x=>({
+        txt:`<b>${esc(x.t)}</b> · ★ ${x.rate}${x.bai?' · '+esc(x.bai):''}`,
+        acao:()=>d.cards.push(novoCard(x))}))}};
+  }
+  if(/cabe|encaix|sugest|sugir|o que fazer|vazio|indica|recomend|opç|passeio/.test(t)){
+    const tem=d.cards.map(c=>c.t);
+    let cand=CAT.filter(x=>x.c===d.cid&&!tem.includes(x.t));
+    const chove=chuvaNoDia(alvo);
+    if(chove)cand=cand.filter(x=>!x.ar).concat(cand.filter(x=>x.ar));
+    cand=cand.slice(0,3);
+    if(!cand.length)return{fala:`Já coloquei tudo que tenho de bom para ${esc(nomeCid(d.cid))} no quadro.`,plano:null};
+    return{fala:`Para o Dia ${alvo+1} em ${esc(nomeCid(d.cid))}${chove?', com a chuva prevista priorizei lugares cobertos':''}:`,
+      plano:{titulo:`Sugestões para o Dia ${alvo+1}`,itens:cand.map(x=>({
+        txt:`<b>${esc(x.t)}</b> · ★ ${x.rate} · ${esc(x.dur||'')}${x.ar?' · ao ar livre':' · coberto'}${x.nota?'<br>'+esc(x.nota):''}`,
+        acao:()=>d.cards.push(novoCard(x))}))}};
+  }
+  if(/mov|passa|troca|adianta|adia|empurra|leva|transfer/.test(t)){
+    let alvoC=null,orig=null;
+    for(const dd of S.dias){for(const c of dd.cards){
+      const ws=c.t.toLowerCase().split(/[\s,·]+/).filter(w=>w.length>4);
+      if(ws.some(w=>t.includes(w))){alvoC=c;orig=dd;break;}}
+      if(alvoC)break;}
+    if(alvoC&&m&&S.dias[alvo]!==orig)
+      return{fala:`Entendi: <b>${esc(alvoC.t)}</b> sai do Dia ${S.dias.indexOf(orig)+1} e vai para o Dia ${alvo+1}.`,
+        plano:{titulo:'Remanejar',itens:[{
+          txt:`<b>${esc(alvoC.t)}</b> → Dia ${alvo+1} (${esc(nomeCid(S.dias[alvo].cid))})`,
+          acao:()=>{const i=orig.cards.findIndex(x=>x.id===alvoC.id);if(i<0)return;
+            const [x]=orig.cards.splice(i,1);S.dias[alvo].cards.push(x);}}]}};
+    return{fala:`Não identifiquei qual cartão mover. Digam: <b>"mova o Museu Botero para o dia 3"</b>.`,plano:null};
+  }
+  if(/(dia\s*\d+).*(é|fica|vai ser|ficar) em|mudar.*cidade|trocar.*cidade/.test(t)){
+    const chave=Object.keys(S.cid).find(k=>t.includes(S.cid[k].toLowerCase()));
+    if(!chave)return{fala:`Qual cidade? Digam: <b>"o dia 5 vai ser em Cartagena"</b>.`,plano:null};
+    return{fala:`Posso mudar o Dia ${alvo+1} de ${esc(nomeCid(d.cid))} para ${esc(nomeCid(chave))}.`,
+      plano:{titulo:'Trocar a cidade do dia',itens:[{
+        txt:`Dia ${alvo+1}: ${esc(nomeCid(d.cid))} → <b>${esc(nomeCid(chave))}</b>`,
+        acao:()=>{S.dias[alvo].cid=chave;}}]}};
+  }
+  if(/hoje|resumo|como está|agenda|programa|o que tem|roteiro/.test(t)){
+    if(!d.cards.length)return{fala:`O Dia ${alvo+1} está vazio. Peçam sugestões que eu preencho.`,plano:null};
+    const c=climaDoDia(alvo);
+    const cab=`<b>Dia ${alvo+1} · ${esc(nomeCid(d.cid))}</b> · ${esc(rotuloDia(alvo))}`+
+      (c?`<br>${wIcon(c.cod)} ${c.max}°/${c.min}° · ${c.prob}% de chuva`:'');
+    const lin=S.listas.map(L=>{
+      const cs=d.cards.filter(x=>x.l===L.id);
+      return cs.length?`<b>${esc(L.n)}</b><br>`+cs.map(x=>
+        `· ${x.h?x.h+' — ':''}${esc(x.t)}${x.ok?' ✓':''}`).join('<br>'):'';
+    }).filter(Boolean).join('<br><br>');
+    return{fala:cab+'<br><br>'+lin,plano:null};
+  }
+  return{fala:`Não peguei o pedido. Posso: consultar a <b>previsão</b>, remanejar por <b>chuva</b>, <b>aliviar</b> um dia cheio, <b>sugerir</b> o que cabe, indicar <b>onde comer</b>, <b>mover</b> um cartão, <b>adicionar</b> ou <b>tirar</b> um dia, <b>trocar a cidade</b> de um dia e <b>resumir</b> o dia.`,plano:null};
+}
+function planoChuva(alvo){
+  const d=S.dias[alvo];
+  const flexId=(S.listas.find(l=>/flex/i.test(l.n))||S.listas[S.listas.length-1]).id;
+  const fora=d.cards.filter(c=>c.ar);
+  if(!fora.length)return null;
+  let dest=-1;
+  for(let i=0;i<S.dias.length;i++)
+    if(i!==alvo&&S.dias[i].cid===d.cid&&!chuvaNoDia(i)){dest=i;break;}
+  if(dest<0)dest=alvo+1<S.dias.length?alvo+1:alvo-1;
+  const cobertos=CAT.filter(x=>x.c===d.cid&&!x.ar&&!d.cards.some(c=>c.t===x.t)).slice(0,2);
+  return{titulo:'Plano de chuva',itens:
+    fora.map(c=>({txt:`Adiar <b>${esc(c.t)}</b> para o Dia ${dest+1}`,
+      acao:()=>{const i=d.cards.findIndex(x=>x.id===c.id);if(i<0)return;
+        const [x]=d.cards.splice(i,1);S.dias[dest].cards.push(x);}}))
+    .concat(cobertos.map(x=>({txt:`Colocar <b>${esc(x.t)}</b> (★ ${x.rate}, coberto) no lugar`,
+      acao:()=>d.cards.push({id:id(),t:x.t,l:listaDe(x.l)?x.l:flexId,ok:false,h:'',dur:x.dur||'',
+        rate:x.rate||'',bai:x.bai||'',nota:x.nota||'',ar:false})})))};
+}
+/* ======= CONVERSA LIVRE via Cloud Function ======= */
+let hist=[];
+function retratoDoQuadro(){
+  return {
+    hoje:new Date().toISOString().slice(0,10),
+    diaAberto:diaAtivo+1,
+    inicio:S.inicio||null,
+    viajantes:S.quem||null,
+    cidades:S.cid,
+    listas:S.listas.map(l=>({id:l.id,nome:l.n})),
+    dias:S.dias.map((d,i)=>({
+      dia:i+1,cidade:nomeCid(d.cid),data:S.inicio?rotuloDia(i):null,
+      clima:(()=>{const c=climaDoDia(i);return c?{desc:wTxt(c.cod),max:c.max,min:c.min,chuva:c.prob}:null;})(),
+      cartoes:d.cards.map(c=>({id:c.id,titulo:c.t,lista:c.l,hora:c.h||null,duracao:c.dur||null,
+        nota:c.rate||null,bairro:c.bai||null,aoArLivre:!!c.ar,feito:!!c.ok}))
+    })),
+    catalogo:CAT.map(x=>({titulo:x.t,cidade:nomeCid(x.c),lista:x.l,nota:x.rate,
+      duracao:x.dur,bairro:x.bai||null,aoArLivre:!!x.ar})),
+    logistica:{
+      voos:(S.log.voos||[]).map(x=>({trecho:x.t,voo:x.cod,...x.f})),
+      hospedagem:(S.log.hoteis||[]).map(x=>({nome:x.t,noites:x.cod,...x.f})),
+      documentos:(S.log.docs||[]).map(x=>({item:x.t,ref:x.cod,...x.f}))
+    }
+  };
+}
+const SISTEMA=`Você é a RutAI, assistente de um app de roteiro de viagem chamado Ruta, usado por um casal brasileiro viajando pela Colômbia. Fala português do Brasil, com tom próximo e direto, sem formalidade excessiva e sem emojis em excesso.
+
+Você recebe o estado atual do quadro em JSON e o pedido dos viajantes. Você NUNCA altera nada sozinha: você PROPÕE ações, e o app mostra as propostas com caixas de confirmação. Só o que for marcado é aplicado.
+
+Responda SEMPRE e SOMENTE com um JSON válido, sem markdown e sem crases, neste formato:
+{"fala":"sua resposta em português, curta (até 4 frases), pode usar <b> para negrito e <br> para quebra de linha","titulo":"título curto do bloco de propostas, ou string vazia","acoes":[...]}
+
+Cada ação em "acoes" tem um "tipo" e um "texto" (descrição curta em português, que o viajante lê antes de confirmar). Tipos disponíveis:
+
+{"tipo":"mover","cartaoId":"<id>","paraDia":<n>,"texto":"..."}
+{"tipo":"criar","dia":<n>,"lista":"<idDaLista>","titulo":"...","hora":"09:00","duracao":"2h","nota":"4,7","bairro":"...","descricao":"...","aoArLivre":true,"texto":"..."}
+{"tipo":"remover","cartaoId":"<id>","texto":"..."}
+{"tipo":"editar","cartaoId":"<id>","campos":{"hora":"10:00","titulo":"..."},"texto":"..."}
+{"tipo":"addDia","apos":<n>,"cidade":"<nome exato da cidade>","texto":"..."}
+{"tipo":"removerDia","dia":<n>,"texto":"..."}
+{"tipo":"trocarCidade","dia":<n>,"cidade":"<nome exato>","texto":"..."}
+
+Regras:
+- Se o pedido for só uma pergunta (previsão, resumo, dúvida), responda em "fala" e devolva "acoes":[].
+- Use os ids reais que estão no JSON. Nunca invente id.
+- "dia" e "paraDia" são o número do dia mostrado no app, começando em 1.
+- Prefira sugestões do "catalogo" quando fizer sentido, mas você pode propor lugares que conheça da Colômbia, sempre com nota realista.
+- Se a previsão indicar chuva alta num dia, priorize programas cobertos e proponha adiar os que estão marcados como aoArLivre.
+- Máximo de 6 ações por resposta.
+- Nunca produza texto fora do JSON.`;
+
+async function chamarIA(pedido){
+  const u=(SY.fn||'').trim();
+  if(!u)return null;
+  hist.push({role:'user',content:JSON.stringify({pedido,quadro:retratoDoQuadro()})});
+  if(hist.length>10)hist=hist.slice(-10);
+  const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({system:SISTEMA,messages:hist,max_tokens:2000})});
+  if(!r.ok){
+    let det='';try{const e=await r.json();det=e.error||'';}catch(_){}
+    throw new Error('HTTP '+r.status+(det?' · '+det:''));
+  }
+  const d=await r.json();
+  const raw=d.text||d.content||'';
+  hist.push({role:'assistant',content:typeof raw==='string'?raw:JSON.stringify(raw)});
+  const limpo=String(raw).replace(/```json|```/g,'').trim();
+  const ini=limpo.indexOf('{'),fim=limpo.lastIndexOf('}');
+  return JSON.parse(ini>=0?limpo.slice(ini,fim+1):limpo);
+}
+/* converte a ação vinda do modelo numa função aplicável */
+function acaoDoModelo(a){
+  const chaveCidade=nome=>{
+    const k=Object.keys(S.cid).find(k=>S.cid[k].toLowerCase()===String(nome||'').toLowerCase());
+    if(k)return k;
+    const nk='c'+(++uid);S.cid[nk]=nome;return nk;
+  };
+  const acharPorId=cid=>{for(const d of S.dias){const i=d.cards.findIndex(x=>x.id===cid);
+    if(i>=0)return{d,i,c:d.cards[i]};}return null;};
+  switch(a.tipo){
+    case 'mover':return()=>{const r=acharPorId(a.cartaoId);const alvo=(a.paraDia|0)-1;
+      if(!r||alvo<0||alvo>=S.dias.length)return;
+      const [x]=r.d.cards.splice(r.i,1);S.dias[alvo].cards.push(x);};
+    case 'criar':return()=>{const alvo=(a.dia|0)-1;if(alvo<0||alvo>=S.dias.length)return;
+      const lid=listaDe(a.lista)?a.lista:S.listas[0].id;
+      S.dias[alvo].cards.push({id:id(),t:a.titulo||'Sem título',l:lid,ok:false,
+        h:a.hora||'',dur:a.duracao||'',rate:a.nota||'',bai:a.bairro||'',nota:a.descricao||'',
+        ar:!!a.aoArLivre,end:a.endereco||'',lat:a.lat||null,lng:a.lng||null,ig:a.instagram||''});};
+    case 'remover':return()=>{const r=acharPorId(a.cartaoId);if(r)r.d.cards.splice(r.i,1);};
+    case 'editar':return()=>{const r=acharPorId(a.cartaoId);if(!r||!a.campos)return;
+      const m={titulo:'t',hora:'h',duracao:'dur',nota:'rate',bairro:'bai',descricao:'nota',
+        aoArLivre:'ar',endereco:'end',instagram:'ig'};
+      Object.entries(a.campos).forEach(([k,v])=>{if(m[k])r.c[m[k]]=v;});};
+    case 'addDia':return()=>{const pos=Math.min(Math.max(a.apos|0,0),S.dias.length);
+      S.dias.splice(pos,0,{id:id(),cid:chaveCidade(a.cidade||nomeCid(S.dias[Math.max(pos-1,0)].cid)),cards:[]});};
+    case 'removerDia':return()=>{const i=(a.dia|0)-1;
+      if(i<0||i>=S.dias.length||S.dias.length<=1)return;
+      S.dias.splice(i,1);if(diaAtivo>=S.dias.length)diaAtivo=S.dias.length-1;};
+    case 'trocarCidade':return()=>{const i=(a.dia|0)-1;if(i<0||i>=S.dias.length)return;
+      S.dias[i].cid=chaveCidade(a.cidade);};
+    default:return null;
+  }
+}
+function montarProposta(bolha,titulo,itens){
+  if(!itens||!itens.length)return;
+  plano={titulo:titulo||'Proposta',itens};
+  const box=document.createElement('div');box.className='prop';
+  box.innerHTML=`<div class="ph">${esc(plano.titulo)} · confirme antes de aplicar</div>`+
+    itens.map((i,k)=>`<div class="pi sel" data-k="${k}" onclick="alternar(this)">
+      <span class="cbx">✓</span><span class="tx">${i.txt}</span></div>`).join('')+
+    `<div class="pb2"><button class="nao" onclick="recusar(this)">Agora não</button>
+     <button class="sim" onclick="aplicar(this)">Aplicar o que marquei</button></div>`;
+  bolha.appendChild(box);
+  document.getElementById('fsc').scrollTop=99999;
+}
+function respostaLocal(bolha,txt){
+  const r=interpretar(txt);
+  bolha.innerHTML=r.fala;
+  if(r.plano&&r.plano.itens.length)montarProposta(bolha,r.plano.titulo,r.plano.itens);
+}
+async function perguntar(txt){
+  txt=(txt||'').trim();if(!txt)return;
+  abrir('rutai');diz('eu',esc(txt));
+  document.getElementById('ask1').value='';document.getElementById('ask2').value='';
+  const p=diz('ia','<span style="opacity:.45">pensando…</span>');
+  if(!SY.fn){setTimeout(()=>respostaLocal(p,txt),380);return;}
+  try{
+    const r=await chamarIA(txt);
+    if(!r){respostaLocal(p,txt);return;}
+    p.innerHTML=r.fala||'—';
+    const itens=(r.acoes||[]).map(a=>{
+      const fn=acaoDoModelo(a);
+      return fn?{txt:esc(a.texto||a.tipo),acao:fn}:null;
+    }).filter(Boolean);
+    montarProposta(p,r.titulo,itens);
+  }catch(e){
+    const m=String(e.message||e);
+    p.innerHTML=`<span style="font-size:13px;color:var(--coral-d)">Não alcancei a RutAI na nuvem (${esc(m)}).</span><br>
+      <span style="font-size:13px;color:var(--ink2)">Respondendo com o interpretador do aparelho:</span>`;
+    const p2=diz('ia','…');respostaLocal(p2,txt);
+  }
+}
+/* ======= GERADOR DE ROTEIRO ======= */
+function selChip(b,grupo){document.querySelectorAll('#'+grupo+' .chip').forEach(x=>x.classList.remove('on'));b.classList.add('on');}
+function multiChip(b){b.classList.toggle('on');}
+function abrirGerar(){
+  document.getElementById('g-data').value=S.inicio||'';
+  document.getElementById('g-dias').value=S.dias.length||9;
+  document.getElementById('g-cid').value=Object.values(S.cid).join(', ');
+  const est=document.getElementById('g-est');
+  est.innerHTML=SY.fn
+    ? '<b>RutAI na nuvem ativa.</b> O roteiro é montado pelo Claude e mostrado para vocês aprovarem dia a dia, antes de substituir o que já existe.'
+    : '<b>Precisa da RutAI na nuvem.</b> Configure a Cloud Function no ☁ do topo para usar esta função.';
+  abrir('gerar');
+}
+const SIS_GERA=`Você é a RutAI, especialista em roteiros pela Colômbia, montando a viagem de um casal brasileiro.
+
+Monte um roteiro completo em português do Brasil, realista quanto a deslocamentos, horários e cansaço. Considere: dias de chegada e de voo interno rendem menos; altitude de Bogotá pede primeiro dia leve; bate-voltas longos (Guatapé, Zipaquirá, Ilhas do Rosário) ocupam o dia inteiro; deixe pelo menos um bloco flexível por dia.
+
+Responda SOMENTE com um JSON válido, sem markdown e sem crases:
+{"fala":"2 a 4 frases explicando a lógica do roteiro, com <b> e <br> se quiser",
+ "dias":[{"cidade":"Bogotá","cartoes":[{"lista":"l1","titulo":"...","hora":"09:00","duracao":"3h","nota":"4,7","bairro":"...","descricao":"dica prática curta","aoArLivre":true,"lat":4.5977,"lng":-74.0733,"endereco":"..."}]}]}
+
+Listas disponíveis: "l1" = âncora do dia (voos, check-in, o programa principal), "l2" = passeios, "l3" = comer e beber, "l4" = flexível (o que pode transitar entre dias).
+
+Regras:
+- Um objeto em "dias" para CADA dia pedido, na ordem, com a cidade correta.
+- 3 a 5 cartões por dia. Sempre pelo menos um "l3" e um "l4".
+- "lat" e "lng" são obrigatórios em lugares físicos reais, com coordenadas corretas. Omita apenas em itens genéricos como "manhã livre".
+- "nota" é a avaliação estilo Google, entre 4,0 e 4,9, realista.
+- "aoArLivre" true para o que a chuva atrapalha.
+- "descricao" é uma dica prática de quem conhece o lugar, curta e concreta.
+- Nunca escreva nada fora do JSON.`;
+
+async function gerarRoteiro(){
+  if(!SY.fn){toast('Configure a RutAI na nuvem no ☁ do topo.');return;}
+  const nd=Math.max(2,Math.min(21,parseInt(document.getElementById('g-dias').value)||9));
+  const cids=document.getElementById('g-cid').value.split(',').map(x=>x.trim()).filter(Boolean);
+  if(!cids.length){toast('Escreva ao menos uma cidade.');return;}
+  const data=document.getElementById('g-data').value;
+  const ritmo=(document.querySelector('#g-ritmo .chip.on')||{}).dataset?.v||'equilibrado';
+  const ints=[...document.querySelectorAll('#g-int .chip.on')].map(b=>b.dataset.v);
+  const obs=document.getElementById('g-obs').value.trim();
+  fechar('gerar');abrirIA();
+  diz('eu',`Montar um roteiro de ${nd} dias por ${esc(cids.join(', '))}.`);
+  const p=diz('ia','<span style="opacity:.45">montando o roteiro… isso leva alguns segundos</span>');
+  const pedido={dias:nd,cidades:cids,inicio:data||null,ritmo,interesses:ints,observacoes:obs||null,
+    hoje:new Date().toISOString().slice(0,10)};
+  try{
+    const r=await fetch(SY.fn,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({system:SIS_GERA,max_tokens:8000,
+        messages:[{role:'user',content:JSON.stringify(pedido)}]})});
+    if(!r.ok){let det='';try{const e=await r.json();det=e.error||'';}catch(_){}
+      throw new Error('HTTP '+r.status+(det?' · '+det:''));}
+    const d=await r.json();
+    const raw=String(d.text||d.content||'').replace(/```json|```/g,'').trim();
+    const ini=raw.indexOf('{'),fim=raw.lastIndexOf('}');
+    const j=JSON.parse(ini>=0?raw.slice(ini,fim+1):raw);
+    if(!j.dias||!j.dias.length)throw new Error('Resposta sem dias.');
+    p.innerHTML=(j.fala||'Roteiro montado.')+
+      `<br><br><b>${j.dias.length} dias</b> · ${j.dias.reduce((a,x)=>a+(x.cartoes||[]).length,0)} cartões.`;
+    /* prévia por dia + confirmação única */
+    const itens=j.dias.map((dd,i)=>({
+      txt:`<b>Dia ${i+1} · ${esc(dd.cidade||'—')}</b><br>`+
+        (dd.cartoes||[]).map(c=>`· ${c.hora?esc(c.hora)+' — ':''}${esc(c.titulo||'')}`).join('<br>'),
+      acao:null
+    }));
+    plano={titulo:'Roteiro proposto',itens};
+    const box=document.createElement('div');box.className='prop';
+    box.innerHTML=`<div class="ph">Roteiro proposto · confira antes de aplicar</div>`+
+      itens.map(i=>`<div class="pi sel"><span class="cbx">✓</span><span class="tx">${i.txt}</span></div>`).join('')+
+      `<div class="pb2"><button class="nao" onclick="recusar(this)">Descartar</button>
+       <button class="sim" onclick="aplicarRoteiro(this)">Substituir o quadro</button></div>`;
+    p.appendChild(box);
+    ROTEIRO_PENDENTE={j,data};
+    document.getElementById('fsc').scrollTop=99999;
+  }catch(e){
+    p.innerHTML=`<span style="color:var(--coral-d)">Não consegui montar o roteiro (${esc(String(e.message||e))}).</span>
+      <br><span style="font-size:13px;color:var(--ink2)">Confira a Cloud Function no ☁ e tente de novo.</span>`;
+  }
+}
+let ROTEIRO_PENDENTE=null;
+function aplicarRoteiro(btn){
+  if(!ROTEIRO_PENDENTE)return;
+  if(!confirm('Isso substitui todos os dias e cartões do quadro atual. Continuar?'))return;
+  const {j,data}=ROTEIRO_PENDENTE;
+  const novoCid={};
+  const chave=nome=>{
+    const k=Object.keys(novoCid).find(k=>novoCid[k].toLowerCase()===String(nome).toLowerCase());
+    if(k)return k;const nk='c'+(++uid);novoCid[nk]=nome;return nk;
+  };
+  S.dias=j.dias.map(dd=>({id:id(),cid:chave(dd.cidade||'Colômbia'),
+    cards:(dd.cartoes||[]).map(c=>({id:id(),t:c.titulo||'Sem título',
+      l:listaDe(c.lista)?c.lista:S.listas[0].id,ok:false,h:c.hora||'',dur:c.duracao||'',
+      rate:c.nota||'',bai:c.bairro||'',nota:c.descricao||'',ar:!!c.aoArLivre,
+      lat:c.lat||null,lng:c.lng||null,end:c.endereco||'',ig:c.instagram||''}))}));
+  S.cid=novoCid;
+  if(data)S.inicio=data;
+  diaAtivo=0;ROTEIRO_PENDENTE=null;plano=null;
+  btn.closest('.prop').querySelector('.pb2').innerHTML=
+    '<div style="flex:1;text-align:center;font-size:13px;font-weight:700;color:var(--verde-d);padding:10px">✓ Roteiro aplicado ao quadro</div>';
+  salvar();render();buscarClima(true);renderMapa();
+  toast('Roteiro montado. Agora é só ajustar o que quiserem.');
+  setTimeout(()=>fechar('rutai'),900);
+}
+
+function alternar(el){el.classList.toggle('sel');}
+function aplicar(btn){
+  if(!plano)return;
+  const box=btn.closest('.prop');
+  const marc=[...box.querySelectorAll('.pi.sel')].map(e=>parseInt(e.dataset.k));
+  if(!marc.length){toast('Marque ao menos um item.');return;}
+  marc.forEach(k=>{try{const a=plano.itens[k];if(a&&a.acao)a.acao();}catch(e){}});
+  const n=marc.length;plano=null;
+  box.querySelector('.pb2').innerHTML=
+    `<div style="flex:1;text-align:center;font-size:13px;font-weight:700;color:var(--verde-d);padding:10px">✓ ${n} mudança(s) aplicada(s)</div>`;
+  box.querySelectorAll('.pi').forEach(e=>e.onclick=null);
+  salvar();render();renderDesc();renderClima();
+  if(document.getElementById('s-mapa').classList.contains('on'))renderMapa();
+  toast(`${n} mudança(s) aplicada(s).`);
+}
+function recusar(btn){
+  plano=null;const box=btn.closest('.prop');
+  box.querySelector('.pb2').innerHTML=
+    '<div style="flex:1;text-align:center;font-size:13px;font-weight:700;color:var(--ink3);padding:10px">Nada mudou</div>';
+  box.querySelectorAll('.pi').forEach(e=>e.onclick=null);
+}
+
+/* ---------- voz ---------- */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+function ligarMic(btnId,inputId,st){
+  const b=document.getElementById(btnId);
+  if(!SR){b.style.opacity=.4;b.addEventListener('click',()=>toast('Este navegador não reconhece voz.'));return;}
+  const rec=new SR();rec.lang='pt-BR';rec.interimResults=true;rec.continuous=false;
+  let on=false,to=null;
+  rec.onstart=()=>{on=true;b.classList.add('rec');st('🎙️ Ouvindo… fale o pedido');};
+  rec.onresult=e=>{let s='';for(let i=e.resultIndex;i<e.results.length;i++)s+=e.results[i][0].transcript;
+    document.getElementById(inputId).value=s.trim();st('“'+s.trim()+'”');};
+  rec.onend=()=>{on=false;b.classList.remove('rec');clearTimeout(to);
+    const v=document.getElementById(inputId).value.trim();st('');if(v)perguntar(v);};
+  rec.onerror=e=>{on=false;b.classList.remove('rec');clearTimeout(to);
+    const m={'not-allowed':'Microfone bloqueado. Ajustes → Safari → Microfone.',
+      'no-speech':'Não ouvi nada. Fale mais perto.','network':'O reconhecimento de voz precisa de internet.'}[e.error];
+    st('');if(m)toast(m);};
+  b.addEventListener('click',()=>{
+    if(on){rec.stop();return;}
+    document.getElementById(inputId).value='';
+    try{rec.start();clearTimeout(to);to=setTimeout(()=>{try{rec.stop();}catch(_){}} ,12000);}
+    catch(e){toast('Microfone ocupado. Espere um instante.');}
+  });
+}
+
+/* ---------- saudação ---------- */
+function saudacaoTexto(){
+  const h=new Date().getHours();
+  return h<5?'Boa madrugada':h<12?'Bom dia':h<18?'Boa tarde':'Boa noite';
+}
+function saudacaoIcone(){
+  const h=new Date().getHours();return h<5?'🌙':h<12?'🌅':h<18?'☀️':'🌆';
+}
+function mostrarSaudacao(){
+  const el=document.getElementById('ola');if(!el)return;
+  const h=new Date().getHours(),nm=S.quem?`, ${S.quem}`:'';
+  document.getElementById('ola-h').textContent=saudacaoIcone()+' '+saudacaoTexto()+nm;
+  document.getElementById('ola-nome').style.display=S.quem?'none':'flex';
+  let p;
+  if(!S.visto)p=`O quadro já está montado: <b>${S.dias.length} dias</b> entre ${esc(contarCidades())}. Tudo é editável.`;
+  else if(h<12)p=`Hoje o quadro está aberto no <b>Dia ${diaAtivo+1}</b>, em ${esc(nomeCid(S.dias[diaAtivo].cid))}.`;
+  else if(h<18)p=`Continuando o <b>Dia ${diaAtivo+1}</b> em ${esc(nomeCid(S.dias[diaAtivo].cid))}. ${pctGeral()}% já foi marcado como feito.`;
+  else p=`Fim de tarde. Vale conferir o <b>Dia ${Math.min(diaAtivo+2,S.dias.length)}</b> antes de dormir.`;
+  document.getElementById('ola-p').innerHTML=p;
+  const at=[],c=climaDoDia(diaAtivo);
+  if(c&&chuvaNoDia(diaAtivo))at.push(['🌧️','Chuva prevista hoje',`${c.prob}% — peça à RutAI para remanejar.`]);
+  if(!S.inicio)at.push(['📅','Falta a data de início','Sem ela não trago a previsão por dia.']);
+  if(!SY.ligado)at.push(['☁','Quadro compartilhado','Ligue a sincronia para editar em mais de um aparelho.']);
+  if(SY.fn)at.push(['✦','RutAI em conversa livre','Peça em voz alta o que quiser mudar no roteiro.']);
+  else at.push(['✦','RutAI por voz','Toque no botão vermelho e fale o que quer mudar.']);
+  at.push(['🗺','Mapa da viagem','Cada lugar marcado vira um pino com a cor do dia.']);
+  document.getElementById('ola-lista').innerHTML=at.slice(0,3).map(x=>
+    `<div class="pl"><span class="e">${x[0]}</span><div><b>${x[1]}</b><span>${x[2]}</span></div></div>`).join('');
+  if(c){
+    document.getElementById('ola-clima').style.display='flex';
+    document.getElementById('ola-cic').textContent=wIcon(c.cod);
+    document.getElementById('ola-ct').textContent=`${c.max}° · ${wTxt(c.cod)}`;
+    document.getElementById('ola-cs').textContent=`${c.cidade} · ${c.prob}% de chuva · mínima ${c.min}°`;
+  }
+  el.classList.add('on');
+}
+function entrarApp(pular){
+  const inp=document.getElementById('ola-in');
+  if(!pular&&inp&&inp.value.trim())S.quem=inp.value.trim();
+  S.visto=true;salvar();
+  document.getElementById('ola').classList.remove('on');render();
+}
+
+/* ---------- boot ---------- */
+carregar();aplicarFundo();render();buscarClima();marcaSync();
+if(SY.ligado){puxarNuvem(true);iniciarTimer();}
+ligarMic('mic1','ask1',t=>{const e=document.getElementById('iastat');e.textContent=t||'';e.classList.toggle('on',!!t);});
+ligarMic('mic2','ask2',t=>{document.getElementById('ia-st').textContent=t||'pronta para ajustar o roteiro';});
+document.getElementById('ask1').addEventListener('keydown',e=>{if(e.key==='Enter')perguntar(e.target.value);});
+document.getElementById('ask2').addEventListener('keydown',e=>{if(e.key==='Enter')perguntar(e.target.value);});
+document.getElementById('snd2').addEventListener('click',()=>perguntar(document.getElementById('ask2').value));
+document.getElementById('ola-in').addEventListener('keydown',e=>{if(e.key==='Enter')entrarApp();});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&SY.ligado)puxarNuvem(true);});
+</script>
+</body>
+</html>
