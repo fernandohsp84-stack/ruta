@@ -41,7 +41,7 @@ body{color:var(--ink);font-family:'Inter',-apple-system,BlinkMacSystemFont,'SF P
 button,input,textarea,select{font-family:inherit;color:inherit}
 
 /* ===== FUNDO FOTOGRÁFICO ===== */
-#fundo{position:fixed;inset:0;z-index:0;background-image:url('fundo.jpg');
+#fundo{position:fixed;inset:0;z-index:0;background-image:url('fundo.jpeg');
   background-size:cover;background-position:center;background-repeat:no-repeat}
 #veu{position:fixed;inset:0;z-index:1;
   background:linear-gradient(180deg,rgba(10,48,66,.58) 0%,rgba(10,48,66,.34) 22%,
@@ -79,7 +79,7 @@ button,input,textarea,select{font-family:inherit;color:inherit}
 #ola{position:fixed;inset:0;z-index:250;display:none;flex-direction:column;
   align-items:center;justify-content:center;padding:28px 24px;overflow-y:auto}
 #ola.on{display:flex}
-#ola::before{content:'';position:fixed;inset:0;background:var(--olabg,url('fundo.jpg')) center/cover;z-index:-2}
+#ola::before{content:'';position:fixed;inset:0;background:var(--olabg,url('fundo.jpeg')) center/cover;z-index:-2}
 #ola::after{content:'';position:fixed;inset:0;background:rgba(10,50,68,.62);z-index:-1}
 #ola .pin{width:74px;height:74px}
 #ola h2{font-size:26px;font-weight:800;letter-spacing:-.035em;text-align:center;margin-top:14px;
@@ -600,7 +600,8 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
     <label class="fl">Quem está viajando</label>
     <input class="fi" id="it-quem" placeholder="Nome do casal" onchange="mudarNome(this.value)">
     <label class="fl">Foto de fundo</label>
-    <input class="fi" id="it-fundo" placeholder="URL de uma foto (vazio = fundo.jpg)" onchange="mudarFundo(this.value)">
+    <input class="fi" id="it-fundo" placeholder="URL de uma foto (vazio = fundo.jpeg)" onchange="mudarFundo(this.value)">
+    <div id="it-fundo-est" style="font-size:12.5px;font-weight:700;line-height:1.5;margin-top:8px"></div>
     <label class="fl">Começar do zero</label>
     <button class="addlst full" style="box-shadow:var(--sh);margin:0" onclick="fechar('itin');abrirGerar()">
       ✦ Deixar a RutAI montar o roteiro inteiro</button>
@@ -1327,6 +1328,18 @@ function renderItin(){
   document.getElementById('it-data').value=S.inicio||'';
   document.getElementById('it-quem').value=S.quem||'';
   document.getElementById('it-fundo').value=S.fundo||'';
+  /* diagnóstico da foto de fundo */
+  const est=document.getElementById('it-fundo-est');
+  if(est){
+    const u=S.fundo||'fundo.jpeg';
+    est.innerHTML='<span style="color:var(--ink2)">Testando a foto…</span>';
+    const img=new Image();
+    img.onload=()=>{est.innerHTML=`<span style="color:var(--verde-d)">✓ Foto carregada (${img.naturalWidth}×${img.naturalHeight}).</span>`;};
+    img.onerror=()=>{est.innerHTML=
+      `<span style="color:var(--coral-d)">✕ Não encontrei "${esc(u)}".</span><br>`+
+      `<span style="color:var(--ink2)">Confira se o arquivo <b>fundo.jpeg</b> (tudo minúsculo) está na mesma pasta do index.html no GitHub.</span>`;};
+    img.src=u+(u.indexOf('http')===0?'':'?t='+Date.now());
+  }
 }
 function trocarCidade(i,k){S.dias[i].cid=k;salvar();renderItin();render();buscarClima();
   toast(`Dia ${i+1} agora é em ${nomeCid(k)}.`);}
@@ -1362,10 +1375,21 @@ function mudarFundo(v){
   toast(S.fundo?'Fundo trocado.':'Fundo padrão restaurado.');
 }
 function aplicarFundo(){
-  const u=S.fundo||'fundo.jpg';
-  document.getElementById('fundo').style.backgroundImage=`url('${u}')`;
+  const u=S.fundo||'fundo.jpeg';
+  const el=document.getElementById('fundo');
+  el.style.backgroundImage=`url('${u}')`;
   const ola=document.getElementById('ola');
   if(ola)ola.style.setProperty('--olabg',`url('${u}')`);
+  /* testa se a imagem existe de verdade; se não, avisa no lugar de ficar só azul */
+  const img=new Image();
+  img.onload=()=>{el.dataset.ok='1';};
+  img.onerror=()=>{
+    el.dataset.ok='0';
+    if(!S.fundo){/* só avisa para o arquivo padrão, não para URL do usuário */
+      toast('A foto de fundo (fundo.jpeg) não foi encontrada no servidor.');
+    }
+  };
+  img.src=u;
 }
 
 /* ---------- logística / descobrir ---------- */
