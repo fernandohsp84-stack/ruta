@@ -191,6 +191,7 @@ button,input,textarea,select{font-family:inherit;color:inherit}
 .dropalvo{outline:3px solid var(--azul);outline-offset:2px}
 .tab.dropalvo{outline-offset:0}
 body.arrastando{overscroll-behavior:none}
+.tabs,.lst,.cd,.cd *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 body.arrastando .board{overflow:hidden!important}
 .cd .mv{display:flex;gap:6px;margin-top:9px;padding-top:9px;border-top:1px solid var(--painel)}
 .cd .mv button{flex:1;background:var(--painel);border:none;border-radius:6px;padding:7px;
@@ -418,6 +419,8 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
 .pop .bt .ig{background:#FCE7F3;color:#9D174D}
 
 #clima,#log,#desc{padding-left:12px;padding-right:12px}
+.dfoto{height:130px;border-radius:9px;overflow:hidden;margin-bottom:11px;background:var(--painel)}
+.dfoto img{width:100%;height:100%;object-fit:cover;display:block}
 .wcard{background:var(--surf);border-radius:12px;box-shadow:var(--shp);padding:14px;margin-bottom:9px}
 .wcard .wl1{display:flex;align-items:center;gap:12px}
 .wcard .wl1 .e{font-size:34px;line-height:1}
@@ -549,8 +552,9 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
   </section>
 
   <section class="screen" id="s-desc">
-    <div class="hd"><div class="r1"><h1>Descobrir</h1></div>
-      <div class="sub">Bem avaliados · toque para encaixar no dia aberto</div></div>
+    <div class="hd"><div class="r1"><h1>Descobrir</h1>
+      <button class="icb" id="btn-perto" onclick="pertoDeMim()">📍</button></div>
+      <div class="sub" id="desc-sub">Bem avaliados · toque no 📍 para ordenar por distância de você</div></div>
     <div class="board" id="desc"></div>
   </section>
 
@@ -892,22 +896,22 @@ function sementeLog(){return{
 };}
 
 const CAT=[
-  {t:'Museu Botero',lat:4.5977,lng:-74.0733,c:'bog',l:'l2',rate:'4,8',dur:'1h30',bai:'La Candelaria',ar:false,nota:'Entrada gratuita. Acervo doado pelo próprio Botero.'},
-  {t:'Catedral de Sal de Zipaquirá',lat:5.019,lng:-74.009,c:'bog',l:'l2',rate:'4,7',dur:'6h',bai:'Zipaquirá',ar:false,nota:'Bate-volta de dia inteiro, 50 km ao norte.'},
-  {t:'Mercado de Paloquemao',lat:4.6183,lng:-74.093,c:'bog',l:'l2',rate:'4,6',dur:'2h',bai:'Centro',ar:false,nota:'Ir antes das 8h. Prove lulo, guanábana e mangostino.'},
-  {t:'Chorro de Quevedo ao entardecer',lat:4.5963,lng:-74.0703,c:'bog',l:'l4',rate:'4,4',dur:'1h30',bai:'La Candelaria',ar:true,nota:'Berço da cidade. Chicha e música na praça.'},
-  {t:'Andrés Carne de Res',lat:4.862,lng:-74.057,c:'bog',l:'l3',rate:'4,6',dur:'4h',bai:'Chía',ar:false,nota:'Jantar-espetáculo. Só em noite sem compromisso no dia seguinte.'},
-  {t:'Metrocable Linha K + Parque Arví',lat:6.281,lng:-75.534,c:'med',l:'l2',rate:'4,7',dur:'4h',bai:'Santo Domingo',ar:true,nota:'Vista da cidade inteira. Leve casaco no Arví.'},
-  {t:'Jardim Botânico de Medellín',lat:6.271,lng:-75.565,c:'med',l:'l4',rate:'4,6',dur:'2h',bai:'Norte',ar:true,nota:'Gratuito. Bom encaixe de meio-período.'},
-  {t:'Praça Botero e Museu de Antioquia',lat:6.2518,lng:-75.5686,c:'med',l:'l2',rate:'4,6',dur:'2h30',bai:'Centro',ar:false},
+  {t:'Museu Botero',wiki:'Museo Botero',lat:4.5977,lng:-74.0733,c:'bog',l:'l2',rate:'4,8',dur:'1h30',bai:'La Candelaria',ar:false,nota:'Entrada gratuita. Acervo doado pelo próprio Botero.'},
+  {t:'Catedral de Sal de Zipaquirá',wiki:'Catedral de Sal de Zipaquirá',lat:5.019,lng:-74.009,c:'bog',l:'l2',rate:'4,7',dur:'6h',bai:'Zipaquirá',ar:false,nota:'Bate-volta de dia inteiro, 50 km ao norte.'},
+  {t:'Mercado de Paloquemao',wiki:'Plaza de mercado de Paloquemao',lat:4.6183,lng:-74.093,c:'bog',l:'l2',rate:'4,6',dur:'2h',bai:'Centro',ar:false,nota:'Ir antes das 8h. Prove lulo, guanábana e mangostino.'},
+  {t:'Chorro de Quevedo ao entardecer',wiki:'Chorro de Quevedo',lat:4.5963,lng:-74.0703,c:'bog',l:'l4',rate:'4,4',dur:'1h30',bai:'La Candelaria',ar:true,nota:'Berço da cidade. Chicha e música na praça.'},
+  {t:'Andrés Carne de Res',wiki:'Andrés Carne de Res',lat:4.862,lng:-74.057,c:'bog',l:'l3',rate:'4,6',dur:'4h',bai:'Chía',ar:false,nota:'Jantar-espetáculo. Só em noite sem compromisso no dia seguinte.'},
+  {t:'Metrocable Linha K + Parque Arví',wiki:'Parque Arví',lat:6.281,lng:-75.534,c:'med',l:'l2',rate:'4,7',dur:'4h',bai:'Santo Domingo',ar:true,nota:'Vista da cidade inteira. Leve casaco no Arví.'},
+  {t:'Jardim Botânico de Medellín',wiki:'Jardín Botánico de Medellín',lat:6.271,lng:-75.565,c:'med',l:'l4',rate:'4,6',dur:'2h',bai:'Norte',ar:true,nota:'Gratuito. Bom encaixe de meio-período.'},
+  {t:'Praça Botero e Museu de Antioquia',wiki:'Museo de Antioquia',lat:6.2518,lng:-75.5686,c:'med',l:'l2',rate:'4,6',dur:'2h30',bai:'Centro',ar:false},
   {t:'Aula de salsa em Laureles',lat:6.245,lng:-75.593,c:'med',l:'l4',rate:'4,9',dur:'2h',bai:'Laureles',ar:false,nota:'Aula para casal. Reservar com um dia de antecedência.'},
   {t:'Mercado del Río',lat:6.223,lng:-75.576,c:'med',l:'l3',rate:'4,6',dur:'2h',bai:'Ciudad del Río',ar:false},
-  {t:'Playa Blanca — Barú',lat:10.172,lng:-75.681,c:'car',l:'l2',rate:'4,4',dur:'8h',ar:true,nota:'Ir por terra evita o cais lotado. Areia mais clara que Rosário.'},
-  {t:'Cidade murada à noite, a pé',lat:10.4236,lng:-75.551,c:'car',l:'l4',rate:'4,9',dur:'2h',bai:'Centro Histórico',ar:true,nota:'Melhor programa gratuito da viagem. Depois das 19h.'},
-  {t:'Convento de La Popa',lat:10.413,lng:-75.529,c:'car',l:'l2',rate:'4,6',dur:'2h',ar:true,nota:'Vista completa da baía. Subir de táxi.'},
+  {t:'Playa Blanca — Barú',wiki:'Isla Barú',lat:10.172,lng:-75.681,c:'car',l:'l2',rate:'4,4',dur:'8h',ar:true,nota:'Ir por terra evita o cais lotado. Areia mais clara que Rosário.'},
+  {t:'Cidade murada à noite, a pé',wiki:'Cartagena de Indias',lat:10.4236,lng:-75.551,c:'car',l:'l4',rate:'4,9',dur:'2h',bai:'Centro Histórico',ar:true,nota:'Melhor programa gratuito da viagem. Depois das 19h.'},
+  {t:'Convento de La Popa',wiki:'Convento de la Popa',lat:10.413,lng:-75.529,c:'car',l:'l2',rate:'4,6',dur:'2h',ar:true,nota:'Vista completa da baía. Subir de táxi.'},
   {t:'Chalupa ao pôr do sol',lat:10.418,lng:-75.549,c:'car',l:'l4',rate:'4,7',dur:'2h',ar:true,nota:'Alternativa ao Café del Mar, com menos gente.'},
-  {t:'Ceviche em Getsemaní',lat:10.42,lng:-75.545,c:'car',l:'l3',rate:'4,7',dur:'1h30',bai:'Getsemaní',ar:false},
-  {t:'Museu do Ouro Zenú',lat:10.4232,lng:-75.5497,c:'car',l:'l2',rate:'4,5',dur:'1h',bai:'Centro Histórico',ar:false,nota:'Pequeno, gratuito e com ar-condicionado. Salvação em dia de chuva.'}
+  {t:'Ceviche em Getsemaní',wiki:'Getsemaní',lat:10.42,lng:-75.545,c:'car',l:'l3',rate:'4,7',dur:'1h30',bai:'Getsemaní',ar:false},
+  {t:'Museu do Ouro Zenú',wiki:'Museo del Oro Zenú',lat:10.4232,lng:-75.5497,c:'car',l:'l2',rate:'4,5',dur:'1h',bai:'Centro Histórico',ar:false,nota:'Pequeno, gratuito e com ar-condicionado. Salvação em dia de chuva.'}
 ];
 
 /* ---------- persistência ---------- */
@@ -1606,22 +1610,92 @@ function apagarLog(){
   });
   fechar('logi');salvar();renderLog();toast('Registro removido.');
 }
+/* ---------- Descobrir: fotos (Wikipédia), distância e "perto de mim" ---------- */
+let descPos=null;
+const FOTOS=(()=>{try{return JSON.parse(localStorage.getItem('ruta_fotos'))||{};}catch(e){return{};}})();
+async function fotoWiki(titulo){
+  if(FOTOS[titulo]!==undefined)return FOTOS[titulo];
+  try{
+    const r=await fetch('https://es.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(titulo));
+    if(!r.ok)throw 0;
+    const j=await r.json();
+    const u=(j.thumbnail&&j.thumbnail.source)||'';
+    FOTOS[titulo]=u;
+    try{localStorage.setItem('ruta_fotos',JSON.stringify(FOTOS));}catch(e){}
+    return u;
+  }catch(e){FOTOS[titulo]='';return '';}
+}
+function carregarFotosDesc(){
+  CAT.forEach((x,i)=>{
+    if(!x.wiki)return;
+    const el=document.getElementById('df_'+i);
+    if(!el)return;
+    fotoWiki(x.wiki).then(u=>{
+      if(!el.isConnected)return;
+      if(u)el.innerHTML=`<img src="${u}" alt="" loading="lazy"
+        onerror="this.parentNode.style.display='none'">`;
+      else el.style.display='none';
+    });
+  });
+}
+function kmEntre(a,b,c,d){
+  const R=6371,rad=x=>x*Math.PI/180;
+  const h=Math.sin(rad(c-a)/2)**2+Math.cos(rad(a))*Math.cos(rad(c))*Math.sin(rad(d-b)/2)**2;
+  return 2*R*Math.asin(Math.sqrt(h));
+}
+function pertoDeMim(){
+  if(descPos){descPos=null;renderDesc();toast('Voltei a agrupar por cidade.');return;}
+  if(!navigator.geolocation){toast('Este navegador não informa localização.');return;}
+  toast('Buscando a sua posição…');
+  navigator.geolocation.getCurrentPosition(p=>{
+    descPos={lat:p.coords.latitude,lng:p.coords.longitude};
+    renderDesc();
+  },()=>{toast('Não consegui a posição. Verifique a permissão de localização do Safari.');},
+  {enableHighAccuracy:true,timeout:10000,maximumAge:60000});
+}
+function descCardHTML(x,i,extra){
+  return `<div class="lcd">
+    ${x.wiki?`<div class="dfoto" id="df_${i}"></div>`:''}
+    <div class="l1"><div class="ic" style="background:var(--oro-t);color:var(--oro-d)">★</div>
+      <div class="t">${esc(x.t)}</div><div class="cod">${esc(x.rate)}</div></div>
+    ${extra||''}
+    ${x.nota?`<div style="font-size:13px;color:var(--ink2);line-height:1.45;margin-top:9px;font-weight:500">${esc(x.nota)}</div>`:''}
+    <div class="gr"><div class="f"><span>Duração</span><b>${esc(x.dur||'—')}</b></div>
+      <div class="f"><span>Local</span><b>${x.ar?'Ao ar livre':'Coberto'}</b></div>
+      <div class="f full" style="display:flex;gap:7px">
+        <button class="btnf" style="flex:1" onclick="addDoCat('${esc(x.t).replace(/'/g,"\\'")}')">＋ Dia ${diaAtivo+1}</button>
+        <button class="btnf" style="flex:1;background:var(--verde-t);color:var(--verde-d)"
+          onclick="gmDoCat('${esc(x.t).replace(/'/g,"\\'")}')">Google Maps ↗</button>
+      </div>
+    </div></div>`;
+}
 function renderDesc(){
-  const cs=Object.keys(S.cid).filter(k=>CAT.some(x=>x.c===k));
-  document.getElementById('desc').innerHTML=cs.map(c=>
-    `<div class="sec">${esc(nomeCid(c))}</div>`+
-    CAT.filter(x=>x.c===c).map(x=>`<div class="lcd">
-      <div class="l1"><div class="ic" style="background:var(--oro-t);color:var(--oro-d)">★</div>
-        <div class="t">${esc(x.t)}</div><div class="cod">${esc(x.rate)}</div></div>
-      ${x.nota?`<div style="font-size:13px;color:var(--ink2);line-height:1.45;margin-top:9px;font-weight:500">${esc(x.nota)}</div>`:''}
-      <div class="gr"><div class="f"><span>Duração</span><b>${esc(x.dur||'—')}</b></div>
-        <div class="f"><span>Local</span><b>${x.ar?'Ao ar livre':'Coberto'}</b></div>
-        <div class="f full" style="display:flex;gap:7px">
-          <button class="btnf" style="flex:1" onclick="addDoCat('${esc(x.t).replace(/'/g,"\\'")}')">＋ Dia ${diaAtivo+1}</button>
-          <button class="btnf" style="flex:1;background:var(--verde-t);color:var(--verde-d)"
-            onclick="gmDoCat('${esc(x.t).replace(/'/g,"\\'")}')">Google Maps ↗</button>
-        </div>
-      </div></div>`).join('')).join('')||'<div class="wcard">Sem sugestões para as cidades atuais.</div>';
+  const sub=document.getElementById('desc-sub');
+  const btn=document.getElementById('btn-perto');
+  if(descPos){
+    /* ordenado pela distância de onde a pessoa está */
+    const perto=CAT.map((x,i)=>({x,i,km:x.lat?kmEntre(descPos.lat,descPos.lng,x.lat,x.lng):1e9}))
+      .filter(p=>p.km<1e9).sort((a,b)=>a.km-b.km);
+    if(sub)sub.textContent='Ordenado pela distância de você · toque no 📍 para voltar por cidade';
+    if(btn)btn.style.background='var(--verde)';
+    const longe=perto.length&&perto[0].km>80;
+    document.getElementById('desc').innerHTML=
+      (longe?`<div class="wcard" style="font-size:13.5px;font-weight:600;color:var(--ink2);line-height:1.5">
+        Você está a ${Math.round(perto[0].km)} km do lugar mais próximo do catálogo — provavelmente ainda não chegou à Colômbia. As distâncias vão fazer sentido lá.</div>`:'')+
+      `<div class="sec">Perto de você</div>`+
+      perto.map(p=>descCardHTML(p.x,p.i,
+        `<div style="margin-top:8px"><span class="bg hora">📍 ${p.km<1?Math.round(p.km*1000)+' m':p.km.toFixed(1).replace('.',',')+' km'}</span>
+         <span class="bg">${esc(nomeCid(p.x.c))}</span></div>`)).join('');
+  }else{
+    if(sub)sub.textContent='Bem avaliados · toque no 📍 para ordenar por distância de você';
+    if(btn)btn.style.background='';
+    const cs=Object.keys(S.cid).filter(k=>CAT.some(x=>x.c===k));
+    document.getElementById('desc').innerHTML=cs.map(c=>
+      `<div class="sec">${esc(nomeCid(c))}</div>`+
+      CAT.map((x,i)=>x.c===c?descCardHTML(x,i):'').join('')).join('')
+      ||'<div class="wcard">Sem sugestões para as cidades atuais.</div>';
+  }
+  carregarFotosDesc();
 }
 function gmDoCat(nome){
   const x=CAT.find(y=>y.t===nome);if(!x)return;
@@ -1675,6 +1749,7 @@ function initDrag(){
       document.querySelectorAll('.dropalvo').forEach(x=>x.classList.remove('dropalvo'));
       document.querySelectorAll('.cd.origem').forEach(x=>x.classList.remove('origem'));
       document.body.classList.remove('arrastando');
+      try{window.getSelection().removeAllRanges();}catch(_){}
       if(drag){try{drag.ghost.remove();}catch(_){}drag=null;}
     };
     timer=setTimeout(()=>{
