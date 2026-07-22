@@ -421,6 +421,10 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
 #clima,#log,#desc{padding-left:12px;padding-right:12px}
 .dfoto{height:130px;border-radius:9px;overflow:hidden;margin-bottom:11px;background:var(--painel)}
 .dfoto img{width:100%;height:100%;object-fit:cover;display:block}
+.cfoto{height:112px;border-radius:7px;overflow:hidden;margin:-2px 0 9px;background:var(--painel)}
+.cfoto.vazia{display:none}
+.cfoto img{width:100%;height:100%;object-fit:cover;display:block}
+.cd.ok .cfoto{filter:grayscale(.55)}
 .wcard{background:var(--surf);border-radius:12px;box-shadow:var(--shp);padding:14px;margin-bottom:9px}
 .wcard .wl1{display:flex;align-items:center;gap:12px}
 .wcard .wl1 .e{font-size:34px;line-height:1}
@@ -622,6 +626,9 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
       <button class="chip" style="flex:0 0 auto" onclick="abrirNoMaps()">↗</button>
     </div>
     <div id="i-coord" style="font-size:12px;font-weight:700;color:var(--ink2);margin-top:7px;line-height:1.5"></div>
+    <label class="fl">Foto do lugar</label>
+    <input class="fi" id="i-foto" placeholder="URL de uma foto (deixe vazio para buscar sozinho)" oninput="previewFoto()">
+    <div id="i-foto-prev" style="margin-top:8px"></div>
     <label class="fl">Link do Google Maps</label>
     <input class="fi" id="i-gm" placeholder="Cole o link compartilhado do Maps (opcional)">
     <label class="fl">Instagram</label>
@@ -931,7 +938,7 @@ function normalizar(){
   });
   S.dias.forEach(d=>{if(!Array.isArray(d.cards))d.cards=[];
     d.cards.forEach(c=>{if(c.lat===undefined)c.lat=null;if(c.lng===undefined)c.lng=null;
-      if(c.end===undefined)c.end='';if(c.ig===undefined)c.ig='';if(c.gm===undefined)c.gm='';});});
+      if(c.end===undefined)c.end='';if(c.ig===undefined)c.ig='';if(c.gm===undefined)c.gm='';if(c.foto===undefined)c.foto='';});});
   S.listas.forEach(l=>{if(l.rot===undefined)l.rot='';});
 }
 function salvar(local){
@@ -1228,6 +1235,8 @@ function cardHTML(c,L){
   if(c.gm||c.lat||c.end)lk.push(`<button class="lk gm" onclick="abrirGM('${c.id}')">Google Maps ↗</button>`);
   if(c.ig)lk.push(`<button class="lk ig" onclick="abrirIG('${c.id}')">Instagram ↗</button>`);
   return `<article class="cd ${c.ok?'ok':''}" data-id="${c.id}">
+    ${c.foto?`<div class="cfoto"><img src="${esc(c.foto)}" alt="" loading="lazy"
+      onerror="this.parentNode.style.display='none'"></div>`:`<div class="cfoto vazia" id="cf_${c.id}"></div>`}
     ${L.rot?`<span class="tag ${L.c}">${esc(L.rot)}</span>`:''}
     <div class="l1">
       <button class="chk" onclick="marcar('${c.id}')">✓</button>
@@ -1240,7 +1249,25 @@ function cardHTML(c,L){
       <button ${prox?'':'disabled'} onclick="mover('${c.id}',1)">${esc(rotuloCurto(diaAtivo+1))} ▶</button>
     </div></article>`;
 }
-function render(){renderHd();renderTabs();renderBoard();renderWbar();marcaSync();salvar(true);}
+/* busca foto para os cartões do dia que ainda não têm uma */
+function carregarFotosCards(){
+  const d=S.dias[diaAtivo];if(!d)return;
+  d.cards.forEach(c=>{
+    if(c.foto)return;
+    const el=document.getElementById('cf_'+c.id);
+    if(!el)return;
+    /* usa o título do catálogo quando o cartão veio de lá */
+    const noCat=CAT.find(x=>x.t===c.t&&x.wiki);
+    const termo=noCat?noCat.wiki:(c.autoWiki||'');
+    if(!termo)return;
+    fotoWiki(termo).then(u=>{
+      if(!u||!el.isConnected)return;
+      el.classList.remove('vazia');
+      el.innerHTML=`<img src="${u}" alt="" loading="lazy" onerror="this.parentNode.style.display='none'">`;
+    });
+  });
+}
+function render(){renderHd();renderTabs();renderBoard();renderWbar();marcaSync();salvar(true);carregarFotosCards();}
 function irDia(i){diaAtivo=i;render();document.getElementById('board').scrollTop=0;}
 
 function achar(cid){for(const d of S.dias){const c=d.cards.find(x=>x.id===cid);if(c)return{d,c};}return null;}
@@ -1269,29 +1296,78 @@ function pintaDias(sel){
     `<option value="${i}" ${i===sel?'selected':''}>Dia ${i+1} · ${esc(rotuloCurto(i))} · ${esc(nomeCid(d.cid))}</option>`).join('');
 }
 let coordEd={lat:null,lng:null};
+function previewFoto(){
+  const u=document.getElementById('i-foto').value.trim();
+  const el=document.getElementById('i-foto-prev');
+  if(!el)return;
+  el.innerHTML='';
+  if(!u){
+    el.innerHTML='<span style="font-size:12px;color:var(--ink3);font-weight:600">'+
+      'Sem foto definida. Se o lugar tiver artigo na Wikipédia, o app busca sozinho.</span>';
+    return;
+  }
+  const box=document.createElement('div');
+  box.className='dfoto';box.style.height='110px';box.style.margin='0';
+  const img=document.createElement('img');
+  img.alt='';img.src=u;
+  img.onerror=()=>{el.innerHTML='<span style="font-size:12px;color:var(--coral-d);font-weight:700">'+
+    'Não consegui carregar esta imagem.</span>';};
+  box.appendChild(img);el.appendChild(box);
+}
 function mostraCoord(){
   const el=document.getElementById('i-coord');
   el.innerHTML=coordEd.lat
     ? `<span style="color:var(--verde-d)">✓ Marcado no mapa (${coordEd.lat.toFixed(4)}, ${coordEd.lng.toFixed(4)})</span>`
     : `<span style="color:var(--ink3)">Sem posição. Toque em Localizar para aparecer no mapa.</span>`;
 }
+/* palavras de rotina que não ajudam a achar um lugar no mapa */
+const RUIDO=/\b(check-?in|check-?out|chegada|traslado|voo|almoço|almoco|jantar|caf[ée]|manh[ãa]|tarde|noite|livre|dia inteiro|passeio|em|no|na|do|da|de|com|para|por|e)\b/gi;
+function limparBusca(t){
+  return (t||'').replace(/[—–·|]/g,' ').replace(RUIDO,' ')
+    .replace(/\s{2,}/g,' ').trim();
+}
+async function nominatim(q){
+  const r=await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q='+
+    encodeURIComponent(q),{headers:{'Accept':'application/json'}});
+  if(!r.ok)return null;
+  const j=await r.json();
+  return j.length?j[0]:null;
+}
 async function buscarCoord(){
-  const q=document.getElementById('i-end').value.trim()||document.getElementById('i-t').value.trim();
-  if(!q){toast('Escreva o endereço ou o nome do lugar.');return;}
+  const tit=document.getElementById('i-t').value.trim();
+  const end=document.getElementById('i-end').value.trim();
+  const bai=document.getElementById('i-b').value.trim();
   const cid=nomeCid(S.dias[parseInt(document.getElementById('i-dia').value)||0].cid);
   const el=document.getElementById('i-coord');
+
+  /* tentativas, da mais específica para a mais genérica */
+  const tent=[];
+  if(end)tent.push(end+', '+cid+', Colombia');
+  if(end&&bai)tent.push(end+', '+bai+', '+cid+', Colombia');
+  const t2=limparBusca(tit);
+  if(t2&&t2.length>3)tent.push(t2+', '+cid+', Colombia');
+  if(bai)tent.push(bai+', '+cid+', Colombia');
+  if(!tent.length){toast('Escreva o endereço, o bairro ou o nome do lugar.');return;}
+
   el.innerHTML='<span style="color:var(--ink2)">Procurando…</span>';
-  try{
-    const u='https://nominatim.openstreetmap.org/search?format=json&limit=1&q='+
-      encodeURIComponent(q+', '+cid+', Colombia');
-    const r=await fetch(u,{headers:{'Accept':'application/json'}});
-    const j=await r.json();
-    if(!j.length){el.innerHTML='<span style="color:var(--coral-d)">Não encontrei. Tente o endereço completo.</span>';return;}
-    coordEd={lat:parseFloat(j[0].lat),lng:parseFloat(j[0].lon)};
-    if(!document.getElementById('i-end').value.trim())
-      document.getElementById('i-end').value=(j[0].display_name||'').split(',').slice(0,3).join(',');
-    mostraCoord();
-  }catch(e){el.innerHTML='<span style="color:var(--coral-d)">Falha na busca. Precisa de internet.</span>';}
+  for(const q of tent){
+    try{
+      const r=await nominatim(q);
+      if(r){
+        coordEd={lat:parseFloat(r.lat),lng:parseFloat(r.lon)};
+        if(!end)document.getElementById('i-end').value=
+          (r.display_name||'').split(',').slice(0,3).join(',').trim();
+        mostraCoord();
+        return;
+      }
+    }catch(e){
+      el.innerHTML='<span style="color:var(--coral-d)">Falha na busca. Precisa de internet.</span>';
+      return;
+    }
+    await new Promise(r=>setTimeout(r,320)); /* respeita o limite do serviço */
+  }
+  el.innerHTML='<span style="color:var(--coral-d)">Não encontrei este lugar.</span><br>'+
+    '<span style="color:var(--ink2)">Tente o endereço completo, ou cole o link do Google Maps no campo abaixo — ele também serve para abrir o local.</span>';
 }
 function abrirNoMaps(){
   const q=document.getElementById('i-end').value.trim()||document.getElementById('i-t').value.trim();
@@ -1302,8 +1378,8 @@ function abrirNoMaps(){
 function novoItem(lid){
   itemEd=null;coordEd={lat:null,lng:null};
   document.getElementById('i-tit').textContent='Novo cartão';
-  ['i-t','i-h','i-d','i-r','i-b','i-n','i-end','i-ig','i-gm'].forEach(i=>document.getElementById(i).value='');
-  document.getElementById('i-ar').checked=false;mostraCoord();
+  ['i-t','i-h','i-d','i-r','i-b','i-n','i-end','i-ig','i-gm','i-foto'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('i-ar').checked=false;mostraCoord();previewFoto();
   pintaListasChips(typeof lid==='string'?lid:S.listas[0].id);pintaDias(diaAtivo);
   document.getElementById('i-del').style.display='none';
   abrir('item');setTimeout(()=>document.getElementById('i-t').focus(),150);
@@ -1320,8 +1396,9 @@ function editarItem(cid){
   document.getElementById('i-end').value=r.c.end||'';
   document.getElementById('i-ig').value=r.c.ig||'';
   document.getElementById('i-gm').value=r.c.gm||'';
+  document.getElementById('i-foto').value=r.c.foto||'';
   document.getElementById('i-ar').checked=!!r.c.ar;
-  coordEd={lat:r.c.lat||null,lng:r.c.lng||null};mostraCoord();
+  coordEd={lat:r.c.lat||null,lng:r.c.lng||null};mostraCoord();previewFoto();
   pintaListasChips(r.c.l);pintaDias(S.dias.indexOf(r.d));
   document.getElementById('i-del').style.display='block';abrir('item');
 }
@@ -1333,6 +1410,7 @@ function salvarItem(){
     nota:document.getElementById('i-n').value.trim(),ar:document.getElementById('i-ar').checked,l:listaSel(),
     end:document.getElementById('i-end').value.trim(),ig:document.getElementById('i-ig').value.trim(),
     gm:document.getElementById('i-gm').value.trim(),
+    foto:document.getElementById('i-foto').value.trim(),
     lat:coordEd.lat,lng:coordEd.lng};
   const destino=parseInt(document.getElementById('i-dia').value);
   if(itemEd){const r=achar(itemEd);Object.assign(r.c,dados);
