@@ -2,7 +2,7 @@
   "name": "Ruta · Colômbia",
   "short_name": "Ruta",
   "description": "Quadro de viagem do casal: dias, passeios, logística e a RutAI.",
-  "start_url": "./ruta.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#FFFFFF",
