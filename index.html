@@ -427,12 +427,14 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
 .cd.ok .cfoto{filter:grayscale(.55)}
 /* logística compacta no topo do dia */
 .logdia{width:87%;max-width:430px;margin:0 auto 12px;display:flex;flex-direction:column;gap:6px}
-.logchip{display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.95);border:none;
+.logchip{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.95);border:none;
   border-radius:10px;padding:10px 13px;box-shadow:0 4px 14px rgba(9,30,66,.2);text-align:left}
 .logchip span{font-size:15px;flex-shrink:0}
+.logchip u{text-decoration:none;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12.5px;
+  font-weight:800;color:var(--azul);flex-shrink:0}
 .logchip b{flex:1;font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.logchip i{font-style:normal;font-size:11px;font-weight:800;color:var(--azul);
-  background:var(--azul-t);border-radius:5px;padding:2px 7px;flex-shrink:0}
+.logchip i{font-style:normal;font-size:11px;font-weight:800;color:var(--verde-d);
+  background:var(--verde-t);border-radius:5px;padding:2px 7px;flex-shrink:0}
 .logchip em{font-style:normal;color:var(--ink3);font-size:15px;flex-shrink:0}
 .wcard{background:var(--surf);border-radius:12px;box-shadow:var(--shp);padding:14px;margin-bottom:9px}
 .wcard .wl1{display:flex;align-items:center;gap:12px}
@@ -616,6 +618,8 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
   <div class="sbody">
     <label class="fl">Título</label>
     <input class="fi" id="i-t" placeholder="Ex.: Comuna 13 com guia local">
+    <button class="chip" style="width:100%;justify-content:center;margin-top:9px" onclick="buscarCoord()">📍 Localizar e abrir no Google Maps</button>
+    <div id="i-coord" style="font-size:12px;font-weight:700;color:var(--ink2);margin-top:7px;line-height:1.5"></div>
     <label class="fl">Rótulo</label>
     <div class="chips" id="i-listas"></div>
     <div class="frow">
@@ -628,10 +632,7 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
     </div>
     <label class="fl">Descrição</label>
     <textarea class="fi" id="i-n" placeholder="Reserva feita? Preço? Quem sugeriu?"></textarea>
-    <div class="frow" style="margin-top:16px">
-      <button class="chip" style="flex:1;justify-content:center" onclick="buscarCoord()">📍 Localizar e abrir no Google Maps</button>
-    </div>
-    <div id="i-coord" style="font-size:12px;font-weight:700;color:var(--ink2);margin-top:7px;line-height:1.5"></div>
+
     <label class="fl">Foto do lugar</label>
     <input class="fi" id="i-foto" placeholder="URL de uma foto (deixe vazio para buscar sozinho)" oninput="previewFoto()">
     <div id="i-foto-prev" style="margin-top:8px"></div>
@@ -894,14 +895,14 @@ function semente(){
 }
 function sementeLog(){return{
   voos:[
-    {id:id(),t:'GRU → BOG',cod:'ida',f:{Data:'Dia 1',Duração:'6h30'},obs:'Preencher com o voo real quando comprar.'},
-    {id:id(),t:'BOG → MDE',cod:'interno',f:{Data:'Dia 4'},obs:''},
-    {id:id(),t:'MDE → CTG',cod:'interno',f:{Data:'Dia 7'},obs:''},
-    {id:id(),t:'CTG → GRU',cod:'volta',f:{Data:'Dia 9'},obs:''}],
+    {id:id(),t:'GRU → BOG',cod:'ida',f:{Data:'Dia 1 · 06:20',Chegada:'09:50',Duração:'6h30'},obs:'Preencher com o voo real quando comprar.'},
+    {id:id(),t:'BOG → MDE',cod:'interno',f:{Data:'Dia 4 · 10:00',Chegada:'11:05'},obs:''},
+    {id:id(),t:'MDE → CTG',cod:'interno',f:{Data:'Dia 7 · 09:00',Chegada:'10:30'},obs:''},
+    {id:id(),t:'CTG → GRU',cod:'volta',f:{Data:'Dia 9 · 18:40'},obs:''}],
   hoteis:[
-    {id:id(),t:'Bogotá · La Candelaria',cod:'3 noites',f:{'Check-in':'Dia 1','Check-out':'Dia 4'},obs:''},
-    {id:id(),t:'Medellín · El Poblado',cod:'3 noites',f:{'Check-in':'Dia 4','Check-out':'Dia 7'},obs:''},
-    {id:id(),t:'Cartagena · Amurallada',cod:'3 noites',f:{'Check-in':'Dia 7','Check-out':'Dia 9'},obs:''}],
+    {id:id(),t:'Bogotá · La Candelaria',cod:'3 noites',f:{'Check-in':'Dia 1 · 15:00','Check-out':'Dia 4 · 08:00'},obs:''},
+    {id:id(),t:'Medellín · El Poblado',cod:'3 noites',f:{'Check-in':'Dia 4 · 14:00','Check-out':'Dia 7 · 07:00'},obs:''},
+    {id:id(),t:'Cartagena · Amurallada',cod:'3 noites',f:{'Check-in':'Dia 7 · 13:00','Check-out':'Dia 9 · 12:00'},obs:''}],
   docs:[
     {id:id(),t:'Passaportes',cod:'2 pax',f:{Validade:'Conferir 6 meses de validade'},obs:'Salvar uma cópia digital offline no celular.'},
     {id:id(),t:'Seguro viagem',cod:'',f:{},obs:'Guardar a apólice e o telefone de emergência aqui.'},
@@ -1214,18 +1215,19 @@ function renderTabs(){
 /* logística que pertence a este dia: procura "Dia N" nos campos */
 function logDoDia(i){
   const re=new RegExp('\\bdia\\s*'+(i+1)+'\\b','i');
+  const hora=s=>{const m=String(s||'').match(/(\d{1,2}[:h]\d{2})/);return m?m[1].replace('h',':'):'';};
   const out=[];
   (S.log.voos||[]).forEach(x=>{
-    const campos=[x.cod,...Object.values(x.f||{})].join(' | ');
-    if(re.test(campos)){
-      const m=String((x.f||{}).Data||'').match(/(\d{1,2}[:h]\d{2})/);
-      out.push({ic:'✈',t:x.t,s:m?m[1]:''});
-    }
+    const f=x.f||{};
+    const campos=[x.cod,...Object.values(f)].join(' | ');
+    if(re.test(campos))out.push({tipo:'voos',id:x.id,ic:'✈',t:x.t,
+      s:hora(f.Data)||hora(f.Partida)||hora(f.Hora)||'',et:x.cod&&x.cod!=='ida'&&x.cod!=='volta'&&x.cod!=='interno'?x.cod:''});
   });
   (S.log.hoteis||[]).forEach(x=>{
-    const ci=String((x.f||{})['Check-in']||''),co=String((x.f||{})['Check-out']||'');
-    if(re.test(ci))out.push({ic:'⌂',t:x.t,s:'check-in'});
-    if(re.test(co))out.push({ic:'⌂',t:x.t,s:'check-out'});
+    const f=x.f||{};
+    const ci=String(f['Check-in']||''),co=String(f['Check-out']||'');
+    if(re.test(ci))out.push({tipo:'hoteis',id:x.id,ic:'⌂',t:x.t,s:hora(ci),et:'check-in'});
+    if(re.test(co))out.push({tipo:'hoteis',id:x.id,ic:'⌂',t:x.t,s:hora(co),et:'check-out'});
   });
   return out;
 }
@@ -1233,11 +1235,14 @@ function renderBoard(){
   if(diaAtivo>=S.dias.length)diaAtivo=S.dias.length-1;
   const d=S.dias[diaAtivo];
   let h='';
-  /* voos e hospedagem do dia, compactos — toque abre a Logística */
+  /* voos e hospedagem do dia, compactos — toque abre o registro */
   const lg=logDoDia(diaAtivo);
   if(lg.length)h+=`<div class="logdia">`+lg.map(x=>
-    `<button class="logchip" onclick="verTela('s-log')">
-      <span>${x.ic}</span><b>${esc(x.t)}</b>${x.s?`<i>${esc(x.s)}</i>`:''}<em>›</em>
+    `<button class="logchip" onclick="editarLog('${x.tipo}','${x.id}')">
+      <span>${x.ic}</span>
+      ${x.s?`<u>${esc(x.s)}</u>`:''}
+      <b>${esc(x.t)}</b>
+      ${x.et?`<i>${esc(x.et)}</i>`:''}<em>›</em>
     </button>`).join('')+`</div>`;
   /* PAINEL PRINCIPAL — como no print: título = data, cartões dentro */
   S.listas.forEach(L=>{
@@ -1279,7 +1284,10 @@ function cardHTML(c,L){
       <button ${prox?'':'disabled'} onclick="mover('${c.id}',1)">${esc(rotuloCurto(diaAtivo+1))} ▶</button>
     </div></article>`;
 }
-/* busca por pesquisa: acha o artigo mais próximo do termo e pega a foto dele */
+/* palavras que indicam logística/rotina — nesses cartões NÃO buscamos foto,
+   porque quase sempre casaria com o artigo errado (ex.: um mapa administrativo) */
+const SEM_FOTO=/\b(check-?in|check-?out|chegada|traslado|voo|hotel|hospedagem|aeroporto|embarque|desembarque|manh[ãa] livre|tarde livre|noite livre|dia livre|compras|descanso|reserva)\b/i;
+/* busca por pesquisa: acha o artigo mais próximo e valida que tem imagem de lugar */
 async function fotoBusca(termo){
   const k='q:'+termo;
   if(FOTOS[k]!==undefined)return FOTOS[k];
@@ -1303,11 +1311,12 @@ function carregarFotosCards(){
     if(!el)return;
     const noCat=CAT.find(x=>x.t===c.t&&x.wiki);
     let p;
-    if(noCat)p=fotoWiki(noCat.wiki);
+    if(noCat)p=fotoWiki(noCat.wiki);              /* catálogo: título curado, confiável */
     else{
+      if(SEM_FOTO.test(c.t))return;               /* logística/rotina: não arrisca */
       const t2=limparBusca(c.t);
-      if(!t2||t2.length<4)return;               /* título genérico: sem foto */
-      p=fotoBusca(t2+' '+nomeCid(d.cid));
+      if(!t2||t2.length<5||!/\s/.test(t2)&&t2.length<8)return; /* muito curto/genérico */
+      p=fotoBusca(t2+' '+nomeCid(d.cid)+' Colombia');
     }
     p.then(u=>{
       if(!u||!el.isConnected)return;
