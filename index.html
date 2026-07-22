@@ -425,6 +425,15 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
 .cfoto.vazia{display:none}
 .cfoto img{width:100%;height:100%;object-fit:cover;display:block}
 .cd.ok .cfoto{filter:grayscale(.55)}
+/* logística compacta no topo do dia */
+.logdia{width:87%;max-width:430px;margin:0 auto 12px;display:flex;flex-direction:column;gap:6px}
+.logchip{display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.95);border:none;
+  border-radius:10px;padding:10px 13px;box-shadow:0 4px 14px rgba(9,30,66,.2);text-align:left}
+.logchip span{font-size:15px;flex-shrink:0}
+.logchip b{flex:1;font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.logchip i{font-style:normal;font-size:11px;font-weight:800;color:var(--azul);
+  background:var(--azul-t);border-radius:5px;padding:2px 7px;flex-shrink:0}
+.logchip em{font-style:normal;color:var(--ink3);font-size:15px;flex-shrink:0}
 .wcard{background:var(--surf);border-radius:12px;box-shadow:var(--shp);padding:14px;margin-bottom:9px}
 .wcard .wl1{display:flex;align-items:center;gap:12px}
 .wcard .wl1 .e{font-size:34px;line-height:1}
@@ -619,11 +628,8 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
     </div>
     <label class="fl">Descrição</label>
     <textarea class="fi" id="i-n" placeholder="Reserva feita? Preço? Quem sugeriu?"></textarea>
-    <label class="fl">Endereço ou nome no mapa</label>
-    <input class="fi" id="i-end" placeholder="Ex.: Calle 26 #10-30, Getsemaní">
-    <div class="frow" style="margin-top:8px">
-      <button class="chip" style="flex:1;justify-content:center" onclick="buscarCoord()">📍 Localizar no mapa</button>
-      <button class="chip" style="flex:0 0 auto" onclick="abrirNoMaps()">↗</button>
+    <div class="frow" style="margin-top:16px">
+      <button class="chip" style="flex:1;justify-content:center" onclick="buscarCoord()">📍 Localizar e abrir no Google Maps</button>
     </div>
     <div id="i-coord" style="font-size:12px;font-weight:700;color:var(--ink2);margin-top:7px;line-height:1.5"></div>
     <label class="fl">Foto do lugar</label>
@@ -1205,10 +1211,34 @@ function renderTabs(){
       <span class="pb"><i style="width:${p}%"></i></span></button>`;}).join('');
   document.getElementById('tabs').innerHTML=h+`<button class="tab mais" onclick="abrirItinerario()">＋</button>`;
 }
+/* logística que pertence a este dia: procura "Dia N" nos campos */
+function logDoDia(i){
+  const re=new RegExp('\\bdia\\s*'+(i+1)+'\\b','i');
+  const out=[];
+  (S.log.voos||[]).forEach(x=>{
+    const campos=[x.cod,...Object.values(x.f||{})].join(' | ');
+    if(re.test(campos)){
+      const m=String((x.f||{}).Data||'').match(/(\d{1,2}[:h]\d{2})/);
+      out.push({ic:'✈',t:x.t,s:m?m[1]:''});
+    }
+  });
+  (S.log.hoteis||[]).forEach(x=>{
+    const ci=String((x.f||{})['Check-in']||''),co=String((x.f||{})['Check-out']||'');
+    if(re.test(ci))out.push({ic:'⌂',t:x.t,s:'check-in'});
+    if(re.test(co))out.push({ic:'⌂',t:x.t,s:'check-out'});
+  });
+  return out;
+}
 function renderBoard(){
   if(diaAtivo>=S.dias.length)diaAtivo=S.dias.length-1;
   const d=S.dias[diaAtivo];
   let h='';
+  /* voos e hospedagem do dia, compactos — toque abre a Logística */
+  const lg=logDoDia(diaAtivo);
+  if(lg.length)h+=`<div class="logdia">`+lg.map(x=>
+    `<button class="logchip" onclick="verTela('s-log')">
+      <span>${x.ic}</span><b>${esc(x.t)}</b>${x.s?`<i>${esc(x.s)}</i>`:''}<em>›</em>
+    </button>`).join('')+`</div>`;
   /* PAINEL PRINCIPAL — como no print: título = data, cartões dentro */
   S.listas.forEach(L=>{
     const cs=d.cards.filter(c=>c.l===L.id);
@@ -1249,6 +1279,21 @@ function cardHTML(c,L){
       <button ${prox?'':'disabled'} onclick="mover('${c.id}',1)">${esc(rotuloCurto(diaAtivo+1))} ▶</button>
     </div></article>`;
 }
+/* busca por pesquisa: acha o artigo mais próximo do termo e pega a foto dele */
+async function fotoBusca(termo){
+  const k='q:'+termo;
+  if(FOTOS[k]!==undefined)return FOTOS[k];
+  try{
+    const r=await fetch('https://es.wikipedia.org/w/api.php?action=query&list=search&srlimit=1&format=json&origin=*&srsearch='+
+      encodeURIComponent(termo));
+    const j=await r.json();
+    const hit=j.query&&j.query.search&&j.query.search[0];
+    const u=hit?await fotoWiki(hit.title):'';
+    FOTOS[k]=u;
+    try{localStorage.setItem('ruta_fotos',JSON.stringify(FOTOS));}catch(e){}
+    return u;
+  }catch(e){FOTOS[k]='';return '';}
+}
 /* busca foto para os cartões do dia que ainda não têm uma */
 function carregarFotosCards(){
   const d=S.dias[diaAtivo];if(!d)return;
@@ -1256,11 +1301,15 @@ function carregarFotosCards(){
     if(c.foto)return;
     const el=document.getElementById('cf_'+c.id);
     if(!el)return;
-    /* usa o título do catálogo quando o cartão veio de lá */
     const noCat=CAT.find(x=>x.t===c.t&&x.wiki);
-    const termo=noCat?noCat.wiki:(c.autoWiki||'');
-    if(!termo)return;
-    fotoWiki(termo).then(u=>{
+    let p;
+    if(noCat)p=fotoWiki(noCat.wiki);
+    else{
+      const t2=limparBusca(c.t);
+      if(!t2||t2.length<4)return;               /* título genérico: sem foto */
+      p=fotoBusca(t2+' '+nomeCid(d.cid));
+    }
+    p.then(u=>{
       if(!u||!el.isConnected)return;
       el.classList.remove('vazia');
       el.innerHTML=`<img src="${u}" alt="" loading="lazy" onerror="this.parentNode.style.display='none'">`;
@@ -1333,52 +1382,47 @@ async function nominatim(q){
   const j=await r.json();
   return j.length?j[0]:null;
 }
+let endEd='';
 async function buscarCoord(){
   const tit=document.getElementById('i-t').value.trim();
-  const end=document.getElementById('i-end').value.trim();
   const bai=document.getElementById('i-b').value.trim();
+  const gm=document.getElementById('i-gm').value.trim();
   const cid=nomeCid(S.dias[parseInt(document.getElementById('i-dia').value)||0].cid);
   const el=document.getElementById('i-coord');
+  if(!tit&&!bai){toast('Escreva o título ou o bairro primeiro.');return;}
 
-  /* tentativas, da mais específica para a mais genérica */
-  const tent=[];
-  if(end)tent.push(end+', '+cid+', Colombia');
-  if(end&&bai)tent.push(end+', '+bai+', '+cid+', Colombia');
-  const t2=limparBusca(tit);
-  if(t2&&t2.length>3)tent.push(t2+', '+cid+', Colombia');
-  if(bai)tent.push(bai+', '+cid+', Colombia');
-  if(!tent.length){toast('Escreva o endereço, o bairro ou o nome do lugar.');return;}
+  /* se já colou o link do Maps, é só abrir */
+  if(gm&&/^https?:\/\//i.test(gm)){window.open(gm,'_blank');return;}
 
   el.innerHTML='<span style="color:var(--ink2)">Procurando…</span>';
+  const t2=limparBusca(tit);
+  const tent=[];
+  if(t2&&t2.length>3)tent.push(t2+', '+cid+', Colombia');
+  if(t2&&bai)tent.push(t2+', '+bai+', '+cid+', Colombia');
+  if(bai)tent.push(bai+', '+cid+', Colombia');
+
+  let achou=null;
   for(const q of tent){
-    try{
-      const r=await nominatim(q);
-      if(r){
-        coordEd={lat:parseFloat(r.lat),lng:parseFloat(r.lon)};
-        if(!end)document.getElementById('i-end').value=
-          (r.display_name||'').split(',').slice(0,3).join(',').trim();
-        mostraCoord();
-        return;
-      }
-    }catch(e){
-      el.innerHTML='<span style="color:var(--coral-d)">Falha na busca. Precisa de internet.</span>';
-      return;
-    }
-    await new Promise(r=>setTimeout(r,320)); /* respeita o limite do serviço */
+    try{achou=await nominatim(q);}catch(e){break;}
+    if(achou)break;
+    await new Promise(r=>setTimeout(r,320));
   }
-  el.innerHTML='<span style="color:var(--coral-d)">Não encontrei este lugar.</span><br>'+
-    '<span style="color:var(--ink2)">Tente o endereço completo, ou cole o link do Google Maps no campo abaixo — ele também serve para abrir o local.</span>';
-}
-function abrirNoMaps(){
-  const q=document.getElementById('i-end').value.trim()||document.getElementById('i-t').value.trim();
-  if(!q&&!coordEd.lat){toast('Escreva o endereço primeiro.');return;}
-  const alvo=coordEd.lat?`${coordEd.lat},${coordEd.lng}`:q;
-  window.open('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(alvo),'_blank');
+  if(achou){
+    coordEd={lat:parseFloat(achou.lat),lng:parseFloat(achou.lon)};
+    endEd=(achou.display_name||'').split(',').slice(0,3).join(',').trim();
+    mostraCoord();
+    window.open(`https://www.google.com/maps/search/?api=1&query=${coordEd.lat},${coordEd.lng}`,'_blank');
+  }else{
+    /* o Google acha melhor que o OpenStreetMap: abre a busca lá mesmo sem pin */
+    el.innerHTML='<span style="color:var(--ink2)">Sem pin no mapa interno, mas abri a busca no Google Maps.</span>';
+    const q=(t2||bai)+', '+cid+', Colombia';
+    window.open('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q),'_blank');
+  }
 }
 function novoItem(lid){
-  itemEd=null;coordEd={lat:null,lng:null};
+  itemEd=null;coordEd={lat:null,lng:null};endEd='';
   document.getElementById('i-tit').textContent='Novo cartão';
-  ['i-t','i-h','i-d','i-r','i-b','i-n','i-end','i-ig','i-gm','i-foto'].forEach(i=>document.getElementById(i).value='');
+  ['i-t','i-h','i-d','i-r','i-b','i-n','i-ig','i-gm','i-foto'].forEach(i=>document.getElementById(i).value='');
   document.getElementById('i-ar').checked=false;mostraCoord();previewFoto();
   pintaListasChips(typeof lid==='string'?lid:S.listas[0].id);pintaDias(diaAtivo);
   document.getElementById('i-del').style.display='none';
@@ -1393,7 +1437,7 @@ function editarItem(cid){
   document.getElementById('i-r').value=r.c.rate||'';
   document.getElementById('i-b').value=r.c.bai||'';
   document.getElementById('i-n').value=r.c.nota||'';
-  document.getElementById('i-end').value=r.c.end||'';
+  endEd=r.c.end||'';
   document.getElementById('i-ig').value=r.c.ig||'';
   document.getElementById('i-gm').value=r.c.gm||'';
   document.getElementById('i-foto').value=r.c.foto||'';
@@ -1408,7 +1452,7 @@ function salvarItem(){
   const dados={t,h:document.getElementById('i-h').value.trim(),dur:document.getElementById('i-d').value.trim(),
     rate:document.getElementById('i-r').value.trim(),bai:document.getElementById('i-b').value.trim(),
     nota:document.getElementById('i-n').value.trim(),ar:document.getElementById('i-ar').checked,l:listaSel(),
-    end:document.getElementById('i-end').value.trim(),ig:document.getElementById('i-ig').value.trim(),
+    end:endEd,ig:document.getElementById('i-ig').value.trim(),
     gm:document.getElementById('i-gm').value.trim(),
     foto:document.getElementById('i-foto').value.trim(),
     lat:coordEd.lat,lng:coordEd.lng};
