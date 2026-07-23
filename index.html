@@ -1007,8 +1007,27 @@ function carregar(){
 }
 /* garante que estados salvos por versões anteriores continuem funcionando */
 function normalizar(){
+  /* REPARO: se as listas visíveis sumiram (estado corrompido), recria as padrão */
+  if(!Array.isArray(S.listas))S.listas=[];
+  S.listas=S.listas.filter(Boolean);
+  const PADRAO=[
+    {id:'l1',n:'Âncora do dia',c:'azul',rot:''},
+    {id:'l2',n:'Passeios',c:'ciano',rot:'Passeio'},
+    {id:'l3',n:'Comer & beber',c:'oro',rot:'Refeição'},
+    {id:'l4',n:'Flexível',c:'coral',rot:'Flexível'}];
+  if(!S.listas.some(l=>!l.oculta)){
+    PADRAO.forEach((sl,ix)=>{if(!S.listas.some(l=>l.id===sl.id))S.listas.splice(ix,0,Object.assign({},sl));});
+  }
   /* lista oculta para voos/hotéis (não aparece como coluna) */
   if(!S.listas.some(l=>l.id==='log'))S.listas.push({id:'log',n:'Logística',c:'azul',rot:'',oculta:true});
+  /* cartões de atividade apontando para lista inexistente ou oculta voltam para a primeira visível */
+  const vis1=S.listas.find(l=>!l.oculta);
+  if(vis1)S.dias.forEach(d=>d.cards.forEach(c=>{
+    if((c.tipo||'atividade')==='atividade'){
+      const L=S.listas.find(l=>l.id===c.l);
+      if(!L||L.oculta)c.l=vis1.id;
+    }
+  }));
   S.dias.forEach(d=>{if(!Array.isArray(d.cards))d.cards=[];
     d.cards.forEach(c=>{
       if(!c.tipo)c.tipo='atividade';
@@ -1532,7 +1551,12 @@ function pintaListasChips(sel){
       <span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${HEX[l.c]};margin-right:6px"></span>${esc(l.n)}</button>`).join('');
 }
 function selLista(lid){document.querySelectorAll('#i-listas .chip').forEach(b=>b.classList.toggle('on',b.dataset.l===lid));}
-function listaSel(){const b=document.querySelector('#i-listas .chip.on');return b?b.dataset.l:S.listas.filter(l=>!l.oculta)[0].id;}
+function listaPadrao(){
+  let L=S.listas.find(l=>!l.oculta);
+  if(!L){L={id:'l1',n:'Âncora do dia',c:'azul',rot:''};S.listas.unshift(L);}
+  return L.id;
+}
+function listaSel(){const b=document.querySelector('#i-listas .chip.on');return b?b.dataset.l:listaPadrao();}
 function pintaDias(sel){
   document.getElementById('i-dia').innerHTML=S.dias.map((d,i)=>
     `<option value="${i}" ${i===sel?'selected':''}>Dia ${i+1} · ${esc(rotuloCurto(i))} · ${esc(nomeCid(d.cid))}</option>`).join('');
@@ -2614,7 +2638,7 @@ function acaoDoModelo(a){
     case 'criar':return()=>{
       let alvo=(a.dia|0)-1;
       if(alvo<0||alvo>=S.dias.length)alvo=diaAtivo;
-      const lid=listaDe(a.lista)?a.lista:S.listas.filter(l=>!l.oculta)[0].id;
+      const lid=(listaDe(a.lista)&&a.lista!=='log')?a.lista:listaPadrao();
       const dataISO=isoDia(alvo)||'';
       S.dias[alvo].cards.push({id:id(),tipo:'atividade',t:a.titulo||'Sem título',l:lid,ok:false,
         h:montarQuando(dataISO,a.hora||''),hora:a.hora||'',dataISO:dataISO,
@@ -2884,7 +2908,7 @@ function aplicarRoteiro(btn){
     const k=Object.keys(novoCid).find(k=>novoCid[k].toLowerCase()===lim.toLowerCase());
     if(k)return k;const nk='c'+(++uid);novoCid[nk]=lim;return nk;
   };
-  const listaOk=l=>listaDe(l)&&l!=='log'?l:S.listas.filter(x=>!x.oculta)[0].id;
+  const listaOk=l=>(listaDe(l)&&l!=='log')?l:listaPadrao();
   S.dias=j.dias.map((dd,i)=>{
     const dataISO=dd.data||'';
     return {id:id(),cid:chave(dd.cidade),
