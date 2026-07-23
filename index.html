@@ -298,6 +298,17 @@ body.arrastando .board{overflow:hidden!important}
 .chatia .ffoot input::placeholder{color:rgba(255,255,255,.4)}
 .chatia .ffoot .snd{width:44px;flex:0 0 44px;padding:0;height:44px;border-radius:50%;font-size:19px;font-weight:800}
 .chatia .grab{display:none}
+.chatia #clip{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);font-size:17px}
+.anexos{display:flex;gap:8px;overflow-x:auto;padding:0 14px 8px;scrollbar-width:none;flex-shrink:0}
+.anexos:empty{display:none}
+.anexos::-webkit-scrollbar{display:none}
+.anx{flex-shrink:0;position:relative;background:rgba(255,255,255,.12);border-radius:10px;
+  padding:8px 10px;display:flex;align-items:center;gap:8px;max-width:180px}
+.anx .ai{font-size:18px;flex-shrink:0}
+.anx img{width:34px;height:34px;border-radius:6px;object-fit:cover;flex-shrink:0}
+.anx .an{font-size:11.5px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.anx .ax{width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.4);color:#fff;border:none;
+  font-size:11px;flex-shrink:0}
 .chatia .bal.boasvindas{background:rgba(255,255,255,.09);color:rgba(255,255,255,.92);
   box-shadow:none;border:1px solid rgba(255,255,255,.13);align-self:center;text-align:center;
   max-width:94%;font-size:14px}
@@ -340,6 +351,11 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
 .chip{background:var(--surf);border:2px solid transparent;border-radius:8px;padding:9px 13px;
   font-size:13.5px;font-weight:700;color:var(--ink2);box-shadow:var(--sh)}
 .chip.on{border-color:var(--azul);color:var(--azul);background:var(--azul-t)}
+.cpwrap{position:relative;display:flex;align-items:center}
+.cpwrap input{flex:1;padding-right:76px}
+.cpbtn{position:absolute;right:6px;background:var(--azul);color:#fff;border:none;border-radius:7px;
+  padding:7px 11px;font-size:12px;font-weight:700}
+.cpbtn.ok{background:var(--verde-d)}
 .swatch{width:38px;height:26px;border-radius:6px;border:3px solid transparent}
 .swatch.on{border-color:var(--ink)}
 .tgl{display:flex;align-items:center;gap:10px;background:var(--surf);box-shadow:var(--sh);border-radius:8px;padding:11px 12px}
@@ -427,15 +443,17 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
 .cd.ok .cfoto{filter:grayscale(.55)}
 /* logística compacta no topo do dia */
 .logdia{width:87%;max-width:430px;margin:0 auto 12px;display:flex;flex-direction:column;gap:6px}
-.logchip{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.95);border:none;
-  border-radius:10px;padding:10px 13px;box-shadow:0 4px 14px rgba(9,30,66,.2);text-align:left}
-.logchip span{font-size:15px;flex-shrink:0}
-.logchip u{text-decoration:none;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12.5px;
-  font-weight:800;color:var(--azul);flex-shrink:0}
-.logchip b{flex:1;font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.logchip i{font-style:normal;font-size:11px;font-weight:800;color:var(--verde-d);
-  background:var(--verde-t);border-radius:5px;padding:2px 7px;flex-shrink:0}
-.logchip em{font-style:normal;color:var(--ink3);font-size:15px;flex-shrink:0}
+.logcard{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.96);
+  border-radius:10px;padding:10px 12px;box-shadow:0 4px 14px rgba(9,30,66,.2)}
+.logcard .lci{font-size:17px;flex-shrink:0}
+.logcard .lcm{flex:1;min-width:0}
+.logcard .lct{font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.logcard .lct u{text-decoration:none;font-family:ui-monospace,monospace;color:var(--azul)}
+.logcard .lcs{font-size:11.5px;color:var(--ink2);font-weight:600;margin-top:1px}
+.logcard .logcp{background:var(--azul-t);color:var(--azul);border:none;border-radius:6px;
+  padding:5px 8px;font-size:11px;font-weight:800;flex-shrink:0;max-width:120px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.logcard em{font-style:normal;color:var(--ink3);font-size:15px;flex-shrink:0}
 .wcard{background:var(--surf);border-radius:12px;box-shadow:var(--shp);padding:14px;margin-bottom:9px}
 .wcard .wl1{display:flex;align-items:center;gap:12px}
 .wcard .wl1 .e{font-size:34px;line-height:1}
@@ -521,7 +539,6 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
       <div class="r1">
         <svg class="pin" viewBox="0 0 100 128"><path d="M50 2C26 2 8 20 8 44c0 30 33 60 42 82 9-22 42-52 42-82C92 20 74 2 50 2z" fill="#22C6E8"/><path d="M50 2c24 0 42 18 42 42 0 30-33 60-42 82V2z" fill="#F0483E"/><circle cx="50" cy="44" r="30" fill="#12384F"/><circle cx="50" cy="44" r="23" fill="#0E7C93"/><path d="M30 26 L52 46 L44 54Z" fill="#F0483E"/><path d="M70 62 L48 42 L56 34Z" fill="#EDEFF2"/></svg>
         <h1>Ruta</h1>
-        <button class="icb" onclick="verTela('s-log')">✈</button>
         <button class="icb sync" id="btn-sync" onclick="abrirSync()">☁</button>
         <button class="icb" onclick="abrirItinerario()">⚙</button>
         <button class="icb pri" onclick="novoItem()">＋</button>
@@ -555,15 +572,6 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
     </div>
     <div id="mapwrap"><div id="map"></div>
       <div class="mlegenda" id="mlegenda"></div></div>
-  </section>
-
-  <section class="screen" id="s-log">
-    <div class="hd"><div class="r1">
-      <button class="icb" onclick="verTela('s-board')">‹</button>
-      <h1>Logística</h1>
-      <button class="icb pri" onclick="novoLog()">＋</button></div>
-      <div class="sub">Voos, hospedagem e documentos · toque para editar</div></div>
-    <div class="board" id="log"></div>
   </section>
 
   <section class="screen" id="s-desc">
@@ -604,9 +612,12 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
   </div>
   <div class="fsc" id="fsc"></div>
   <div class="sugs" id="sugs"></div>
+  <div class="anexos" id="anexos"></div>
   <div class="ffoot">
+    <button class="mic" id="clip" onclick="document.getElementById('arq').click()">📎</button>
+    <input type="file" id="arq" accept="image/*,application/pdf" style="display:none" multiple>
     <button class="mic" id="mic2">🎙️</button>
-    <input id="ask2" placeholder="Pergunte qualquer coisa…" autocomplete="off">
+    <input id="ask2" placeholder="Pergunte ou anexe uma reserva…" autocomplete="off">
     <button class="snd" id="snd2">↑</button>
   </div>
 </div>
@@ -614,35 +625,96 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
 <!-- ============ CARTÃO ============ -->
 <div class="sheet" id="item">
   <div class="grab"></div>
-  <div class="shd"><h3 id="i-tit">Novo cartão</h3><button class="x" onclick="fechar('item')">✕</button></div>
+  <div class="shd"><h3 id="i-tit">Novo</h3><button class="x" onclick="fechar('item')">✕</button></div>
   <div class="sbody">
-    <label class="fl">Título</label>
-    <input class="fi" id="i-t" placeholder="Ex.: Comuna 13 com guia local">
-    <button class="chip" style="width:100%;justify-content:center;margin-top:9px" onclick="buscarCoord()">📍 Localizar e abrir no Google Maps</button>
-    <div id="i-coord" style="font-size:12px;font-weight:700;color:var(--ink2);margin-top:7px;line-height:1.5"></div>
-    <label class="fl">Rótulo</label>
-    <div class="chips" id="i-listas"></div>
-    <div class="frow">
-      <div><label class="fl">Hora</label><input class="fi" id="i-h" placeholder="09:30"></div>
-      <div><label class="fl">Duração</label><input class="fi" id="i-d" placeholder="3h"></div>
+    <div class="chips" id="i-tipo" style="margin-bottom:4px">
+      <button class="chip on" data-t="atividade" onclick="trocarTipoItem(this)">📍 Atividade</button>
+      <button class="chip" data-t="voo" onclick="trocarTipoItem(this)">✈ Voo</button>
+      <button class="chip" data-t="hotel" onclick="trocarTipoItem(this)">⌂ Hotel</button>
     </div>
-    <div class="frow">
-      <div><label class="fl">Nota Google</label><input class="fi" id="i-r" placeholder="4,7"></div>
-      <div><label class="fl">Bairro</label><input class="fi" id="i-b" placeholder="El Poblado"></div>
-    </div>
-    <label class="fl">Descrição</label>
-    <textarea class="fi" id="i-n" placeholder="Reserva feita? Preço? Quem sugeriu?"></textarea>
 
-    <label class="fl">Foto do lugar</label>
-    <input class="fi" id="i-foto" placeholder="URL de uma foto (deixe vazio para buscar sozinho)" oninput="previewFoto()">
-    <div id="i-foto-prev" style="margin-top:8px"></div>
-    <label class="fl">Link do Google Maps</label>
-    <input class="fi" id="i-gm" placeholder="Cole o link compartilhado do Maps (opcional)">
-    <label class="fl">Instagram</label>
-    <input class="fi" id="i-ig" placeholder="@perfil ou o link completo">
-    <label class="fl">Depende do tempo</label>
-    <div class="tgl"><div class="tx">É ao ar livre — a RutAI remaneja se chover</div>
-      <input type="checkbox" id="i-ar"></div>
+    <!-- ===== campos de ATIVIDADE ===== -->
+    <div id="campos-atividade">
+      <label class="fl">Título</label>
+      <input class="fi" id="i-t" placeholder="Ex.: Comuna 13 com guia local">
+      <button class="chip" style="width:100%;justify-content:center;margin-top:9px" onclick="buscarCoord()">📍 Localizar e abrir no Google Maps</button>
+      <div id="i-coord" style="font-size:12px;font-weight:700;color:var(--ink2);margin-top:7px;line-height:1.5"></div>
+      <label class="fl">Rótulo</label>
+      <div class="chips" id="i-listas"></div>
+      <div class="frow">
+        <div><label class="fl">Data</label><input class="fi" type="date" id="i-data"></div>
+        <div><label class="fl">Hora</label><input class="fi" type="time" id="i-hora"></div>
+      </div>
+      <div class="frow">
+        <div><label class="fl">Duração</label><input class="fi" id="i-d" placeholder="3h"></div>
+        <div><label class="fl">Nota Google</label><input class="fi" id="i-r" placeholder="4,7"></div>
+      </div>
+      <label class="fl">Bairro</label>
+      <input class="fi" id="i-b" placeholder="El Poblado">
+      <label class="fl">Descrição</label>
+      <textarea class="fi" id="i-n" placeholder="Reserva feita? Preço? Quem sugeriu?"></textarea>
+      <label class="fl">Foto do lugar</label>
+      <input class="fi" id="i-foto" placeholder="URL de uma foto (deixe vazio para buscar sozinho)" oninput="previewFoto()">
+      <div id="i-foto-prev" style="margin-top:8px"></div>
+      <label class="fl">Link do Google Maps</label>
+      <input class="fi" id="i-gm" placeholder="Cole o link compartilhado do Maps (opcional)">
+      <label class="fl">Instagram</label>
+      <input class="fi" id="i-ig" placeholder="@perfil ou o link completo">
+      <label class="fl">Depende do tempo</label>
+      <div class="tgl"><div class="tx">É ao ar livre — a RutAI remaneja se chover</div>
+        <input type="checkbox" id="i-ar"></div>
+    </div>
+
+    <!-- ===== campos de VOO ===== -->
+    <div id="campos-voo" style="display:none">
+      <label class="fl">Trecho</label>
+      <input class="fi" id="v-t" placeholder="GRU → BOG">
+      <div class="frow">
+        <div><label class="fl">Companhia / voo</label><input class="fi" id="v-voo" placeholder="AV 123"></div>
+        <div><label class="fl">Localizador</label>
+          <div class="cpwrap"><input class="fi" id="v-loc" placeholder="ABC123">
+            <button class="cpbtn" onclick="copiar('v-loc')">Copiar</button></div></div>
+      </div>
+      <label class="fl">Partida</label>
+      <div class="frow">
+        <div><input class="fi" type="date" id="v-data"></div>
+        <div><input class="fi" type="time" id="v-hora"></div>
+      </div>
+      <div class="frow">
+        <div><label class="fl">Chegada</label><input class="fi" id="v-cheg" placeholder="09:50"></div>
+        <div><label class="fl">Duração</label><input class="fi" id="v-dur" placeholder="6h30"></div>
+      </div>
+      <div class="frow">
+        <div><label class="fl">Assentos</label><input class="fi" id="v-ass" placeholder="12A e 12B"></div>
+        <div><label class="fl">Bagagem</label><input class="fi" id="v-bag" placeholder="1 despachada"></div>
+      </div>
+    </div>
+
+    <!-- ===== campos de HOTEL ===== -->
+    <div id="campos-hotel" style="display:none">
+      <label class="fl">Nome e cidade</label>
+      <input class="fi" id="h-t" placeholder="Casa India Catalina · Cartagena">
+      <button class="chip" style="width:100%;justify-content:center;margin-top:9px" onclick="buscarCoordHotel()">📍 Localizar e abrir no Google Maps</button>
+      <div id="h-coord" style="font-size:12px;font-weight:700;color:var(--ink2);margin-top:7px;line-height:1.5"></div>
+      <div class="frow">
+        <div><label class="fl">Check-in · data</label><input class="fi" type="date" id="h-cidata"></div>
+        <div><label class="fl">Hora</label><input class="fi" type="time" id="h-cihora"></div>
+      </div>
+      <div class="frow">
+        <div><label class="fl">Check-out · data</label><input class="fi" type="date" id="h-codata"></div>
+        <div><label class="fl">Hora</label><input class="fi" type="time" id="h-cohora"></div>
+      </div>
+      <label class="fl">Código da reserva</label>
+      <div class="cpwrap"><input class="fi" id="h-res" placeholder="BK-99887">
+        <button class="cpbtn" onclick="copiar('h-res')">Copiar</button></div>
+      <label class="fl">Endereço</label>
+      <input class="fi" id="h-end" placeholder="Calle del Curato #38-89">
+      <div class="frow">
+        <div><label class="fl">Telefone</label><input class="fi" id="h-tel" placeholder="+57 5 664 0000"></div>
+        <div><label class="fl">Valor</label><input class="fi" id="h-val" placeholder="COP 1.200.000"></div>
+      </div>
+    </div>
+
     <label class="fl">Dia</label>
     <select class="fi" id="i-dia"></select>
     <div class="fbtns">
@@ -699,28 +771,6 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
     <button class="addlst full" style="box-shadow:var(--sh);margin:0" onclick="fechar('itin');abrirGerar()">
       ✦ Deixar a RutAI montar o roteiro inteiro</button>
     <div class="fbtns"><button class="sv" onclick="fechar('itin')">Concluído</button></div>
-  </div>
-</div>
-
-<!-- ============ LOGÍSTICA ============ -->
-<div class="sheet" id="logi">
-  <div class="grab"></div>
-  <div class="shd"><h3 id="g-tit">Novo registro</h3><button class="x" onclick="fechar('logi')">✕</button></div>
-  <div class="sbody">
-    <label class="fl">Tipo</label>
-    <div class="chips" id="g-tipo">
-      <button class="chip on" data-v="voos" onclick="trocarTipoLog(this)">✈ Voo</button>
-      <button class="chip" data-v="hoteis" onclick="trocarTipoLog(this)">⌂ Hospedagem</button>
-      <button class="chip" data-v="docs" onclick="trocarTipoLog(this)">▤ Documento</button>
-    </div>
-    <div id="g-campos"></div>
-    <label class="fl">Anotações</label>
-    <textarea class="fi" id="g-obs2" placeholder="O que mais precisam lembrar sobre isso"></textarea>
-    <div class="fbtns">
-      <button class="cn" onclick="fechar('logi')">Cancelar</button>
-      <button class="dl" id="g-del" onclick="apagarLog()">🗑</button>
-      <button class="sv" onclick="salvarLog()">Salvar</button>
-    </div>
   </div>
 </div>
 
@@ -844,7 +894,8 @@ function semente(){
     {id:'l1',n:'Âncora do dia',c:'azul',rot:''},
     {id:'l2',n:'Passeios',c:'ciano',rot:'Passeio'},
     {id:'l3',n:'Comer & beber',c:'oro',rot:'Refeição'},
-    {id:'l4',n:'Flexível',c:'coral',rot:'Flexível'}
+    {id:'l4',n:'Flexível',c:'coral',rot:'Flexível'},
+    {id:'log',n:'Logística',c:'azul',rot:'',oculta:true}
   ];
   const C=(t,l,o={})=>Object.assign({id:id(),t,l,ok:false,h:'',dur:'',rate:'',bai:'',nota:'',ar:false},o);
   const dias=[
@@ -891,23 +942,18 @@ function semente(){
       C('Manhã livre + compras','l4',{lat:10.424,lng:-75.548,dur:'3h'}),
       C('Traslado ao aeroporto','l1',{lat:10.4424,lng:-75.513,h:'15:00',nota:'Voo internacional: 3h de antecedência.'})]}
   ].map(d=>Object.assign({id:id()},d));
-  return {cid,listas,dias,log:sementeLog(),inicio:'',quem:'',visto:false,fundo:'',v:0};
+  /* voos e hotéis como cartões nos dias certos (lista 'log') */
+  const V=(dia,o)=>dias[dia].cards.unshift(Object.assign({id:id(),ok:false,tipo:'voo',l:'log'},o));
+  const H=(dia,o)=>dias[dia].cards.unshift(Object.assign({id:id(),ok:false,tipo:'hotel',l:'log'},o));
+  V(0,{t:'GRU → BOG',voo:'ida',h:'Dia 1 · 06:20',cheg:'09:50',dur:'6h30',loc:''});
+  V(3,{t:'BOG → MDE',voo:'interno',h:'Dia 4 · 10:00',cheg:'11:05',loc:''});
+  V(6,{t:'MDE → CTG',voo:'interno',h:'Dia 7 · 09:00',cheg:'10:30',loc:''});
+  V(8,{t:'CTG → GRU',voo:'volta',h:'Dia 9 · 18:40',loc:''});
+  H(0,{t:'Bogotá · La Candelaria',h:'Dia 1 · 15:00',hout:'Dia 4 · 08:00',loc:''});
+  H(3,{t:'Medellín · El Poblado',h:'Dia 4 · 14:00',hout:'Dia 7 · 07:00',loc:''});
+  H(6,{t:'Cartagena · Amurallada',h:'Dia 7 · 13:00',hout:'Dia 9 · 12:00',loc:''});
+  return {cid,listas,dias,inicio:'',quem:'',visto:false,fundo:'',v:0};
 }
-function sementeLog(){return{
-  voos:[
-    {id:id(),t:'GRU → BOG',cod:'ida',f:{Data:'Dia 1 · 06:20',Chegada:'09:50',Duração:'6h30'},obs:'Preencher com o voo real quando comprar.'},
-    {id:id(),t:'BOG → MDE',cod:'interno',f:{Data:'Dia 4 · 10:00',Chegada:'11:05'},obs:''},
-    {id:id(),t:'MDE → CTG',cod:'interno',f:{Data:'Dia 7 · 09:00',Chegada:'10:30'},obs:''},
-    {id:id(),t:'CTG → GRU',cod:'volta',f:{Data:'Dia 9 · 18:40'},obs:''}],
-  hoteis:[
-    {id:id(),t:'Bogotá · La Candelaria',cod:'3 noites',f:{'Check-in':'Dia 1 · 15:00','Check-out':'Dia 4 · 08:00'},obs:''},
-    {id:id(),t:'Medellín · El Poblado',cod:'3 noites',f:{'Check-in':'Dia 4 · 14:00','Check-out':'Dia 7 · 07:00'},obs:''},
-    {id:id(),t:'Cartagena · Amurallada',cod:'3 noites',f:{'Check-in':'Dia 7 · 13:00','Check-out':'Dia 9 · 12:00'},obs:''}],
-  docs:[
-    {id:id(),t:'Passaportes',cod:'2 pax',f:{Validade:'Conferir 6 meses de validade'},obs:'Salvar uma cópia digital offline no celular.'},
-    {id:id(),t:'Seguro viagem',cod:'',f:{},obs:'Guardar a apólice e o telefone de emergência aqui.'},
-    {id:id(),t:'Pesos colombianos',cod:'COP',f:{Onde:'Sacar em caixa de banco, nunca de rua'},obs:'Avisar o banco da viagem antes de sair.'}]
-};}
 
 const CAT=[
   {t:'Museu Botero',wiki:'Museo Botero',lat:4.5977,lng:-74.0733,c:'bog',l:'l2',rate:'4,8',dur:'1h30',bai:'La Candelaria',ar:false,nota:'Entrada gratuita. Acervo doado pelo próprio Botero.'},
@@ -936,17 +982,38 @@ function carregar(){
 }
 /* garante que estados salvos por versões anteriores continuem funcionando */
 function normalizar(){
-  if(!S.log)S.log=sementeLog();
-  ['voos','hoteis','docs'].forEach(t=>{
-    if(!Array.isArray(S.log[t]))S.log[t]=[];
-    S.log[t].forEach(x=>{if(!x.id)x.id=id();if(!x.f)x.f={};if(x.obs==null)x.obs='';
-      if(x.cod==='—')x.cod='';
-      Object.keys(x.f).forEach(k=>{if(x.f[k]==='—')delete x.f[k];});});
-  });
+  /* lista oculta para voos/hotéis (não aparece como coluna) */
+  if(!S.listas.some(l=>l.id==='log'))S.listas.push({id:'log',n:'Logística',c:'azul',rot:'',oculta:true});
   S.dias.forEach(d=>{if(!Array.isArray(d.cards))d.cards=[];
-    d.cards.forEach(c=>{if(c.lat===undefined)c.lat=null;if(c.lng===undefined)c.lng=null;
+    d.cards.forEach(c=>{
+      if(!c.tipo)c.tipo='atividade';
+      if(c.lat===undefined)c.lat=null;if(c.lng===undefined)c.lng=null;
       if(c.end===undefined)c.end='';if(c.ig===undefined)c.ig='';if(c.gm===undefined)c.gm='';if(c.foto===undefined)c.foto='';});});
   S.listas.forEach(l=>{if(l.rot===undefined)l.rot='';});
+  /* MIGRAÇÃO: converte a antiga estrutura S.log em cartões voo/hotel nos dias */
+  if(S.log){
+    const achaDia=q=>{const m=String(q||'').match(/dia\s*(\d+)/i);
+      return m?Math.min(Math.max(parseInt(m[1])-1,0),S.dias.length-1):0;};
+    (S.log.voos||[]).forEach(x=>{
+      const di=achaDia((x.f||{}).Data);
+      S.dias[di].cards.unshift({id:id(),ok:false,tipo:'voo',l:'log',t:x.t||'Voo',
+        voo:x.cod||'',h:(x.f||{}).Data||'',cheg:(x.f||{}).Chegada||'',dur:(x.f||{}).Duração||'',
+        loc:(x.f||{}).Localizador||'',ass:(x.f||{}).Assentos||'',bag:(x.f||{}).Bagagem||''});
+    });
+    (S.log.hoteis||[]).forEach(x=>{
+      const di=achaDia((x.f||{})['Check-in']);
+      S.dias[di].cards.unshift({id:id(),ok:false,tipo:'hotel',l:'log',t:x.t||'Hotel',
+        h:(x.f||{})['Check-in']||'',hout:(x.f||{})['Check-out']||'',loc:(x.f||{}).Reserva||'',
+        end:(x.f||{})['Endereço']||'',tel:(x.f||{}).Telefone||'',val:(x.f||{}).Valor||'',lat:null,lng:null});
+    });
+    /* documentos viram cartões flexíveis no primeiro dia, para não se perderem */
+    const flex=S.listas.find(l=>l.n&&l.n.toLowerCase().includes('flex'))||S.listas[0];
+    (S.log.docs||[]).forEach(x=>{
+      S.dias[0].cards.push({id:id(),ok:false,tipo:'atividade',l:flex.id,t:x.t||'Documento',
+        nota:[x.cod,...Object.values(x.f||{}),x.obs].filter(Boolean).join(' · '),h:''});
+    });
+    delete S.log; /* logística antiga descontinuada */
+  }
 }
 function salvar(local){
   S.v=Date.now();
@@ -1212,42 +1279,24 @@ function renderTabs(){
       <span class="pb"><i style="width:${p}%"></i></span></button>`;}).join('');
   document.getElementById('tabs').innerHTML=h+`<button class="tab mais" onclick="abrirItinerario()">＋</button>`;
 }
-/* logística que pertence a este dia: procura "Dia N" nos campos */
-function logDoDia(i){
-  const re=new RegExp('\\bdia\\s*'+(i+1)+'\\b','i');
-  const hora=s=>{const m=String(s||'').match(/(\d{1,2}[:h]\d{2})/);return m?m[1].replace('h',':'):'';};
-  const out=[];
-  (S.log.voos||[]).forEach(x=>{
-    const f=x.f||{};
-    const campos=[x.cod,...Object.values(f)].join(' | ');
-    if(re.test(campos))out.push({tipo:'voos',id:x.id,ic:'✈',t:x.t,
-      s:hora(f.Data)||hora(f.Partida)||hora(f.Hora)||'',et:x.cod&&x.cod!=='ida'&&x.cod!=='volta'&&x.cod!=='interno'?x.cod:''});
-  });
-  (S.log.hoteis||[]).forEach(x=>{
-    const f=x.f||{};
-    const ci=String(f['Check-in']||''),co=String(f['Check-out']||'');
-    if(re.test(ci))out.push({tipo:'hoteis',id:x.id,ic:'⌂',t:x.t,s:hora(ci),et:'check-in'});
-    if(re.test(co))out.push({tipo:'hoteis',id:x.id,ic:'⌂',t:x.t,s:hora(co),et:'check-out'});
-  });
-  return out;
+/* extrai HH:MM de um "Dia N · HH:MM" para ordenar; sem hora vai para o fim */
+function horaMin(c){
+  const m=String(c.h||'').match(/(\d{1,2}):(\d{2})/);
+  return m?(+m[1])*60+(+m[2]):9999;
+}
+function ordenarPorHora(arr){
+  return arr.slice().sort((a,b)=>horaMin(a)-horaMin(b));
 }
 function renderBoard(){
   if(diaAtivo>=S.dias.length)diaAtivo=S.dias.length-1;
   const d=S.dias[diaAtivo];
   let h='';
-  /* voos e hospedagem do dia, compactos — toque abre o registro */
-  const lg=logDoDia(diaAtivo);
-  if(lg.length)h+=`<div class="logdia">`+lg.map(x=>
-    `<button class="logchip" onclick="editarLog('${x.tipo}','${x.id}')">
-      <span>${x.ic}</span>
-      ${x.s?`<u>${esc(x.s)}</u>`:''}
-      <b>${esc(x.t)}</b>
-      ${x.et?`<i>${esc(x.et)}</i>`:''}<em>›</em>
-    </button>`).join('')+`</div>`;
-  /* PAINEL PRINCIPAL — como no print: título = data, cartões dentro */
-  S.listas.forEach(L=>{
-    const cs=d.cards.filter(c=>c.l===L.id);
-    if(!cs.length&&L.id!==S.listas[0].id&&!cs.length){} /* mostra todas mesmo vazias */
+  /* VOOS E HOTÉIS do dia — cartões compactos no topo */
+  const logs=ordenarPorHora(d.cards.filter(c=>c.tipo==='voo'||c.tipo==='hotel'));
+  if(logs.length)h+=`<div class="logdia">`+logs.map(c=>logCardHTML(c)).join('')+`</div>`;
+  /* ATIVIDADES por lista, ordenadas por horário */
+  S.listas.filter(L=>!L.oculta).forEach(L=>{
+    const cs=ordenarPorHora(d.cards.filter(c=>c.l===L.id&&c.tipo!=='voo'&&c.tipo!=='hotel'));
     h+=`<section class="lst" data-l="${L.id}">
       <div class="lhd"><span class="nm">${esc(L.n)}</span><span class="ct">${cs.length}</span>
         <button class="mn" onclick="editarLista('${L.id}')">•••</button></div>`;
@@ -1256,6 +1305,30 @@ function renderBoard(){
   });
   h+=`<button class="addlst" onclick="novaLista()">＋ Adicionar outra lista</button>`;
   document.getElementById('board').innerHTML=h;
+}
+/* mini-cartão de voo/hotel: pouca informação, toque abre para editar */
+function logCardHTML(c){
+  const ic=c.tipo==='voo'?'✈':'⌂';
+  const hora=(String(c.h||'').match(/(\d{1,2}:\d{2})/)||[])[1]||'';
+  let sub='';
+  if(c.tipo==='voo')sub=[c.voo,c.cheg?'chega '+c.cheg:''].filter(Boolean).join(' · ');
+  else{const co=(String(c.hout||'').match(/(\d{1,2}:\d{2})/)||[])[1];
+    sub=['check-in',co?'· check-out '+co:''].filter(Boolean).join(' ');}
+  const cod=c.loc?`<button class="logcp" onclick="event.stopPropagation();copiarTexto('${esc(c.loc).replace(/'/g,"\\'")}',this)">⧉ ${esc(c.loc)}</button>`:'';
+  return `<div class="logcard" onclick="editarItem('${c.id}')">
+    <div class="lci">${ic}</div>
+    <div class="lcm">
+      <div class="lct">${hora?`<u>${esc(hora)}</u> `:''}${esc(c.t)}</div>
+      ${sub?`<div class="lcs">${esc(sub)}</div>`:''}
+    </div>
+    ${cod}<em>›</em>
+  </div>`;
+}
+function copiarTexto(txt,btn){
+  const ok=()=>{if(btn){const o=btn.innerHTML;btn.innerHTML='✓ copiado';
+    setTimeout(()=>btn.innerHTML=o,1400);}toast('Copiado.');};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(ok,ok);
+  else ok();
 }
 function cardHTML(c,L){
   const bg=[];
@@ -1342,13 +1415,88 @@ function fechar(n){document.getElementById(n).classList.remove('up');}
 
 /* ---------- cartão ---------- */
 let itemEd=null;
+/* ======= tipos do editor: atividade / voo / hotel ======= */
+let itemTipo='atividade';
+function trocarTipoItem(b){
+  document.querySelectorAll('#i-tipo .chip').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');itemTipo=b.dataset.t;
+  document.getElementById('campos-atividade').style.display=itemTipo==='atividade'?'':'none';
+  document.getElementById('campos-voo').style.display=itemTipo==='voo'?'':'none';
+  document.getElementById('campos-hotel').style.display=itemTipo==='hotel'?'':'none';
+  const tit={atividade:'atividade',voo:'voo',hotel:'hotel'}[itemTipo];
+  document.getElementById('i-tit').textContent=(itemEd?'Editar ':'Novo ')+tit;
+}
+function copiar(id){
+  const inp=document.getElementById(id);
+  const v=(inp.value||'').trim();
+  const btn=(typeof event!=='undefined'&&event)?event.target:null;
+  if(!v){toast('Nada para copiar.');return;}
+  const ok=()=>{if(btn){btn.textContent='✓';btn.classList.add('ok');
+    setTimeout(()=>{btn.textContent='Copiar';btn.classList.remove('ok');},1400);}toast('Copiado.');};
+  if(navigator.clipboard&&navigator.clipboard.writeText)
+    navigator.clipboard.writeText(v).then(ok,()=>fallbackCopiar(inp,ok));
+  else fallbackCopiar(inp,ok);
+}
+function fallbackCopiar(inp,ok){
+  try{inp.select();inp.setSelectionRange(0,999);document.execCommand('copy');ok();}
+  catch(e){toast('Copie manualmente.');}
+}
+function montarQuando(dataISO,hora){
+  let dnum=null;
+  if(dataISO&&S.inicio){
+    const d0=new Date(S.inicio+'T12:00:00'),d1=new Date(dataISO+'T12:00:00');
+    if(!isNaN(d0)&&!isNaN(d1))dnum=Math.round((d1-d0)/86400000)+1;
+  }
+  const p=[];
+  if(dnum&&dnum>=1&&dnum<=S.dias.length)p.push('Dia '+dnum);
+  else if(dataISO){const x=dataISO.split('-');p.push(x[2]+'/'+x[1]);}
+  if(hora)p.push(hora);
+  return p.join(' · ');
+}
+function separarQuando(str){
+  const s=String(str||'');
+  const mh=s.match(/(\d{1,2})[:h](\d{2})/);
+  let hora=mh?(mh[1].padStart(2,'0')+':'+mh[2]):'';
+  let data='';
+  const md=s.match(/dia\s*(\d+)/i);
+  if(md&&S.inicio){const d=new Date(S.inicio+'T12:00:00');d.setDate(d.getDate()+parseInt(md[1])-1);
+    data=d.toISOString().slice(0,10);}
+  else{const dm=s.match(/(\d{1,2})\/(\d{1,2})/);
+    if(dm&&S.inicio){const y=new Date(S.inicio+'T12:00:00').getFullYear();
+      data=`${y}-${dm[2].padStart(2,'0')}-${dm[1].padStart(2,'0')}`;}}
+  return {data,hora};
+}
+function diaDaData(dataISO){
+  if(!dataISO||!S.inicio)return diaAtivo;
+  const d0=new Date(S.inicio+'T12:00:00'),d1=new Date(dataISO+'T12:00:00');
+  if(isNaN(d0)||isNaN(d1))return diaAtivo;
+  const n=Math.round((d1-d0)/86400000);
+  return (n>=0&&n<S.dias.length)?n:diaAtivo;
+}
+let coordHotelEd={lat:null,lng:null},endHotelEd='';
+function buscarCoordHotel(){
+  const nome=document.getElementById('h-t').value.trim();
+  const end=document.getElementById('h-end').value.trim();
+  const q=end||nome;
+  if(!q){toast('Escreva o nome ou o endereço do hotel.');return;}
+  const el=document.getElementById('h-coord');
+  el.innerHTML='<span style="color:var(--ink2)">Procurando…</span>';
+  nominatim(q+', Colombia').then(r=>{
+    if(r){coordHotelEd={lat:parseFloat(r.lat),lng:parseFloat(r.lon)};
+      endHotelEd=(r.display_name||'').split(',').slice(0,3).join(',').trim();
+      el.innerHTML=`<span style="color:var(--verde-d)">✓ Marcado no mapa</span>`;
+      window.open(`https://www.google.com/maps/search/?api=1&query=${r.lat},${r.lon}`,'_blank');
+    }else{el.innerHTML='<span style="color:var(--ink2)">Abri a busca no Google Maps.</span>';
+      window.open('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q+', Colombia'),'_blank');}
+  }).catch(()=>{el.innerHTML='<span style="color:var(--coral-d)">Falha. Precisa de internet.</span>';});
+}
 function pintaListasChips(sel){
-  document.getElementById('i-listas').innerHTML=S.listas.map(l=>
+  document.getElementById('i-listas').innerHTML=S.listas.filter(l=>!l.oculta).map(l=>
     `<button class="chip ${l.id===sel?'on':''}" data-l="${l.id}" onclick="selLista('${l.id}')">
       <span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${HEX[l.c]};margin-right:6px"></span>${esc(l.n)}</button>`).join('');
 }
 function selLista(lid){document.querySelectorAll('#i-listas .chip').forEach(b=>b.classList.toggle('on',b.dataset.l===lid));}
-function listaSel(){const b=document.querySelector('#i-listas .chip.on');return b?b.dataset.l:S.listas[0].id;}
+function listaSel(){const b=document.querySelector('#i-listas .chip.on');return b?b.dataset.l:S.listas.filter(l=>!l.oculta)[0].id;}
 function pintaDias(sel){
   document.getElementById('i-dia').innerHTML=S.dias.map((d,i)=>
     `<option value="${i}" ${i===sel?'selected':''}>Dia ${i+1} · ${esc(rotuloCurto(i))} · ${esc(nomeCid(d.cid))}</option>`).join('');
@@ -1428,54 +1576,119 @@ async function buscarCoord(){
     window.open('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q),'_blank');
   }
 }
+function limparCampos(){
+  ['i-t','i-d','i-r','i-b','i-n','i-ig','i-gm','i-foto','i-data','i-hora',
+   'v-t','v-voo','v-loc','v-data','v-hora','v-cheg','v-dur','v-ass','v-bag',
+   'h-t','h-cidata','h-cihora','h-codata','h-cohora','h-res','h-end','h-tel','h-val']
+   .forEach(i=>{const e=document.getElementById(i);if(e)e.value='';});
+  document.getElementById('i-ar').checked=false;
+  document.getElementById('h-coord').innerHTML='';
+}
 function novoItem(lid){
-  itemEd=null;coordEd={lat:null,lng:null};endEd='';
-  document.getElementById('i-tit').textContent='Novo cartão';
-  ['i-t','i-h','i-d','i-r','i-b','i-n','i-ig','i-gm','i-foto'].forEach(i=>document.getElementById(i).value='');
-  document.getElementById('i-ar').checked=false;mostraCoord();previewFoto();
+  itemEd=null;coordEd={lat:null,lng:null};endEd='';coordHotelEd={lat:null,lng:null};endHotelEd='';
+  limparCampos();
+  /* volta para o tipo atividade */
+  document.querySelectorAll('#i-tipo .chip').forEach(x=>x.classList.remove('on'));
+  document.querySelector('#i-tipo .chip[data-t="atividade"]').classList.add('on');
+  itemTipo='atividade';trocarTipoItem(document.querySelector('#i-tipo .chip[data-t="atividade"]'));
+  document.getElementById('i-tit').textContent='Novo';
+  mostraCoord();previewFoto();
   pintaListasChips(typeof lid==='string'?lid:S.listas[0].id);pintaDias(diaAtivo);
   document.getElementById('i-del').style.display='none';
   abrir('item');setTimeout(()=>document.getElementById('i-t').focus(),150);
 }
+function selTipoChip(t){
+  document.querySelectorAll('#i-tipo .chip').forEach(x=>x.classList.toggle('on',x.dataset.t===t));
+  itemTipo=t;trocarTipoItem(document.querySelector('#i-tipo .chip[data-t="'+t+'"]'));
+}
 function editarItem(cid){
   const r=achar(cid);if(!r)return;itemEd=cid;
-  document.getElementById('i-tit').textContent='Editar cartão';
-  document.getElementById('i-t').value=r.c.t;
-  document.getElementById('i-h').value=r.c.h||'';
-  document.getElementById('i-d').value=r.c.dur||'';
-  document.getElementById('i-r').value=r.c.rate||'';
-  document.getElementById('i-b').value=r.c.bai||'';
-  document.getElementById('i-n').value=r.c.nota||'';
-  endEd=r.c.end||'';
-  document.getElementById('i-ig').value=r.c.ig||'';
-  document.getElementById('i-gm').value=r.c.gm||'';
-  document.getElementById('i-foto').value=r.c.foto||'';
-  document.getElementById('i-ar').checked=!!r.c.ar;
-  coordEd={lat:r.c.lat||null,lng:r.c.lng||null};mostraCoord();previewFoto();
-  pintaListasChips(r.c.l);pintaDias(S.dias.indexOf(r.d));
-  document.getElementById('i-del').style.display='block';abrir('item');
+  limparCampos();
+  const c=r.c,tp=c.tipo||'atividade';
+  selTipoChip(tp);
+  document.getElementById('i-del').style.display='block';
+  if(tp==='voo'){
+    document.getElementById('v-t').value=c.t||'';
+    document.getElementById('v-voo').value=c.voo||'';
+    document.getElementById('v-loc').value=c.loc||'';
+    const q=separarQuando(c.h);document.getElementById('v-data').value=q.data;document.getElementById('v-hora').value=q.hora;
+    document.getElementById('v-cheg').value=c.cheg||'';
+    document.getElementById('v-dur').value=c.dur||'';
+    document.getElementById('v-ass').value=c.ass||'';
+    document.getElementById('v-bag').value=c.bag||'';
+  }else if(tp==='hotel'){
+    document.getElementById('h-t').value=c.t||'';
+    const ci=separarQuando(c.h),co=separarQuando(c.hout);
+    document.getElementById('h-cidata').value=ci.data;document.getElementById('h-cihora').value=ci.hora;
+    document.getElementById('h-codata').value=co.data;document.getElementById('h-cohora').value=co.hora;
+    document.getElementById('h-res').value=c.loc||'';
+    document.getElementById('h-end').value=c.end||'';
+    document.getElementById('h-tel').value=c.tel||'';
+    document.getElementById('h-val').value=c.val||'';
+    coordHotelEd={lat:c.lat||null,lng:c.lng||null};endHotelEd=c.end||'';
+  }else{
+    document.getElementById('i-t').value=c.t||'';
+    const q=separarQuando(c.h);document.getElementById('i-data').value=q.data;document.getElementById('i-hora').value=q.hora;
+    document.getElementById('i-d').value=c.dur||'';
+    document.getElementById('i-r').value=c.rate||'';
+    document.getElementById('i-b').value=c.bai||'';
+    document.getElementById('i-n').value=c.nota||'';
+    endEd=c.end||'';
+    document.getElementById('i-ig').value=c.ig||'';
+    document.getElementById('i-gm').value=c.gm||'';
+    document.getElementById('i-foto').value=c.foto||'';
+    document.getElementById('i-ar').checked=!!c.ar;
+    coordEd={lat:c.lat||null,lng:c.lng||null};mostraCoord();previewFoto();
+    pintaListasChips(c.l);
+  }
+  pintaDias(S.dias.indexOf(r.d));
+  abrir('item');
 }
 function salvarItem(){
-  const t=document.getElementById('i-t').value.trim();
-  if(!t){toast('Escreva o título do cartão.');return;}
-  const dados={t,h:document.getElementById('i-h').value.trim(),dur:document.getElementById('i-d').value.trim(),
-    rate:document.getElementById('i-r').value.trim(),bai:document.getElementById('i-b').value.trim(),
-    nota:document.getElementById('i-n').value.trim(),ar:document.getElementById('i-ar').checked,l:listaSel(),
-    end:endEd,ig:document.getElementById('i-ig').value.trim(),
-    gm:document.getElementById('i-gm').value.trim(),
-    foto:document.getElementById('i-foto').value.trim(),
-    lat:coordEd.lat,lng:coordEd.lng};
-  const destino=parseInt(document.getElementById('i-dia').value);
+  let dados,destino;
+  if(itemTipo==='voo'){
+    const t=document.getElementById('v-t').value.trim();
+    if(!t){toast('Escreva o trecho do voo.');return;}
+    const data=document.getElementById('v-data').value,hora=document.getElementById('v-hora').value;
+    dados={tipo:'voo',t,voo:document.getElementById('v-voo').value.trim(),
+      loc:document.getElementById('v-loc').value.trim(),h:montarQuando(data,hora),
+      cheg:document.getElementById('v-cheg').value.trim(),dur:document.getElementById('v-dur').value.trim(),
+      ass:document.getElementById('v-ass').value.trim(),bag:document.getElementById('v-bag').value.trim(),
+      l:'log'};
+    destino=data?diaDaData(data):parseInt(document.getElementById('i-dia').value);
+  }else if(itemTipo==='hotel'){
+    const t=document.getElementById('h-t').value.trim();
+    if(!t){toast('Escreva o nome do hotel.');return;}
+    const cd=document.getElementById('h-cidata').value,ch=document.getElementById('h-cihora').value;
+    const od=document.getElementById('h-codata').value,oh=document.getElementById('h-cohora').value;
+    dados={tipo:'hotel',t,h:montarQuando(cd,ch),hout:montarQuando(od,oh),
+      loc:document.getElementById('h-res').value.trim(),end:document.getElementById('h-end').value.trim(),
+      tel:document.getElementById('h-tel').value.trim(),val:document.getElementById('h-val').value.trim(),
+      lat:coordHotelEd.lat,lng:coordHotelEd.lng,l:'log'};
+    destino=cd?diaDaData(cd):parseInt(document.getElementById('i-dia').value);
+  }else{
+    const t=document.getElementById('i-t').value.trim();
+    if(!t){toast('Escreva o título do cartão.');return;}
+    const data=document.getElementById('i-data').value,hora=document.getElementById('i-hora').value;
+    dados={tipo:'atividade',t,h:montarQuando(data,hora),dataISO:data,hora,
+      dur:document.getElementById('i-d').value.trim(),rate:document.getElementById('i-r').value.trim(),
+      bai:document.getElementById('i-b').value.trim(),nota:document.getElementById('i-n').value.trim(),
+      ar:document.getElementById('i-ar').checked,l:listaSel(),end:endEd,
+      ig:document.getElementById('i-ig').value.trim(),gm:document.getElementById('i-gm').value.trim(),
+      foto:document.getElementById('i-foto').value.trim(),lat:coordEd.lat,lng:coordEd.lng};
+    destino=data?diaDaData(data):parseInt(document.getElementById('i-dia').value);
+  }
   if(itemEd){const r=achar(itemEd);Object.assign(r.c,dados);
     const atual=S.dias.indexOf(r.d);
     if(atual!==destino){r.d.cards.splice(r.d.cards.indexOf(r.c),1);S.dias[destino].cards.push(r.c);}}
   else S.dias[destino].cards.push(Object.assign({id:id(),ok:false},dados));
-  diaAtivo=destino;fechar('item');salvar();render();toast(itemEd?'Cartão atualizado.':'Cartão criado.');
+  diaAtivo=destino;fechar('item');salvar();render();
+  toast(itemEd?'Atualizado.':'Adicionado ao Dia '+(destino+1)+'.');
 }
 function apagarItem(){
-  if(!itemEd||!confirm('Apagar este cartão?'))return;
+  if(!itemEd||!confirm('Apagar este item?'))return;
   for(const d of S.dias){const i=d.cards.findIndex(x=>x.id===itemEd);if(i>=0){d.cards.splice(i,1);break;}}
-  fechar('item');salvar();render();toast('Cartão removido.');
+  fechar('item');salvar();render();toast('Removido.');
 }
 
 /* ---------- lista ---------- */
@@ -1606,141 +1819,6 @@ function aplicarFundo(){
 }
 
 /* ---------- logística / descobrir ---------- */
-/* ==========================================================
-   LOGÍSTICA — voos, hospedagem e documentos
-   ========================================================== */
-const LOGDEF={
-  voos:{nome:'Voo',ic:'✈',sec:'Voos',
-    campos:[
-      {k:'t',l:'Trecho',ph:'GRU → BOG',obrig:true},
-      {k:'cod',l:'Voo',ph:'AV 123'},
-      {k:'Data',l:'Data e hora de partida',ph:'Sáb 14/03 · 06:20'},
-      {k:'Chegada',l:'Chegada',ph:'09:50'},
-      {k:'Duração',l:'Duração',ph:'6h30'},
-      {k:'Localizador',l:'Localizador',ph:'ABC123'},
-      {k:'Assentos',l:'Assentos',ph:'12A e 12B'},
-      {k:'Bagagem',l:'Bagagem',ph:'1 despachada por pessoa'}
-    ]},
-  hoteis:{nome:'Hospedagem',ic:'⌂',sec:'Hospedagem',
-    campos:[
-      {k:'t',l:'Nome e cidade',ph:'Casa India Catalina · Cartagena',obrig:true},
-      {k:'cod',l:'Noites',ph:'3 noites'},
-      {k:'Check-in',l:'Check-in',ph:'Sex 20/03 · 15:00'},
-      {k:'Check-out',l:'Check-out',ph:'Seg 23/03 · 12:00'},
-      {k:'Endereço',l:'Endereço',ph:'Calle del Curato #38-89'},
-      {k:'Reserva',l:'Código da reserva',ph:'BK-99887'},
-      {k:'Telefone',l:'Telefone',ph:'+57 5 664 0000'},
-      {k:'Valor',l:'Valor',ph:'COP 1.200.000'}
-    ]},
-  docs:{nome:'Documento',ic:'▤',sec:'Documentos e dinheiro',
-    campos:[
-      {k:'t',l:'O que é',ph:'Seguro viagem',obrig:true},
-      {k:'cod',l:'Referência',ph:'2 pax'},
-      {k:'Número',l:'Número / apólice',ph:'—'},
-      {k:'Validade',l:'Validade',ph:'12/2028'},
-      {k:'Emergência',l:'Contato de emergência',ph:'+55 11 0000-0000'},
-      {k:'Onde',l:'Onde está guardado',ph:'Cópia no e-mail e na mochila'}
-    ]}
-};
-function renderLog(){
-  const bl=(tipo)=>{
-    const D=LOGDEF[tipo],arr=S.log[tipo]||[];
-    let h=`<div class="sec">${D.sec}</div>`;
-    if(!arr.length){
-      h+=`<div class="lcd" style="text-align:center;padding:22px">
-        <div style="font-size:30px">${D.ic}</div>
-        <div style="font-size:14px;font-weight:700;margin-top:8px">Nada cadastrado</div>
-        <div style="font-size:13px;color:var(--ink2);font-weight:500;margin-top:4px;line-height:1.5">
-          Toque em ＋ no topo para adicionar ${D.nome.toLowerCase()}.</div></div>`;
-      return h;
-    }
-    h+=arr.map(x=>{
-      const f=Object.entries(x.f||{}).filter(([k,v])=>v&&String(v).trim()&&v!=='—');
-      return `<div class="lcd" onclick="editarLog('${tipo}','${x.id}')">
-        <div class="l1"><div class="ic">${D.ic}</div>
-          <div class="t">${esc(x.t)}</div>
-          ${x.cod?`<div class="cod">${esc(x.cod)}</div>`:''}</div>
-        ${f.length?`<div class="gr">${f.map(([k,v])=>
-          `<div class="f"><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('')}</div>`:''}
-        ${x.obs?`<div style="font-size:13px;color:var(--ink2);font-weight:500;line-height:1.5;
-          margin-top:10px;padding-top:10px;border-top:1px solid var(--painel)">${esc(x.obs)}</div>`:''}
-      </div>`;}).join('');
-    h+=`<button class="lcd" style="width:100%;text-align:left;border:none;font-size:13.5px;
-      font-weight:700;color:var(--azul);padding:13px" onclick="novoLog('${tipo}')">
-      ＋ Adicionar ${D.nome.toLowerCase()}</button>`;
-    return h;
-  };
-  document.getElementById('log').innerHTML=bl('voos')+bl('hoteis')+bl('docs');
-}
-let logEd=null,logTipo='voos';
-function trocarTipoLog(b){
-  document.querySelectorAll('#g-tipo .chip').forEach(x=>x.classList.remove('on'));
-  b.classList.add('on');logTipo=b.dataset.v;
-  pintaCamposLog(logEd?acharLog(logEd):null);
-}
-function pintaCamposLog(reg){
-  const D=LOGDEF[logTipo];
-  document.getElementById('g-campos').innerHTML=D.campos.map(c=>{
-    const v=reg?(c.k==='t'?reg.t:c.k==='cod'?reg.cod:(reg.f||{})[c.k]||''):'';
-    return `<label class="fl">${esc(c.l)}${c.obrig?' *':''}</label>
-      <input class="fi" data-k="${c.k}" value="${esc(v)}" placeholder="${esc(c.ph)}">`;
-  }).join('');
-}
-function acharLog(lid){
-  for(const t of Object.keys(LOGDEF)){
-    const x=(S.log[t]||[]).find(y=>y.id===lid);
-    if(x)return x;
-  }
-  return null;
-}
-function novoLog(tipo){
-  logEd=null;logTipo=(typeof tipo==='string'&&LOGDEF[tipo])?tipo:'voos';
-  document.getElementById('g-tit').textContent='Novo registro';
-  document.querySelectorAll('#g-tipo .chip').forEach(b=>b.classList.toggle('on',b.dataset.v===logTipo));
-  document.getElementById('g-obs2').value='';
-  document.getElementById('g-del').style.display='none';
-  pintaCamposLog(null);abrir('logi');
-  setTimeout(()=>{const i=document.querySelector('#g-campos input');if(i)i.focus();},150);
-}
-function editarLog(tipo,lid){
-  const reg=acharLog(lid);if(!reg)return;
-  logEd=lid;logTipo=tipo;
-  document.getElementById('g-tit').textContent='Editar '+LOGDEF[tipo].nome.toLowerCase();
-  document.querySelectorAll('#g-tipo .chip').forEach(b=>b.classList.toggle('on',b.dataset.v===tipo));
-  document.getElementById('g-obs2').value=reg.obs||'';
-  document.getElementById('g-del').style.display='block';
-  pintaCamposLog(reg);abrir('logi');
-}
-function salvarLog(){
-  const ins=[...document.querySelectorAll('#g-campos input')];
-  const vals={};ins.forEach(i=>vals[i.dataset.k]=i.value.trim());
-  if(!vals.t){toast('Preencha o primeiro campo.');return;}
-  const f={};
-  LOGDEF[logTipo].campos.forEach(c=>{if(c.k!=='t'&&c.k!=='cod'&&vals[c.k])f[c.k]=vals[c.k];});
-  const reg={t:vals.t,cod:vals.cod||'',f,obs:document.getElementById('g-obs2').value.trim()};
-  if(logEd){
-    /* pode ter mudado de tipo: remove de onde estava e grava no tipo atual */
-    let antigo=null;
-    Object.keys(LOGDEF).forEach(t=>{
-      const i=(S.log[t]||[]).findIndex(x=>x.id===logEd);
-      if(i>=0){antigo=S.log[t][i];if(t!==logTipo)S.log[t].splice(i,1);}
-    });
-    if(antigo&&(S.log[logTipo]||[]).some(x=>x.id===logEd))Object.assign(antigo,reg);
-    else{S.log[logTipo]=S.log[logTipo]||[];S.log[logTipo].push(Object.assign({id:logEd},reg));}
-  }else{
-    S.log[logTipo]=S.log[logTipo]||[];
-    S.log[logTipo].push(Object.assign({id:id()},reg));
-  }
-  fechar('logi');salvar();renderLog();toast(logEd?'Registro atualizado.':'Registro criado.');
-}
-function apagarLog(){
-  if(!logEd||!confirm('Apagar este registro?'))return;
-  Object.keys(LOGDEF).forEach(t=>{
-    const i=(S.log[t]||[]).findIndex(x=>x.id===logEd);
-    if(i>=0)S.log[t].splice(i,1);
-  });
-  fechar('logi');salvar();renderLog();toast('Registro removido.');
-}
 /* ---------- Descobrir: fotos (Wikipédia), distância e "perto de mim" ---------- */
 let descPos=null;
 const FOTOS=(()=>{try{return JSON.parse(localStorage.getItem('ruta_fotos'))||{};}catch(e){return{};}})();
@@ -1933,7 +2011,9 @@ function largar(x,y,cid){
   const a=alvoEm(x,y);
   if(!a)return;
   const r=achar(cid);if(!r)return;
+  const ehLog=r.c.tipo==='voo'||r.c.tipo==='hotel';
   if(a.tipo==='lista'){
+    if(ehLog){toast('Voo e hotel não vão para colunas — arraste para outro dia.');return;}
     if(r.c.l===a.l)return;
     r.c.l=a.l;
     salvar();render();
@@ -1955,7 +2035,6 @@ function verTela(id){
   const b=document.querySelector(`.nav button[data-s="${id}"]`);if(b)b.classList.add('on');
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
   document.getElementById(id).classList.add('on');
-  if(id==='s-log')renderLog();
   if(id==='s-desc')renderDesc();
   if(id==='s-clima')renderClima();
   if(id==='s-mapa')renderMapa();
@@ -2110,7 +2189,7 @@ function abrirIA(){
     const nm=S.quem?`, ${S.quem}`:'';
     const b=diz('ia',`${saudacaoTexto()}${nm}. `+
       (livre
-        ? `Podem falar do jeito que vier — <b>"a gente tá cansado, deixa a tarde livre"</b>, <b>"um lugar bom pra jantar sem gente demais"</b>. Eu leio o quadro e a previsão, monto a proposta, e vocês marcam o que aceitam antes de qualquer coisa mudar.`
+        ? `Podem falar do jeito que vier — <b>"a gente tá cansado, deixa a tarde livre"</b>, <b>"um lugar bom pra jantar sem gente demais"</b>.<br><br>E dá para <b>anexar reservas</b> no 📎 — confirmação de voo, hotel, ingresso, reserva de restaurante. Eu leio o documento e coloco no lugar certo. Nada muda sem vocês aprovarem.`
         : `Falem comigo por voz ou texto — <b>"chove no dia 2"</b>, <b>"esse dia está cheio"</b>, <b>"mais um dia em Cartagena"</b>. Eu monto a proposta, vocês marcam o que aceitam e só então o quadro muda.`));
     b.classList.add('boasvindas');
   }
@@ -2283,8 +2362,47 @@ function planoChuva(alvo){
       acao:()=>d.cards.push({id:id(),t:x.t,l:listaDe(x.l)?x.l:flexId,ok:false,h:'',dur:x.dur||'',
         rate:x.rate||'',bai:x.bai||'',nota:x.nota||'',ar:false})})))};
 }
-/* ======= CONVERSA LIVRE via Cloud Function ======= */
-let hist=[];
+/* ======= ANEXOS: reservas, voos, ingressos em PDF/imagem ======= */
+let ANEXOS=[];
+function lerArquivo(file){
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=()=>res(r.result.split(',')[1]);
+    r.onerror=()=>rej(new Error('falha ao ler'));
+    r.readAsDataURL(file);
+  });
+}
+async function addAnexos(files){
+  if(!SY.fn){
+    toast('Para ler documentos, ligue a RutAI na nuvem no ☁ do topo.');
+    return;
+  }
+  for(const f of files){
+    if(f.size>4.5*1024*1024){toast(`"${f.name}" passa de 4,5 MB — muito grande.`);continue;}
+    const ehPdf=f.type==='application/pdf'||/\.pdf$/i.test(f.name);
+    const ehImg=f.type.startsWith('image/');
+    if(!ehPdf&&!ehImg){toast('Envie PDF ou imagem.');continue;}
+    try{
+      const b64=await lerArquivo(f);
+      ANEXOS.push({nome:f.name,tipo:ehPdf?'pdf':'img',media:f.type||(ehPdf?'application/pdf':'image/jpeg'),dados:b64});
+    }catch(e){toast('Não consegui ler '+f.name);}
+  }
+  renderAnexos();
+}
+function renderAnexos(){
+  const el=document.getElementById('anexos');
+  el.innerHTML=ANEXOS.map((a,i)=>
+    `<div class="anx">
+      ${a.tipo==='img'?`<img src="data:${a.media};base64,${a.dados}" alt="">`:`<span class="ai">📄</span>`}
+      <span class="an">${esc(a.nome)}</span>
+      <button class="ax" onclick="tirarAnexo(${i})">✕</button>
+    </div>`).join('');
+}
+function tirarAnexo(i){ANEXOS.splice(i,1);renderAnexos();}
+document.getElementById('arq').addEventListener('change',e=>{
+  if(e.target.files&&e.target.files.length)addAnexos([...e.target.files]);
+  e.target.value='';
+});
 function retratoDoQuadro(){
   return {
     hoje:new Date().toISOString().slice(0,10),
@@ -2296,16 +2414,13 @@ function retratoDoQuadro(){
     dias:S.dias.map((d,i)=>({
       dia:i+1,cidade:nomeCid(d.cid),data:S.inicio?rotuloDia(i):null,
       clima:(()=>{const c=climaDoDia(i);return c?{desc:wTxt(c.cod),max:c.max,min:c.min,chuva:c.prob}:null;})(),
-      cartoes:d.cards.map(c=>({id:c.id,titulo:c.t,lista:c.l,hora:c.h||null,duracao:c.dur||null,
-        nota:c.rate||null,bairro:c.bai||null,aoArLivre:!!c.ar,feito:!!c.ok}))
+      cartoes:d.cards.filter(c=>c.tipo!=='voo'&&c.tipo!=='hotel').map(c=>({id:c.id,titulo:c.t,lista:c.l,hora:c.h||null,duracao:c.dur||null,
+        nota:c.rate||null,bairro:c.bai||null,aoArLivre:!!c.ar,feito:!!c.ok})),
+      voos:d.cards.filter(c=>c.tipo==='voo').map(c=>({id:c.id,trecho:c.t,voo:c.voo||null,partida:c.h||null,chegada:c.cheg||null,localizador:c.loc||null})),
+      hoteis:d.cards.filter(c=>c.tipo==='hotel').map(c=>({id:c.id,nome:c.t,checkin:c.h||null,checkout:c.hout||null,reserva:c.loc||null}))
     })),
     catalogo:CAT.map(x=>({titulo:x.t,cidade:nomeCid(x.c),lista:x.l,nota:x.rate,
-      duracao:x.dur,bairro:x.bai||null,aoArLivre:!!x.ar})),
-    logistica:{
-      voos:(S.log.voos||[]).map(x=>({trecho:x.t,voo:x.cod,...x.f})),
-      hospedagem:(S.log.hoteis||[]).map(x=>({nome:x.t,noites:x.cod,...x.f})),
-      documentos:(S.log.docs||[]).map(x=>({item:x.t,ref:x.cod,...x.f}))
-    }
+      duracao:x.dur,bairro:x.bai||null,aoArLivre:!!x.ar}))
   };
 }
 const SISTEMA=`Você é a RutAI, assistente de um app de roteiro de viagem chamado Ruta, usado por um casal brasileiro viajando pela Colômbia. Fala português do Brasil, com tom próximo e direto, sem formalidade excessiva e sem emojis em excesso.
@@ -2337,10 +2452,29 @@ Regras:
 async function chamarIA(pedido){
   const u=(SY.fn||'').trim();
   if(!u)return null;
-  hist.push({role:'user',content:JSON.stringify({pedido,quadro:retratoDoQuadro()})});
+  /* monta o conteúdo do turno: texto + anexos (se houver) */
+  let conteudo;
+  if(ANEXOS.length){
+    conteudo=[];
+    ANEXOS.forEach(a=>{
+      if(a.tipo==='pdf')conteudo.push({type:'document',
+        source:{type:'base64',media_type:'application/pdf',data:a.dados}});
+      else conteudo.push({type:'image',
+        source:{type:'base64',media_type:a.media,data:a.dados}});
+    });
+    conteudo.push({type:'text',content:''}); /* placeholder, ajustado abaixo */
+    conteudo[conteudo.length-1]={type:'text',text:
+      JSON.stringify({pedido:pedido+' (há documento(s) anexado(s) — leia e extraia as reservas)',
+        quadro:retratoDoQuadro()})};
+  }else{
+    conteudo=JSON.stringify({pedido,quadro:retratoDoQuadro()});
+  }
+  hist.push({role:'user',content:conteudo});
   if(hist.length>10)hist=hist.slice(-10);
+  const sys=ANEXOS.length?SISTEMA+'\n\n'+EXTRA_DOC:SISTEMA;
   const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({system:SISTEMA,messages:hist,max_tokens:2000})});
+    body:JSON.stringify({system:sys,messages:hist,max_tokens:3000})});
+  ANEXOS=[];renderAnexos();
   if(!r.ok){
     let det='';try{const e=await r.json();det=e.error||'';}catch(_){}
     throw new Error('HTTP '+r.status+(det?' · '+det:''));
@@ -2352,6 +2486,18 @@ async function chamarIA(pedido){
   const ini=limpo.indexOf('{'),fim=limpo.lastIndexOf('}');
   return JSON.parse(ini>=0?limpo.slice(ini,fim+1):limpo);
 }
+const EXTRA_DOC=`O usuário anexou um ou mais documentos (voo, reserva de hotel, ingresso, reserva de restaurante, passeio). Leia com atenção e extraia as informações reais.
+
+Além das ações já descritas, você pode usar estas para logística (que viram cartões de voo/hotel no dia certo):
+{"tipo":"logVoo","trecho":"GRU → BOG","voo":"AV123","data":"Dia 1 · 06:20","chegada":"09:50","duracao":"6h30","localizador":"ABC123","dia":1,"texto":"..."}
+{"tipo":"logHotel","nome":"Cidade · Bairro","checkin":"Dia 1 · 15:00","checkout":"Dia 4 · 08:00","reserva":"...","endereco":"...","dia":1,"texto":"..."}
+{"tipo":"logDoc","item":"Seguro viagem","ref":"2 pax","numero":"...","validade":"...","texto":"..."}
+
+Regras para documentos:
+- Para reserva de RESTAURANTE ou PASSEIO com data/hora, crie um cartão no dia certo (ação "criar"), lista l3 para comer, l2 para passeio, com hora, endereço e o essencial na descrição.
+- Para VOO use "logVoo"; para HOSPEDAGEM "logHotel". Preencha "data"/"checkin" como "Dia N · HH:MM" e informe "dia" com o número do dia, calculando a partir da data de início do quadro.
+- Se o documento não trouxer um dado, deixe o campo vazio — nunca invente localizador, número ou horário.
+- Explique em "fala" o que encontrou, em 1-2 frases, e liste as ações para confirmação.`;
 /* converte a ação vinda do modelo numa função aplicável */
 function acaoDoModelo(a){
   const chaveCidade=nome=>{
@@ -2382,6 +2528,19 @@ function acaoDoModelo(a){
       S.dias.splice(i,1);if(diaAtivo>=S.dias.length)diaAtivo=S.dias.length-1;};
     case 'trocarCidade':return()=>{const i=(a.dia|0)-1;if(i<0||i>=S.dias.length)return;
       S.dias[i].cid=chaveCidade(a.cidade);};
+    case 'logVoo':return()=>{
+      const di=a.dia?Math.min(Math.max((a.dia|0)-1,0),S.dias.length-1):diaDaData(separarQuando(a.data).data);
+      S.dias[di].cards.unshift({id:id(),ok:false,tipo:'voo',l:'log',t:a.trecho||'Voo',
+        voo:a.voo||'',h:a.data||'',cheg:a.chegada||'',dur:a.duracao||'',loc:a.localizador||''});};
+    case 'logHotel':return()=>{
+      const di=a.dia?Math.min(Math.max((a.dia|0)-1,0),S.dias.length-1):diaDaData(separarQuando(a.checkin).data);
+      S.dias[di].cards.unshift({id:id(),ok:false,tipo:'hotel',l:'log',t:a.nome||'Hospedagem',
+        h:a.checkin||'',hout:a.checkout||'',loc:a.reserva||'',end:a.endereco||'',
+        tel:a.telefone||'',val:a.valor||'',lat:null,lng:null});};
+    case 'logDoc':return()=>{
+      const flex=S.listas.find(l=>l.n.toLowerCase().includes('flex'))||S.listas[0];
+      S.dias[0].cards.push({id:id(),ok:false,tipo:'atividade',l:flex.id,
+        t:a.item||'Documento',nota:[a.ref,a.numero,a.validade].filter(Boolean).join(' · '),h:''});};
     default:return null;
   }
 }
@@ -2404,11 +2563,15 @@ function respostaLocal(bolha,txt){
   if(r.plano&&r.plano.itens.length)montarProposta(bolha,r.plano.titulo,r.plano.itens);
 }
 async function perguntar(txt){
-  txt=(txt||'').trim();if(!txt)return;
-  abrir('rutai');diz('eu',esc(txt));
+  txt=(txt||'').trim();
+  if(!txt&&ANEXOS.length)txt='Leia o documento anexado e adicione ao roteiro.';
+  if(!txt)return;
+  abrir('rutai');
+  const temAnexo=ANEXOS.length;
+  diz('eu',esc(txt)+(temAnexo?` <span style="opacity:.7">· ${temAnexo} anexo(s)</span>`:''));
   document.getElementById('ask1').value='';document.getElementById('ask2').value='';
   const p=diz('ia','<span class="dots"><i></i><i></i><i></i></span>');
-  orbe('pensando');statusIA('pensando…');
+  orbe('pensando');statusIA(temAnexo?'lendo o documento…':'pensando…');
   if(!SY.fn){setTimeout(()=>{respostaLocal(p,txt);orbe('');statusIA('');},420);return;}
   try{
     const r=await chamarIA(txt);
@@ -2521,10 +2684,10 @@ function aplicarRoteiro(btn){
     if(k)return k;const nk='c'+(++uid);novoCid[nk]=nome;return nk;
   };
   S.dias=j.dias.map(dd=>({id:id(),cid:chave(dd.cidade||'Colômbia'),
-    cards:(dd.cartoes||[]).map(c=>({id:id(),t:c.titulo||'Sem título',
-      l:listaDe(c.lista)?c.lista:S.listas[0].id,ok:false,h:c.hora||'',dur:c.duracao||'',
+    cards:(dd.cartoes||[]).map(c=>({id:id(),tipo:'atividade',t:c.titulo||'Sem título',
+      l:listaDe(c.lista)&&c.lista!=='log'?c.lista:S.listas[0].id,ok:false,h:c.hora||'',dur:c.duracao||'',
       rate:c.nota||'',bai:c.bairro||'',nota:c.descricao||'',ar:!!c.aoArLivre,
-      lat:c.lat||null,lng:c.lng||null,end:c.endereco||'',ig:c.instagram||''}))}));
+      lat:c.lat||null,lng:c.lng||null,end:c.endereco||'',ig:c.instagram||'',gm:'',foto:''}))}));
   S.cid=novoCid;
   if(data)S.inicio=data;
   diaAtivo=0;ROTEIRO_PENDENTE=null;plano=null;
