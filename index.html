@@ -359,6 +359,11 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
 .chip.on{border-color:var(--azul);color:var(--azul);background:var(--azul-t)}
 .fl2{display:block;font-size:10.5px;font-weight:700;color:var(--ink3);text-transform:uppercase;
   letter-spacing:.04em;margin:0 0 5px 2px}
+.trecho{background:var(--painel);border-radius:12px;padding:11px;margin-bottom:9px}
+.tlin{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.tlin .fi{flex:1;margin:0}
+.txr{width:34px;height:34px;flex-shrink:0;border:none;border-radius:8px;background:var(--coral-t);
+  color:var(--coral-d);font-size:14px;font-weight:700}
 .cpwrap input{flex:1;padding-right:76px}
 .cpbtn{position:absolute;right:6px;background:var(--azul);color:#fff;border:none;border-radius:7px;
   padding:7px 11px;font-size:12px;font-weight:700}
@@ -787,14 +792,13 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
   <div class="grab"></div>
   <div class="shd"><h3>Montar o roteiro do zero</h3><button class="x" onclick="fechar('gerar')">✕</button></div>
   <div class="sbody">
-    <div class="resumo">Diga como querem viajar e a RutAI monta o roteiro inteiro — dias, cidades e cartões.
-      Ela mostra tudo para vocês confirmarem antes de qualquer coisa entrar no quadro.</div>
-    <label class="fl">Quantos dias</label>
-    <input class="fi" type="number" id="g-dias" value="9" min="2" max="21">
-    <label class="fl">Cidades, na ordem</label>
-    <input class="fi" id="g-cid" placeholder="Bogotá, Medellín, Cartagena">
-    <label class="fl">Data de início</label>
-    <input class="fi" type="date" id="g-data">
+    <div class="resumo">Diga os trechos da viagem — cidade, quando chega e quando sai. A RutAI monta
+      dia a dia e mostra tudo para vocês confirmarem antes de entrar no quadro.</div>
+
+    <label class="fl">Trechos da viagem</label>
+    <div id="g-trechos"></div>
+    <button class="chip" style="width:100%;justify-content:center;margin-top:2px" onclick="addTrecho()">＋ Adicionar cidade</button>
+
     <label class="fl">Ritmo</label>
     <div class="chips" id="g-ritmo">
       <button class="chip" data-v="tranquilo" onclick="selChip(this,'g-ritmo')">Tranquilo</button>
@@ -807,19 +811,19 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
       <button class="chip on" data-v="gastronomia" onclick="multiChip(this)">Comida</button>
       <button class="chip" data-v="natureza e trilhas" onclick="multiChip(this)">Natureza</button>
       <button class="chip" data-v="praia e mar" onclick="multiChip(this)">Praia</button>
+      <button class="chip on" data-v="drinks e cervejas artesanais" onclick="multiChip(this)">Drinks & cerveja</button>
       <button class="chip" data-v="vida noturna e música" onclick="multiChip(this)">Noite</button>
       <button class="chip" data-v="compras e artesanato" onclick="multiChip(this)">Compras</button>
-      <button class="chip" data-v="arquitetura e fotografia" onclick="multiChip(this)">Fotografia</button>
-      <button class="chip on" data-v="programas românticos para casal" onclick="multiChip(this)">Casal</button>
+      <button class="chip on" data-v="lugares bem avaliados por moradores locais" onclick="multiChip(this)">Spots de locais</button>
+      <button class="chip on" data-v="momentos contemplativos e de descanso" onclick="multiChip(this)">Descanso</button>
     </div>
     <label class="fl">Observações</label>
-    <textarea class="fi" id="g-obs" placeholder="Ex.: chegamos de madrugada, um de nós tem joelho sensível, queremos uma noite livre em Medellín"></textarea>
+    <textarea class="fi" id="g-obs" placeholder="Ex.: valorizem eficiência de deslocamento; uma noite livre em Medellín; joelho sensível"></textarea>
     <div class="fbtns">
       <button class="cn" onclick="fechar('gerar')">Cancelar</button>
       <button class="sv" onclick="gerarRoteiro()">Montar roteiro</button>
     </div>
-    <div class="aviso" id="g-est"><b>Precisa da RutAI na nuvem.</b> Esta função monta o roteiro com o Claude —
-      configure a Cloud Function no ☁ do topo. Sem ela, o botão fica indisponível.</div>
+    <div class="aviso" id="g-est"><b>Precisa da RutAI na nuvem.</b> Configure a Cloud Function no ☁ do topo.</div>
   </div>
 </div>
 
@@ -2611,6 +2615,17 @@ async function perguntar(txt){
   if(!txt)return;
   abrir('rutai');
   const temAnexo=ANEXOS.length;
+  /* pedido de roteiro completo → o gerador é muito mais confiável que 6 ações soltas */
+  if(!temAnexo&&/\b(roteiro|itinerário)\b.*\b(complet|inteir|todos os dias|toda|período|viagem)\b/i.test(txt)
+     ||/\b(monte|montar|elabore|crie|criar|gere|gerar)\b.*\broteiro\b/i.test(txt)){
+    diz('eu',esc(txt));
+    const p=diz('ia','Para um roteiro do zero, o <b>montador</b> funciona bem melhor que o chat: '+
+      'você informa os trechos com as datas de chegada e saída, e eu monto dia a dia com tudo vinculado.<br><br>'+
+      'Vou abrir o montador — seus dados de viagem já vêm preenchidos.');
+    document.getElementById('ask2').value='';
+    setTimeout(()=>{fechar('rutai');abrirGerar();},1400);
+    return;
+  }
   diz('eu',esc(txt)+(temAnexo?` <span style="opacity:.7">· ${temAnexo} anexo(s)</span>`:''));
   document.getElementById('ask1').value='';document.getElementById('ask2').value='';
   const p=diz('ia','<span class="dots"><i></i><i></i><i></i></span>');
@@ -2636,52 +2651,87 @@ async function perguntar(txt){
     const p2=diz('ia','…');respostaLocal(p2,txt);
   }
 }
-/* ======= GERADOR DE ROTEIRO ======= */
+/* ======= GERADOR DE ROTEIRO — por trechos de cidade ======= */
 function selChip(b,grupo){document.querySelectorAll('#'+grupo+' .chip').forEach(x=>x.classList.remove('on'));b.classList.add('on');}
 function multiChip(b){b.classList.toggle('on');}
+let TRECHOS=[];
+function addTrecho(cidade,chegada,saida){
+  TRECHOS.push({cidade:cidade||'',chegada:chegada||'',saida:saida||''});
+  renderTrechos();
+}
+function tirarTrecho(i){TRECHOS.splice(i,1);renderTrechos();}
+function attTrecho(i,campo,v){if(TRECHOS[i])TRECHOS[i][campo]=v;}
+function renderTrechos(){
+  const el=document.getElementById('g-trechos');
+  el.innerHTML=TRECHOS.map((t,i)=>`
+    <div class="trecho">
+      <div class="tlin">
+        <input class="fi" placeholder="Cidade" value="${esc(t.cidade)}" oninput="attTrecho(${i},'cidade',this.value)">
+        <button class="txr" onclick="tirarTrecho(${i})">✕</button>
+      </div>
+      <div class="frow">
+        <div><label class="fl2">Chegada</label><input class="fi" type="date" value="${esc(t.chegada)}" oninput="attTrecho(${i},'chegada',this.value)"></div>
+        <div><label class="fl2">Saída</label><input class="fi" type="date" value="${esc(t.saida)}" oninput="attTrecho(${i},'saida',this.value)"></div>
+      </div>
+    </div>`).join('');
+}
 function abrirGerar(){
-  document.getElementById('g-data').value=S.inicio||'';
-  document.getElementById('g-dias').value=S.dias.length||9;
-  document.getElementById('g-cid').value=Object.values(S.cid).join(', ');
+  if(!TRECHOS.length){
+    /* semeia com as cidades atuais do quadro */
+    const cids=[...new Set(S.dias.map(d=>nomeCid(d.cid)))];
+    if(cids.length&&S.inicio){
+      cids.forEach((c,k)=>{
+        const idxs=S.dias.map((d,i)=>nomeCid(d.cid)===c?i:-1).filter(i=>i>=0);
+        addTrecho(c,isoDia(idxs[0]),isoDia(idxs[idxs.length-1]));
+      });
+    }else{
+      addTrecho('','','');
+    }
+  }
+  renderTrechos();
   const est=document.getElementById('g-est');
   est.innerHTML=SY.fn
-    ? '<b>RutAI na nuvem ativa.</b> O roteiro é montado pelo Claude e mostrado para vocês aprovarem dia a dia, antes de substituir o que já existe.'
-    : '<b>Precisa da RutAI na nuvem.</b> Configure a Cloud Function no ☁ do topo para usar esta função.';
+    ? '<b>RutAI na nuvem ativa.</b> O roteiro é montado pelo Claude e você aprova antes de entrar no quadro.'
+    : '<b>Precisa da RutAI na nuvem.</b> Configure a Cloud Function no ☁ do topo.';
   abrir('gerar');
 }
-const SIS_GERA=`Você é a RutAI, especialista em roteiros pela Colômbia, montando a viagem de um casal brasileiro.
+const SIS_GERA=`Você é a RutAI, especialista em roteiros pela Colômbia, montando a viagem de um casal brasileiro (Fernando e Manu).
 
-Monte um roteiro completo em português do Brasil, realista quanto a deslocamentos, horários e cansaço. Considere: dias de chegada e de voo interno rendem menos; altitude de Bogotá pede primeiro dia leve; bate-voltas longos (Guatapé, Zipaquirá, Ilhas do Rosário) ocupam o dia inteiro; deixe pelo menos um bloco flexível por dia.
+Você recebe: os TRECHOS da viagem (cidade, data de chegada e data de saída de cada uma), o ritmo, os interesses e observações. Monte um roteiro dia a dia, realista quanto a deslocamentos e cansaço.
 
-Responda SOMENTE com um JSON válido, sem markdown e sem crases:
-{"fala":"2 a 4 frases explicando a lógica do roteiro, com <b> e <br> se quiser",
- "dias":[{"cidade":"Bogotá","cartoes":[{"lista":"l1","titulo":"...","hora":"09:00","duracao":"3h","nota":"4,7","bairro":"...","descricao":"dica prática curta","aoArLivre":true,"lat":4.5977,"lng":-74.0733,"endereco":"..."}]}]}
+REGRAS DE OURO:
+- Gere EXATAMENTE um dia para cada data do calendário, da primeira chegada até a última saída, sem pular nenhuma. Se a viagem vai de 28/08 a 06/09, são 10 dias.
+- A cidade de cada dia é definida pelos trechos: no dia em que se está numa cidade, o dia é daquela cidade. No dia de mudança, a cidade é a de DESTINO (onde vão dormir). NUNCA crie cidades com nome tipo "Medellín → Cartagena" — o nome da cidade é só "Cartagena".
+- O dia de chegada a uma cidade (com voo/deslocamento) rende menos: 2 a 3 cartões, incluindo check-in e algo perto do hotel. O último dia numa cidade também rende menos se houver voo.
+- Dias cheios: 3 a 5 cartões. Sempre pelo menos um de comida (l3) e um flexível (l4).
+- Respeite o horário de chegada informado nas observações: se chegam às 19h, o dia 1 tem só jantar e check-in.
+- Aproveite as OBSERVAÇÕES do usuário — elas são instruções diretas (ex.: "eficiência de deslocamento", "noite livre", "drinks e cerveja artesanal").
 
-Listas disponíveis: "l1" = âncora do dia (voos, check-in, o programa principal), "l2" = passeios, "l3" = comer e beber, "l4" = flexível (o que pode transitar entre dias).
+Responda SOMENTE com JSON válido, sem markdown e sem crases:
+{"fala":"2-3 frases explicando a lógica","dias":[{"data":"2026-08-28","cidade":"Medellín","cartoes":[{"lista":"l1","titulo":"...","hora":"20:00","duracao":"1h30","nota":"4,6","bairro":"El Poblado","descricao":"dica curta","aoArLivre":false,"endereco":"Nome, Bairro","lat":6.20,"lng":-75.57}]}]}
 
-Regras:
-- Um objeto em "dias" para CADA dia pedido, na ordem, com a cidade correta.
-- 3 a 5 cartões por dia. Sempre pelo menos um "l3" e um "l4".
-- "lat" e "lng" são obrigatórios em lugares físicos reais, com coordenadas corretas. Omita apenas em itens genéricos como "manhã livre".
-- "nota" é a avaliação estilo Google, entre 4,0 e 4,9, realista.
-- "aoArLivre" true para o que a chuva atrapalha.
-- "descricao" é uma dica prática de quem conhece o lugar, curta e concreta.
+Listas: "l1" âncora (check-in, programa principal), "l2" passeios, "l3" comer e beber, "l4" flexível.
+- "data" no formato YYYY-MM-DD, uma por dia, em ordem.
+- "endereco" sempre preenchido com nome + bairro, para o mapa.
+- "lat"/"lng" reais para lugares físicos; omita em "manhã livre".
 - Nunca escreva nada fora do JSON.`;
 
 async function gerarRoteiro(){
   if(!SY.fn){toast('Configure a RutAI na nuvem no ☁ do topo.');return;}
-  const nd=Math.max(2,Math.min(21,parseInt(document.getElementById('g-dias').value)||9));
-  const cids=document.getElementById('g-cid').value.split(',').map(x=>x.trim()).filter(Boolean);
-  if(!cids.length){toast('Escreva ao menos uma cidade.');return;}
-  const data=document.getElementById('g-data').value;
+  const trechos=TRECHOS.filter(t=>t.cidade.trim()&&t.chegada&&t.saida);
+  if(!trechos.length){toast('Preencha ao menos uma cidade com chegada e saída.');return;}
   const ritmo=(document.querySelector('#g-ritmo .chip.on')||{}).dataset?.v||'equilibrado';
   const ints=[...document.querySelectorAll('#g-int .chip.on')].map(b=>b.dataset.v);
   const obs=document.getElementById('g-obs').value.trim();
+  /* calcula o total de dias e a data de início a partir dos trechos */
+  const todasDatas=trechos.flatMap(t=>[t.chegada,t.saida]).sort();
+  const inicio=todasDatas[0],fim=todasDatas[todasDatas.length-1];
   fechar('gerar');abrirIA();
-  diz('eu',`Montar um roteiro de ${nd} dias por ${esc(cids.join(', '))}.`);
-  const p=diz('ia','<span class="dots"><i></i><i></i><i></i></span>');orbe('pensando');statusIA('montando o roteiro…');
-  const pedido={dias:nd,cidades:cids,inicio:data||null,ritmo,interesses:ints,observacoes:obs||null,
-    hoje:new Date().toISOString().slice(0,10)};
+  const resumoTrechos=trechos.map(t=>`${t.cidade} (${t.chegada} a ${t.saida})`).join(', ');
+  diz('eu',`Montar roteiro: ${esc(resumoTrechos)}.`);
+  const p=diz('ia','<span class="dots"><i></i><i></i><i></i></span>');
+  orbe('pensando');statusIA('montando o roteiro dia a dia…');
+  const pedido={trechos,inicio,fim,ritmo,interesses:ints,observacoes:obs||null};
   try{
     const r=await fetch(SY.fn,{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({system:SIS_GERA,max_tokens:16000,
@@ -2690,56 +2740,62 @@ async function gerarRoteiro(){
       throw new Error('HTTP '+r.status+(det?' · '+det:''));}
     const d=await r.json();
     const raw=String(d.text||d.content||'').replace(/```json|```/g,'').trim();
-    const ini=raw.indexOf('{'),fim=raw.lastIndexOf('}');
-    const j=JSON.parse(ini>=0?raw.slice(ini,fim+1):raw);
+    const i0=raw.indexOf('{'),i1=raw.lastIndexOf('}');
+    const j=JSON.parse(i0>=0?raw.slice(i0,i1+1):raw);
     if(!j.dias||!j.dias.length)throw new Error('Resposta sem dias.');
     orbe('');statusIA('');
+    const totCards=j.dias.reduce((a,x)=>a+(x.cartoes||[]).length,0);
     p.innerHTML=(j.fala||'Roteiro montado.')+
-      `<br><br><b>${j.dias.length} dias</b> · ${j.dias.reduce((a,x)=>a+(x.cartoes||[]).length,0)} cartões.`;
-    /* prévia por dia + confirmação única */
-    const itens=j.dias.map((dd,i)=>({
-      txt:`<b>Dia ${i+1} · ${esc(dd.cidade||'—')}</b><br>`+
-        (dd.cartoes||[]).map(c=>`· ${c.hora?esc(c.hora)+' — ':''}${esc(c.titulo||'')}`).join('<br>'),
-      acao:null
-    }));
-    plano={titulo:'Roteiro proposto',itens};
+      `<br><br><b>${j.dias.length} dias</b> · ${totCards} cartões. Confira abaixo.`;
+    /* prévia por dia */
     const box=document.createElement('div');box.className='prop';
-    box.innerHTML=`<div class="ph">Roteiro proposto · confira antes de aplicar</div>`+
-      itens.map(i=>`<div class="pi sel"><span class="cbx">✓</span><span class="tx">${i.txt}</span></div>`).join('')+
+    box.innerHTML=`<div class="ph">Roteiro proposto · ${j.dias.length} dias</div>`+
+      j.dias.map(dd=>{
+        const dt=dd.data?dd.data.split('-').reverse().slice(0,2).join('/'):'';
+        return `<div class="pi sel"><span class="cbx">✓</span><span class="tx">
+          <b>${dt} · ${esc(dd.cidade||'—')}</b><br>`+
+          (dd.cartoes||[]).map(c=>`· ${c.hora?esc(c.hora)+' ':''}${esc(c.titulo||'')}`).join('<br>')+
+          `</span></div>`;}).join('')+
       `<div class="pb2"><button class="nao" onclick="recusar(this)">Descartar</button>
-       <button class="sim" onclick="aplicarRoteiro(this)">Substituir o quadro</button></div>`;
+       <button class="sim" onclick="aplicarRoteiro(this)">Aplicar ao quadro</button></div>`;
     p.appendChild(box);
-    ROTEIRO_PENDENTE={j,data};
+    ROTEIRO_PENDENTE={j,inicio};
     document.getElementById('fsc').scrollTop=99999;
   }catch(e){
     orbe('');statusIA('');
-    p.innerHTML=`<span style="color:var(--coral-d)">Não consegui montar o roteiro (${esc(String(e.message||e))}).</span>
+    p.innerHTML=`<span style="color:var(--coral-d)">Não consegui montar (${esc(String(e.message||e))}).</span>
       <br><span style="font-size:13px;color:var(--ink2)">Confira a Cloud Function no ☁ e tente de novo.</span>`;
   }
 }
 let ROTEIRO_PENDENTE=null;
 function aplicarRoteiro(btn){
   if(!ROTEIRO_PENDENTE)return;
-  if(!confirm('Isso substitui todos os dias e cartões do quadro atual. Continuar?'))return;
-  const {j,data}=ROTEIRO_PENDENTE;
+  if(!confirm('Isso substitui todos os dias e cartões atuais. Continuar?'))return;
+  const {j,inicio}=ROTEIRO_PENDENTE;
   const novoCid={};
   const chave=nome=>{
-    const k=Object.keys(novoCid).find(k=>novoCid[k].toLowerCase()===String(nome).toLowerCase());
-    if(k)return k;const nk='c'+(++uid);novoCid[nk]=nome;return nk;
+    const lim=String(nome||'Colômbia').replace(/\s*→.*$/,'').trim();  /* corta "A → B" */
+    const k=Object.keys(novoCid).find(k=>novoCid[k].toLowerCase()===lim.toLowerCase());
+    if(k)return k;const nk='c'+(++uid);novoCid[nk]=lim;return nk;
   };
-  S.dias=j.dias.map(dd=>({id:id(),cid:chave(dd.cidade||'Colômbia'),
-    cards:(dd.cartoes||[]).map(c=>({id:id(),tipo:'atividade',t:c.titulo||'Sem título',
-      l:listaDe(c.lista)&&c.lista!=='log'?c.lista:S.listas[0].id,ok:false,h:c.hora||'',dur:c.duracao||'',
-      rate:c.nota||'',bai:c.bairro||'',nota:c.descricao||'',ar:!!c.aoArLivre,
-      lat:c.lat||null,lng:c.lng||null,end:c.endereco||'',ig:c.instagram||'',gm:'',foto:''}))}));
+  const listaOk=l=>listaDe(l)&&l!=='log'?l:S.listas.filter(x=>!x.oculta)[0].id;
+  S.dias=j.dias.map((dd,i)=>{
+    const dataISO=dd.data||'';
+    return {id:id(),cid:chave(dd.cidade),
+      cards:(dd.cartoes||[]).map(c=>({id:id(),tipo:'atividade',t:c.titulo||'Sem título',
+        l:listaOk(c.lista),ok:false,h:montarQuando(dataISO,c.hora||''),hora:c.hora||'',dataISO,
+        dur:c.duracao||'',rate:c.nota||'',bai:c.bairro||'',nota:c.descricao||'',ar:!!c.aoArLivre,
+        lat:c.lat||null,lng:c.lng||null,end:c.endereco||'',ig:'',gm:'',foto:''}))};
+  });
   S.cid=novoCid;
-  if(data)S.inicio=data;
-  diaAtivo=0;ROTEIRO_PENDENTE=null;plano=null;
+  if(inicio)S.inicio=inicio;
+  diaAtivo=0;ROTEIRO_PENDENTE=null;plano=null;TRECHOS=[];
   btn.closest('.prop').querySelector('.pb2').innerHTML=
-    '<div style="flex:1;text-align:center;font-size:13px;font-weight:700;color:var(--verde-d);padding:10px">✓ Roteiro aplicado ao quadro</div>';
-  salvar();render();buscarClima(true);renderMapa();
-  toast('Roteiro montado. Agora é só ajustar o que quiserem.');
-  setTimeout(()=>fechar('rutai'),900);
+    '<div style="flex:1;display:flex;gap:8px;align-items:center;justify-content:center;padding:8px">'+
+    '<span style="font-size:13px;font-weight:700;color:var(--verde-d)">✓ Aplicado</span>'+
+    '<button onclick="fechar(\'rutai\')" style="background:var(--azul);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12.5px;font-weight:700">Ver no quadro →</button></div>';
+  salvar();render();buscarClima(true);
+  toast('Roteiro montado no quadro.');
 }
 
 function alternar(el){el.classList.toggle('sel');}
