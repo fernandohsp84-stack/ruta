@@ -1624,9 +1624,9 @@ async function buscarCoord(){
     if(achou)break;
     await new Promise(r=>setTimeout(r,320));
   }
-  /* o Google abre SEMPRE pela busca do nome — assim mostra a ficha do lugar,
-     com endereço, fotos e avaliações, e não um pino mudo de coordenada */
-  const consulta=(tit||bai)+(bai&&tit?', '+bai:'')+', '+cid+', Colombia';
+  /* o Google abre SEMPRE pela busca do nome LIMPO — "Jantar no X" vira "X",
+     e o Maps mostra a ficha do lugar em vez de errar por causa do prefixo */
+  const consulta=(t2||bai)+(bai&&t2?', '+bai:'')+', '+cid+', Colombia';
   if(achou){
     coordEd={lat:parseFloat(achou.lat),lng:parseFloat(achou.lon)};
     endEd=(achou.display_name||'').split(',').slice(0,4).join(',').trim();
@@ -2135,12 +2135,17 @@ function irMapa(cid){
 }
 function abrirGM(cid){
   const r=achar(cid);if(!r)return;
-  let u=r.c.gm&&/^https?:\/\//i.test(r.c.gm)?r.c.gm:'';
-  if(!u&&r.c.lat)u=`https://www.google.com/maps/search/?api=1&query=${r.c.lat},${r.c.lng}`;
-  if(!u&&r.c.end)u='https://www.google.com/maps/search/?api=1&query='+
-    encodeURIComponent(r.c.end+', '+nomeCid(r.d.cid)+', Colombia');
-  if(!u&&r.c.gm)u='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(r.c.gm);
-  if(u)window.open(u,'_blank');
+  const c=r.c;
+  /* link colado pelo usuário sempre vence */
+  if(c.gm&&/^https?:\/\//i.test(c.gm)){window.open(c.gm,'_blank');return;}
+  /* busca pelo NOME do lugar (limpo de "jantar no", "almoço em"...) — o Google
+     mostra a ficha completa: endereço, fotos, avaliações. Coordenada crua só
+     mostraria um pino mudo. */
+  const nome=limparBusca(c.t)||c.t;
+  let q=nome;
+  if(c.bai)q+=', '+c.bai;
+  q+=', '+nomeCid(r.d.cid)+', Colombia';
+  window.open('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q),'_blank');
 }
 function abrirIG(cid){
   const r=achar(cid);if(!r||!r.c.ig)return;
@@ -2564,6 +2569,7 @@ Listas: "l1" âncora do dia (o programa principal, check-in), "l2" passeios, "l3
 Regras:
 - "dia" é o número mostrado no app, começando em 1. Se o usuário citar uma data (ex.: 28/08), converta para o número do dia usando "inicio" e a lista "dias" do JSON.
 - Para restaurante/bar/jantar use lista "l3". Para passeio "l2". Para o programa central do dia "l1".
+- O "titulo" é o NOME PRÓPRIO do lugar ("Andrés D.C.", "Pergamino Café") — NUNCA "Jantar no X" ou "Almoço em Y". O tipo de programa já é dado pela lista. Exceção: itens sem lugar próprio ("Manhã livre", "Check-in").
 - Preencha "endereco" com o nome do lugar + bairro, para o mapa funcionar (ex.: "Pergamino Café, El Poblado").
 - Só use "cartaoId" com ids que aparecem no JSON. Nunca invente id.
 - Cartões com "tipo":"voo" ou "tipo":"hotel" são INTOCÁVEIS: nunca proponha remover, editar ou mover esses. Eles são a espinha logística da viagem.
@@ -2801,6 +2807,7 @@ Listas: "l1" âncora (check-in, programa principal), "l2" passeios, "l3" comer e
 - "data" no formato YYYY-MM-DD, uma por dia, em ordem.
 - "endereco" sempre preenchido com nome + bairro, para o mapa.
 - "lat"/"lng" reais para lugares físicos; omita em "manhã livre".
+- O "titulo" é o NOME PRÓPRIO do lugar ("Andrés D.C.", "Castillo San Felipe") — NUNCA "Jantar no X" ou "Almoço em Y"; a lista já diz o tipo. Exceção: itens sem lugar ("Manhã livre", "Check-in", "Traslado ao aeroporto").
 - Seja ECONÔMICO no texto: "descricao" com no máximo 12 palavras, "fala" com 2 frases. Roteiros longos precisam caber inteiros na resposta.
 - Nunca escreva nada fora do JSON.`;
 
