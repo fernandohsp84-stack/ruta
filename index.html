@@ -874,6 +874,9 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
       <button class="sv" onclick="salvarFn()">Salvar endereço</button>
     </div>
     <div id="sy-fnest" style="margin-top:12px;font-size:12.5px;font-weight:700;line-height:1.5"></div>
+
+    <label class="fl">Versões salvas neste aparelho</label>
+    <div id="sy-backups" style="font-size:12.5px;line-height:1.5"></div>
   </div>
 </div>
 
@@ -1002,7 +1005,7 @@ const CAT=[
 /* ---------- persistência ---------- */
 function carregar(){
   try{const s=JSON.parse(localStorage.getItem(KEY));
-    if(s&&s.dias&&s.listas){S=s;if(!S.cid)S.cid={};if(S.v==null)S.v=0;normalizar();return;}}catch(e){}
+    if(s&&s.dias&&s.listas){S=s;if(!S.cid)S.cid={};if(S.v==null)S.v=0;if(S.n==null)S.n=1;normalizar();return;}}catch(e){}
   S=semente();
 }
 /* garante que estados salvos por versões anteriores continuem funcionando */
@@ -1060,9 +1063,43 @@ function normalizar(){
   }
 }
 function salvar(local){
-  S.v=Date.now();
+  /* versão = contador que só cresce, imune a relógio errado entre aparelhos */
+  S.n=(S.n||0)+1;
+  S.v=Date.now();               /* mantido só para desempate/informação */
+  S.editadoPor=meuId();
   try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
+  backupLocal();
   if(!local)enviarNuvem();
+}
+function meuId(){
+  let m=localStorage.getItem('ruta_dispositivo');
+  if(!m){m='d'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+    try{localStorage.setItem('ruta_dispositivo',m);}catch(e){}}
+  return m;
+}
+/* guarda as últimas 5 versões do quadro, para resgate se algo se perder */
+function backupLocal(){
+  try{
+    const bk=JSON.parse(localStorage.getItem('ruta_backups')||'[]');
+    bk.unshift({em:new Date().toISOString(),dias:S.dias.length,
+      cards:S.dias.reduce((a,d)=>a+d.cards.length,0),n:S.n||0,estado:JSON.stringify(S)});
+    localStorage.setItem('ruta_backups',JSON.stringify(bk.slice(0,5)));
+  }catch(e){}
+}
+function listarBackups(){
+  try{return JSON.parse(localStorage.getItem('ruta_backups')||'[]');}catch(e){return[];}
+}
+function restaurarBackup(i){
+  const bk=listarBackups();if(!bk[i])return;
+  if(!confirm(`Restaurar a versão de ${new Date(bk[i].em).toLocaleString('pt-BR')} (${bk[i].dias} dias, ${bk[i].cards} cartões)?\n\nO quadro atual será substituído por ela.`))return;
+  try{
+    S=JSON.parse(bk[i].estado);normalizar();
+    S.n=(S.n||0)+1;S.v=Date.now();  /* nova edição, para vencer o sync */
+    localStorage.setItem(KEY,JSON.stringify(S));
+    diaAtivo=0;protegidoAte=Date.now()+30000;
+    render();renderClima();enviarNuvem();
+    fechar('sync');toast('Versão restaurada.');
+  }catch(e){alert('Não consegui restaurar: '+(e.message||e));}
 }
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');
   clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('on'),2800);}
@@ -1104,8 +1141,24 @@ function marcaSync(){
 }
 async function enviarNuvem(){
   const u=urlNuvem();if(!u||!SY.ligado||puxando)return;
-  try{await fetch(u,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(S)});}
-  catch(e){}
+  try{
+    /* lê a versão da nuvem ANTES de escrever: se a de lá tiver mais edições
+       que a nossa, NÃO sobrescrevemos — evita apagar o trabalho do outro */
+    const r=await fetch(u+'?t='+Date.now());
+    if(r.ok){
+      const j=await r.json();
+      if(j&&j.dias&&(j.n||0)>(S.n||0)&&Date.now()>=protegidoAte){
+        /* a nuvem está mais adiantada: puxa em vez de empurrar */
+        puxando=true;S=j;normalizar();
+        try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
+        if(diaAtivo>=S.dias.length)diaAtivo=S.dias.length-1;
+        render();renderClima();puxando=false;
+        toast('O outro aparelho tinha uma versão mais nova.');
+        return;
+      }
+    }
+    await fetch(u,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(S)});
+  }catch(e){}
 }
 async function puxarNuvem(silencioso){
   const u=urlNuvem();if(!u||!SY.ligado)return;
@@ -1113,14 +1166,18 @@ async function puxarNuvem(silencioso){
     const r=await fetch(u+'?t='+Date.now());
     if(!r.ok)throw new Error('HTTP '+r.status);
     const j=await r.json();
-    if(j&&j.dias&&j.v&&j.v>(S.v||0)){
-      /* acabamos de aplicar algo de propósito: nosso estado manda */
+    /* critério de vitória: MAIS EDIÇÕES (n), não relógio. Empate no n → mantém local */
+    const nNuvem=(j&&j.n)||0, nLocal=S.n||0;
+    if(j&&j.dias&&nNuvem>nLocal){
       if(Date.now()<protegidoAte){enviarNuvem();return;}
       puxando=true;S=j;normalizar();
       try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
       if(diaAtivo>=S.dias.length)diaAtivo=S.dias.length-1;
       render();renderClima();puxando=false;
       if(!silencioso)toast('Quadro atualizado pelo outro aparelho.');
+    }else if(j&&j.dias&&nLocal>nNuvem){
+      /* a nuvem está atrás: empurra a nossa versão para lá */
+      enviarNuvem();
     }else if(!j&&!silencioso){
       await enviarNuvem();toast('Quadro enviado para a nuvem.');
     }
@@ -1136,6 +1193,17 @@ function abrirSync(){
   document.getElementById('sy-fnest').innerHTML=SY.fn
     ? `<span style="color:var(--verde-d)">✓ RutAI em modo conversa livre.</span>`
     : `<span style="color:var(--ink2)">RutAI em modo local: entende os pedidos previstos, sem precisar de internet.</span>`;
+  /* versões salvas para resgate */
+  const bk=listarBackups();const el=document.getElementById('sy-backups');
+  if(el){
+    el.innerHTML=bk.length?bk.map((b,i)=>
+      `<div style="display:flex;align-items:center;gap:9px;background:var(--painel);border-radius:9px;padding:9px 11px;margin-bottom:6px">
+        <div style="flex:1"><b>${b.dias} dias · ${b.cards} cartões</b><br>
+          <span style="color:var(--ink3);font-weight:600">${new Date(b.em).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</span></div>
+        <button onclick="restaurarBackup(${i})" style="background:var(--azul);color:#fff;border:none;border-radius:7px;padding:7px 12px;font-size:12px;font-weight:700">Restaurar</button>
+      </div>`).join('')
+      :'<span style="color:var(--ink3);font-weight:600">Ainda não há versões salvas. Elas aparecem conforme você edita.</span>';
+  }
   abrir('sync');
 }
 function ligarSync(){
