@@ -1587,7 +1587,7 @@ function mostraCoord(){
     : `<span style="color:var(--ink3)">Sem posição. Toque em Localizar para aparecer no mapa.</span>`;
 }
 /* palavras de rotina que não ajudam a achar um lugar no mapa */
-const RUIDO=/\b(check-?in|check-?out|chegada|traslado|voo|almoço|almoco|jantar|caf[ée]|manh[ãa]|tarde|noite|livre|dia inteiro|passeio|em|no|na|do|da|de|com|para|por|e)\b/gi;
+const RUIDO=/\b(check-?in|check-?out|chegada|traslado|voo|almoço|almoco|jantar|caf[ée]|manh[ãa]|tarde|noite|livre|dia inteiro|passeio|leve|r[áa]pido|despedida|rom[âa]ntico|t[íi]pico|especial|em|no|na|do|da|de|com|para|por|e)\b/gi;
 function limparBusca(t){
   return (t||'').replace(/[—–·|]/g,' ').replace(RUIDO,' ')
     .replace(/\s{2,}/g,' ').trim();
@@ -1774,7 +1774,9 @@ function editarLista(lid){
   document.getElementById('l-n').value=L.n;
   document.getElementById('l-rot').value=L.rot||'';pintaCores(L.c);
   const n=S.dias.reduce((a,d)=>a+d.cards.filter(c=>c.l===lid).length,0);
-  document.getElementById('l-info').innerHTML=`Esta lista tem <b>${n}</b> cartão(ões) em todo o roteiro.`;
+  document.getElementById('l-info').innerHTML=n
+    ?`Esta lista tem <b>${n}</b> cartão(ões) em todo o roteiro. Excluir a lista <b>não apaga</b> os cartões — eles migram para outra lista.`
+    :`Esta lista está vazia.`;
   document.getElementById('l-del').style.display=S.listas.length>1?'block':'none';abrir('lista');
 }
 function salvarLista(){
@@ -1787,11 +1789,20 @@ function salvarLista(){
 }
 function apagarLista(){
   if(!listaEd)return;
+  const visiveis=S.listas.filter(l=>!l.oculta);
+  if(visiveis.length<=1){toast('Esta é a última lista — não dá para excluir.');return;}
   const n=S.dias.reduce((a,d)=>a+d.cards.filter(c=>c.l===listaEd).length,0);
-  if(!confirm(n?`Apagar a lista e seus ${n} cartão(ões)?`:'Apagar esta lista?'))return;
-  S.dias.forEach(d=>d.cards=d.cards.filter(c=>c.l!==listaEd));
+  const destino=visiveis.find(l=>l.id!==listaEd);
+  if(n){
+    /* os cartões NUNCA são excluídos junto: migram para outra lista */
+    if(!confirm(`Excluir a lista?\n\nOs ${n} cartão(ões) dela NÃO serão apagados — vão para "${destino.n}". Para excluir cartões, abra cada um e use o 🗑 dele.`))return;
+    S.dias.forEach(d=>d.cards.forEach(c=>{if(c.l===listaEd)c.l=destino.id;}));
+  }else{
+    if(!confirm('Excluir esta lista vazia?'))return;
+  }
   S.listas=S.listas.filter(l=>l.id!==listaEd);
-  fechar('lista');salvar();render();toast('Lista removida.');
+  fechar('lista');salvar();render();
+  toast(n?`Lista removida. ${n} cartão(ões) foram para "${destino.n}".`:'Lista removida.');
 }
 
 /* ---------- itinerário ---------- */
