@@ -2580,8 +2580,10 @@ async function chamarIA(pedido){
   const raw=d.text||d.content||'';
   hist.push({role:'assistant',content:typeof raw==='string'?raw:JSON.stringify(raw)});
   const limpo=String(raw).replace(/```json|```/g,'').trim();
-  const ini=limpo.indexOf('{'),fim=limpo.lastIndexOf('}');
-  return JSON.parse(ini>=0?limpo.slice(ini,fim+1):limpo);
+  const ini=limpo.indexOf('{');
+  const parsed=repararJSON(ini>=0?limpo.slice(ini):limpo);
+  if(!parsed)throw new Error('Resposta ilegível da IA.');
+  return parsed;
 }
 const EXTRA_DOC=`O usuário anexou um ou mais documentos (voo, reserva de hotel, ingresso, reserva de restaurante, passeio). Leia com atenção e extraia as informações reais.
 
@@ -2775,8 +2777,34 @@ Listas: "l1" âncora (check-in, programa principal), "l2" passeios, "l3" comer e
 - "data" no formato YYYY-MM-DD, uma por dia, em ordem.
 - "endereco" sempre preenchido com nome + bairro, para o mapa.
 - "lat"/"lng" reais para lugares físicos; omita em "manhã livre".
+- Seja ECONÔMICO no texto: "descricao" com no máximo 12 palavras, "fala" com 2 frases. Roteiros longos precisam caber inteiros na resposta.
 - Nunca escreva nada fora do JSON.`;
 
+/* fecha chaves/colchetes pendentes de um JSON cortado no meio */
+function fechosPendentes(t){
+  const pilha=[];let str=false,escp=false;
+  for(const ch of t){
+    if(escp){escp=false;continue;}
+    if(ch==='\\'){escp=true;continue;}
+    if(ch==='"'){str=!str;continue;}
+    if(str)continue;
+    if(ch==='{'||ch==='[')pilha.push(ch);
+    else if(ch==='}'||ch===']')pilha.pop();
+  }
+  return pilha.reverse().map(c=>c==='{'?'}':']').join('');
+}
+/* tenta parsear; se cortado, recua até o último objeto completo e fecha */
+function repararJSON(txt){
+  try{return JSON.parse(txt);}catch(e){}
+  let t=txt;
+  for(let i=0;i<60;i++){
+    const corte=t.lastIndexOf('}');
+    if(corte<0)return null;
+    t=t.slice(0,corte+1);
+    try{return JSON.parse(t+fechosPendentes(t));}catch(e){t=t.slice(0,corte);}
+  }
+  return null;
+}
 async function gerarRoteiro(){
   if(!SY.fn){toast('Configure a RutAI na nuvem no ☁ do topo.');return;}
   const trechos=TRECHOS.filter(t=>t.cidade.trim()&&t.chegada&&t.saida);
@@ -2787,6 +2815,11 @@ async function gerarRoteiro(){
   /* calcula o total de dias e a data de início a partir dos trechos */
   const todasDatas=trechos.flatMap(t=>[t.chegada,t.saida]).sort();
   const inicio=todasDatas[0],fim=todasDatas[todasDatas.length-1];
+  const totalDias=Math.round((new Date(fim+'T12:00')-new Date(inicio+'T12:00'))/86400000)+1;
+  if(totalDias>21){
+    const segue=confirm(`Pelas datas informadas, a viagem tem ${totalDias} dias (${inicio.split('-').reverse().join('/')} a ${fim.split('-').reverse().join('/')}).\n\nConfira se não há um mês errado em algum trecho. Continuar mesmo assim?`);
+    if(!segue){abrir('gerar');return;}
+  }
   fechar('gerar');abrirIA();
   const resumoTrechos=trechos.map(t=>`${t.cidade} (${t.chegada} a ${t.saida})`).join(', ');
   diz('eu',`Montar roteiro: ${esc(resumoTrechos)}.`);
@@ -2801,13 +2834,16 @@ async function gerarRoteiro(){
       throw new Error('HTTP '+r.status+(det?' · '+det:''));}
     const d=await r.json();
     const raw=String(d.text||d.content||'').replace(/```json|```/g,'').trim();
-    const i0=raw.indexOf('{'),i1=raw.lastIndexOf('}');
-    const j=JSON.parse(i0>=0?raw.slice(i0,i1+1):raw);
-    if(!j.dias||!j.dias.length)throw new Error('Resposta sem dias.');
+    const i0=raw.indexOf('{');
+    const j=repararJSON(i0>=0?raw.slice(i0):raw);
+    if(!j||!j.dias||!j.dias.length)throw new Error('Resposta ilegível ou sem dias.');
+    const esperado=totalDias;
+    const cortado=j.dias.length<esperado;
     orbe('');statusIA('');
     const totCards=j.dias.reduce((a,x)=>a+(x.cartoes||[]).length,0);
     p.innerHTML=(j.fala||'Roteiro montado.')+
-      `<br><br><b>${j.dias.length} dias</b> · ${totCards} cartões. Confira abaixo.`;
+      `<br><br><b>${j.dias.length} dias</b> · ${totCards} cartões.`+
+      (cortado?`<br><span style="color:var(--coral-d);font-size:13px">A resposta veio longa e foi cortada: vieram ${j.dias.length} de ${esperado} dias. Aplique estes e peça os restantes no chat ("monte os dias que faltam"), ou confira as datas dos trechos.</span>`:' Confira abaixo.');
     /* prévia por dia */
     const box=document.createElement('div');box.className='prop';
     box.innerHTML=`<div class="ph">Roteiro proposto · ${j.dias.length} dias</div>`+
