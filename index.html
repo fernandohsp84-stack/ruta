@@ -280,8 +280,12 @@ body.arrastando .board{overflow:hidden!important}
 
 /* balões sobre o fundo escuro */
 .chatia .fsc{padding:8px 16px 12px}
-.chatia .bal.ia{background:rgba(255,255,255,.96);box-shadow:0 2px 12px rgba(0,0,0,.25)}
-.chatia .bal.eu{background:var(--azul);box-shadow:0 2px 12px rgba(0,0,0,.25)}
+.chatia .bal.ia{background:rgba(255,255,255,.96);box-shadow:0 2px 12px rgba(0,0,0,.25);position:relative;padding-bottom:26px}
+.copbal{position:absolute;right:8px;bottom:6px;background:none;border:none;color:var(--ink3);
+  font-size:15px;padding:2px 6px;border-radius:6px;line-height:1}
+.copbal:active{background:var(--painel)}
+.chatia .bal.eu{background:var(--azul);box-shadow:0 2px 12px rgba(0,0,0,.25);position:relative;padding-bottom:26px}
+.chatia .bal.eu .copbal{color:rgba(255,255,255,.7)}
 /* digitando */
 .dots{display:inline-flex;gap:5px;padding:3px 2px}
 .dots i{width:7px;height:7px;border-radius:50%;background:var(--ink3);animation:dotp 1.2s ease-in-out infinite}
@@ -293,9 +297,11 @@ body.arrastando .board{overflow:hidden!important}
 .chatia .sugs button{background:rgba(255,255,255,.1);box-shadow:none;color:rgba(255,255,255,.85);
   border:1px solid rgba(255,255,255,.14)}
 .chatia .ffoot{background:transparent}
-.chatia .ffoot input{background:rgba(255,255,255,.1);color:#fff;box-shadow:none;
-  border:1px solid rgba(255,255,255,.16)}
-.chatia .ffoot input::placeholder{color:rgba(255,255,255,.4)}
+.chatia .ffoot textarea{flex:1;background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.16);
+  border-radius:20px;padding:11px 15px;font-size:15px;font-family:inherit;resize:none;
+  max-height:140px;line-height:1.35;overflow-y:auto}
+.chatia .ffoot textarea::placeholder{color:rgba(255,255,255,.4)}
+.chatia .ffoot textarea:focus{outline:none;border-color:rgba(255,255,255,.35)}
 .chatia .ffoot .snd{width:44px;flex:0 0 44px;padding:0;height:44px;border-radius:50%;font-size:19px;font-weight:800}
 .chatia .grab{display:none}
 .chatia #clip{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);font-size:17px}
@@ -351,7 +357,8 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
 .chip{background:var(--surf);border:2px solid transparent;border-radius:8px;padding:9px 13px;
   font-size:13.5px;font-weight:700;color:var(--ink2);box-shadow:var(--sh)}
 .chip.on{border-color:var(--azul);color:var(--azul);background:var(--azul-t)}
-.cpwrap{position:relative;display:flex;align-items:center}
+.fl2{display:block;font-size:10.5px;font-weight:700;color:var(--ink3);text-transform:uppercase;
+  letter-spacing:.04em;margin:0 0 5px 2px}
 .cpwrap input{flex:1;padding-right:76px}
 .cpbtn{position:absolute;right:6px;background:var(--azul);color:#fff;border:none;border-radius:7px;
   padding:7px 11px;font-size:12px;font-weight:700}
@@ -617,7 +624,8 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
     <button class="mic" id="clip" onclick="document.getElementById('arq').click()">📎</button>
     <input type="file" id="arq" accept="image/*,application/pdf" style="display:none" multiple>
     <button class="mic" id="mic2">🎙️</button>
-    <input id="ask2" placeholder="Pergunte ou anexe uma reserva…" autocomplete="off">
+    <textarea id="ask2" placeholder="Pergunte ou anexe uma reserva…" rows="1" autocomplete="off"
+      oninput="autoCresce(this)"></textarea>
     <button class="snd" id="snd2">↑</button>
   </div>
 </div>
@@ -677,11 +685,11 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
       </div>
       <label class="fl">Partida</label>
       <div class="frow">
-        <div><input class="fi" type="date" id="v-data"></div>
-        <div><input class="fi" type="time" id="v-hora"></div>
+        <div><label class="fl2">Data</label><input class="fi" type="date" id="v-data"></div>
+        <div><label class="fl2">Horário</label><input class="fi" type="time" id="v-hora"></div>
       </div>
       <div class="frow">
-        <div><label class="fl">Chegada</label><input class="fi" id="v-cheg" placeholder="09:50"></div>
+        <div><label class="fl">Chegada</label><input class="fi" type="time" id="v-cheg"></div>
         <div><label class="fl">Duração</label><input class="fi" id="v-dur" placeholder="6h30"></div>
       </div>
       <div class="frow">
@@ -1269,13 +1277,17 @@ function renderHd(){
     (S.quem?`<b>${esc(S.quem)}</b> · `:'')+`<b>${S.dias.length} dias</b> · ${esc(contarCidades())} · <b>${pctGeral()}%</b>`
     +(SY.ligado?' · ☁ em dupla':'');
 }
+const MES_ABREV=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
 function renderTabs(){
   const h=S.dias.map((d,i)=>{
     const tot=d.cards.length,fe=d.cards.filter(c=>c.ok).length;
     const p=tot?Math.round(fe/tot*100):0;const c=climaDoDia(i);
+    const dt=dataDoDia(i);
+    const linha1=dt?`${String(dt.getDate()).padStart(2,'0')} ${MES_ABREV[dt.getMonth()]}`:`Dia ${i+1}`;
+    const linha2=dt?`${DIAS_SEM[dt.getDay()]} · ${esc(nomeCid(d.cid).slice(0,3))}`:esc(nomeCid(d.cid).slice(0,3));
     return `<button class="tab ${i===diaAtivo?'on':''}" data-i="${i}" onclick="irDia(${i})">
-      <span class="d">Dia ${i+1} ${c?wIcon(c.cod):''}</span>
-      <span class="c">${esc(rotuloCurto(i))} · ${esc(nomeCid(d.cid).slice(0,3))}</span>
+      <span class="d">${linha1} ${c?wIcon(c.cod):''}</span>
+      <span class="c">${linha2}</span>
       <span class="pb"><i style="width:${p}%"></i></span></button>`;}).join('');
   document.getElementById('tabs').innerHTML=h+`<button class="tab mais" onclick="abrirItinerario()">＋</button>`;
 }
@@ -2196,10 +2208,31 @@ function abrirIA(){
   document.getElementById('sugs').innerHTML=(livre?SUGS_LIVRE:SUGS).map(s=>
     `<button onclick="perguntar('${s.replace(/'/g,"\\'")}')">${esc(s)}</button>`).join('');
 }
+function autoCresce(t){
+  t.style.height='auto';
+  t.style.height=Math.min(t.scrollHeight,140)+'px';
+}
+/* botão discreto de copiar dentro de uma bolha */
+function botaoCopiaBolha(b){
+  if(b.querySelector('.copbal'))return;
+  const btn=document.createElement('button');
+  btn.className='copbal';btn.textContent='⧉';btn.title='Copiar';
+  btn.onclick=(e)=>{
+    e.stopPropagation();
+    const txt=b.innerText.replace(/⧉.*$/,'').trim();
+    const ok=()=>{btn.textContent='✓';setTimeout(()=>btn.textContent='⧉',1400);toast('Copiado.');};
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(ok,ok);
+    else ok();
+  };
+  b.appendChild(btn);
+}
 function diz(quem,html,semGravar){
   const s=document.getElementById('fsc');const b=document.createElement('div');
   b.className='bal '+quem;b.innerHTML=html;s.appendChild(b);s.scrollTop=s.scrollHeight;
   if(!semGravar&&html.indexOf('class="dots"')<0)gravarChat(quem,html);
+  if(quem==='ia'&&html.indexOf('class="dots"')<0&&html.indexOf('boasvindas')<0)
+    setTimeout(()=>botaoCopiaBolha(b),0);
+  if(quem==='eu')setTimeout(()=>botaoCopiaBolha(b),0);
   return b;
 }
 function gravarChat(quem,html){
@@ -2364,6 +2397,7 @@ function planoChuva(alvo){
 }
 /* ======= ANEXOS: reservas, voos, ingressos em PDF/imagem ======= */
 let ANEXOS=[];
+let hist=[];  /* histórico da conversa com o Claude (turnos user/assistant) */
 function lerArquivo(file){
   return new Promise((res,rej)=>{
     const r=new FileReader();
@@ -2793,8 +2827,13 @@ if(SY.ligado){puxarNuvem(true);iniciarTimer();}
 ligarMic('mic1','ask1',t=>{const e=document.getElementById('iastat');e.textContent=t||'';e.classList.toggle('on',!!t);});
 ligarMic('mic2','ask2',t=>{statusIA(t);orbe(t?'ouvindo':'');});
 document.getElementById('ask1').addEventListener('keydown',e=>{if(e.key==='Enter')perguntar(e.target.value);});
-document.getElementById('ask2').addEventListener('keydown',e=>{if(e.key==='Enter')perguntar(e.target.value);});
-document.getElementById('snd2').addEventListener('click',()=>perguntar(document.getElementById('ask2').value));
+document.getElementById('ask2').addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();
+    const v=e.target.value;e.target.value='';e.target.style.height='auto';perguntar(v);}
+});
+document.getElementById('snd2').addEventListener('click',()=>{
+  const el=document.getElementById('ask2');const v=el.value;el.value='';el.style.height='auto';perguntar(v);
+});
 document.getElementById('ola-in').addEventListener('keydown',e=>{if(e.key==='Enter')entrarApp();});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&SY.ligado)puxarNuvem(true);});
 </script>
