@@ -1073,7 +1073,7 @@ function isoDia(i){const d=dataDoDia(i);return d?d.toISOString().slice(0,10):nul
    ========================================================== */
 let SY={url:'',cod:'',ligado:false,fn:''};
 try{const s=JSON.parse(localStorage.getItem('ruta_sync'));if(s)SY=Object.assign(SY,s);}catch(e){}
-let puxando=false,timerSync=null;
+let puxando=false,timerSync=null,protegidoAte=0;
 function urlNuvem(){
   if(!SY.url||!SY.cod)return null;
   const base=SY.url.replace(/\/+$/,'');
@@ -1095,6 +1095,8 @@ async function puxarNuvem(silencioso){
     if(!r.ok)throw new Error('HTTP '+r.status);
     const j=await r.json();
     if(j&&j.dias&&j.v&&j.v>(S.v||0)){
+      /* acabamos de aplicar algo de propósito: nosso estado manda */
+      if(Date.now()<protegidoAte){enviarNuvem();return;}
       puxando=true;S=j;normalizar();
       try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
       if(diaAtivo>=S.dias.length)diaAtivo=S.dias.length-1;
@@ -2645,9 +2647,11 @@ function acaoDoModelo(a){
     default:return null;
   }
 }
+const PROPS={};let propSeq=0;
 function montarProposta(bolha,titulo,itens){
   if(!itens||!itens.length)return;
   const box=document.createElement('div');box.className='prop';
+  const pid='p'+(++propSeq);box.dataset.pid=pid;PROPS[pid]=itens;
   /* as ações cruas ficam NO PRÓPRIO bloco — o Aplicar reconstrói na hora,
      sem depender de variável global que pode ser limpa no meio */
   const raws=itens.map(i=>i.raw||null);
@@ -2828,6 +2832,7 @@ let ROTEIRO_PENDENTE=null;
 function aplicarRoteiro(btn){
   if(!ROTEIRO_PENDENTE)return;
   if(!confirm('Isso substitui todos os dias e cartões atuais. Continuar?'))return;
+  try{
   const {j,inicio}=ROTEIRO_PENDENTE;
   /* preserva voos e hotéis existentes: guarda com a data do dia em que estavam */
   const preservados=[];
@@ -2867,8 +2872,14 @@ function aplicarRoteiro(btn){
     '<div style="flex:1;display:flex;gap:8px;align-items:center;justify-content:center;padding:8px">'+
     '<span style="font-size:13px;font-weight:700;color:var(--verde-d)">✓ Aplicado</span>'+
     '<button onclick="fechar(\'rutai\')" style="background:var(--azul);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12.5px;font-weight:700">Ver no quadro →</button></div>';
+  protegidoAte=Date.now()+30000;
   salvar();render();buscarClima(true);
-  toast('Roteiro montado no quadro.');
+  const tot=S.dias.reduce((a,d)=>a+d.cards.filter(c=>c.tipo==='atividade').length,0);
+  toast(`Roteiro no quadro: ${S.dias.length} dias, ${tot} atividades.`);
+  if(!tot)alert('O roteiro foi aplicado mas nenhuma atividade entrou. Me avise com um print desta mensagem.');
+  }catch(e){
+    alert('Erro ao aplicar o roteiro: '+(e.message||e)+'. Nada foi perdido — tente de novo.');
+  }
 }
 
 function alternar(el){el.classList.toggle('sel');}
@@ -2876,21 +2887,24 @@ function aplicar(btn){
   const box=btn.closest('.prop');
   let raws=[];
   try{raws=JSON.parse(decodeURIComponent(box.dataset.acoes||''))||[];}catch(e){}
-  if(!raws.length){toast('Esta proposta expirou. Peça de novo à RutAI.');return;}
+  const temReg=(PROPS[box.dataset.pid]||[]).length>0;
+  if(!raws.some(Boolean)&&!temReg){toast('Esta proposta expirou. Peça de novo à RutAI.');return;}
   const marc=[...box.querySelectorAll('.pi.sel')].map(e=>parseInt(e.dataset.k));
   if(!marc.length){toast('Marque ao menos um item.');return;}
+  const reg=PROPS[box.dataset.pid]||[];
   let irPara=null,ok=0,falha=0;
   marc.forEach(k=>{
-    const a=raws[k];if(!a)return;
-    const fn=acaoDoModelo(a);
+    const a=raws[k];
+    let fn=a?acaoDoModelo(a):((reg[k]&&reg[k].acao)||null);
     if(!fn){falha++;return;}
     try{
       fn();ok++;
-      if(irPara===null&&a.tipo==='criar')irPara=(a.dia|0)-1;
-      if(irPara===null&&a.tipo==='mover')irPara=(a.paraDia|0)-1;
+      if(a&&irPara===null&&a.tipo==='criar')irPara=(a.dia|0)-1;
+      if(a&&irPara===null&&a.tipo==='mover')irPara=(a.paraDia|0)-1;
     }catch(e){falha++;console.error('acao falhou',a,e);}
   });
   if(!ok){toast('Nenhuma ação pôde ser aplicada.');return;}
+  protegidoAte=Date.now()+30000;
   if(irPara!==null&&irPara>=0&&irPara<S.dias.length)diaAtivo=irPara;
   box.querySelector('.pb2').innerHTML=
     `<div style="flex:1;display:flex;gap:8px;align-items:center;justify-content:center;padding:8px">
