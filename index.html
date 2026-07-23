@@ -2180,9 +2180,9 @@ function ajustarMapa(){
    ========================================================== */
 const SUGS=['Vai chover no dia 2?','Esse dia está cheio demais','O que cabe hoje?',
   'Onde jantar bem aqui?','Quero um dia a mais em Cartagena','Resumo do dia'];
-const SUGS_LIVRE=['Estamos cansados, deixa o dia 3 mais leve','Um jantar romântico com vista',
-  'Trocar o passeio da tarde por algo coberto','O que fazer perto do hotel à noite?',
-  'Encaixar uma aula de salsa','Refaça o dia 5 pensando em fotografia'];
+const SUGS_LIVRE=['Monte o Dia 1 com jantar em El Poblado','Sugira 3 lugares para hoje',
+  'Um jantar romântico com vista','Encaixe uma aula de salsa amanhã',
+  'O que fazer perto do hotel à noite?','Deixe o dia 3 mais leve'];
 function orbe(st){
   const o=document.getElementById('orb');if(!o)return;
   o.classList.remove('ouvindo','pensando');
@@ -2457,31 +2457,35 @@ function retratoDoQuadro(){
       duracao:x.dur,bairro:x.bai||null,aoArLivre:!!x.ar}))
   };
 }
-const SISTEMA=`Você é a RutAI, assistente de um app de roteiro de viagem chamado Ruta, usado por um casal brasileiro viajando pela Colômbia. Fala português do Brasil, com tom próximo e direto, sem formalidade excessiva e sem emojis em excesso.
+const SISTEMA=`Você é a RutAI, assistente de um app de roteiro de viagem chamado Ruta, usado por um casal brasileiro viajando pela Colômbia. Fala português do Brasil, com tom próximo e direto, sem formalidade e sem emojis em excesso.
 
-Você recebe o estado atual do quadro em JSON e o pedido dos viajantes. Você NUNCA altera nada sozinha: você PROPÕE ações, e o app mostra as propostas com caixas de confirmação. Só o que for marcado é aplicado.
+Você recebe o estado atual do quadro em JSON e o pedido dos viajantes. Você propõe ações, e o app mostra as propostas com caixas de confirmação para o usuário aplicar.
 
-Responda SEMPRE e SOMENTE com um JSON válido, sem markdown e sem crases, neste formato:
-{"fala":"sua resposta em português, curta (até 4 frases), pode usar <b> para negrito e <br> para quebra de linha","titulo":"título curto do bloco de propostas, ou string vazia","acoes":[...]}
+PRINCÍPIO MAIS IMPORTANTE: quando o usuário pede algo que muda o roteiro (criar, adicionar, incluir, montar, sugerir um lugar, mover, trocar), você SEMPRE devolve pelo menos uma ação em "acoes". NÃO faça perguntas de esclarecimento quando o pedido já é claro o suficiente para agir — aja e proponha. É muito melhor propor um cartão que o usuário pode recusar do que responder só com texto. Só peça esclarecimento se o pedido for realmente impossível de interpretar.
 
-Cada ação em "acoes" tem um "tipo" e um "texto" (descrição curta em português, que o viajante lê antes de confirmar). Tipos disponíveis:
+Se o usuário mencionar um lugar (ex.: "um card do Pergamino", "jantar no Carmen"), CRIE o cartão com a ação "criar", preenchendo o que você sabe sobre o lugar (horário sugerido, bairro, nota típica, uma descrição útil). Não diga que "já existe" a menos que haja um cartão com título muito parecido no JSON — e mesmo assim, ofereça criar um novo ou editar o existente com uma ação concreta.
 
-{"tipo":"mover","cartaoId":"<id>","paraDia":<n>,"texto":"..."}
-{"tipo":"criar","dia":<n>,"lista":"<idDaLista>","titulo":"...","hora":"09:00","duracao":"2h","nota":"4,7","bairro":"...","descricao":"...","aoArLivre":true,"texto":"..."}
-{"tipo":"remover","cartaoId":"<id>","texto":"..."}
-{"tipo":"editar","cartaoId":"<id>","campos":{"hora":"10:00","titulo":"..."},"texto":"..."}
-{"tipo":"addDia","apos":<n>,"cidade":"<nome exato da cidade>","texto":"..."}
-{"tipo":"removerDia","dia":<n>,"texto":"..."}
+Responda SEMPRE e SOMENTE com um JSON válido, sem markdown e sem crases:
+{"fala":"resposta curta em português (até 3 frases), pode usar <b> e <br>","titulo":"título curto do bloco de propostas","acoes":[...]}
+
+Cada ação tem "tipo", "texto" (descrição curta que o usuário lê antes de confirmar) e os campos do tipo:
+
+{"tipo":"criar","dia":<n>,"lista":"l1|l2|l3|l4","titulo":"Nome do lugar","hora":"20:30","duracao":"1h30","nota":"4,6","bairro":"El Poblado","descricao":"dica prática","aoArLivre":false,"endereco":"nome ou endereço p/ mapa","texto":"Criar 'X' no Dia N às 20:30"}
+{"tipo":"mover","cartaoId":"<id do JSON>","paraDia":<n>,"texto":"..."}
+{"tipo":"remover","cartaoId":"<id do JSON>","texto":"..."}
+{"tipo":"editar","cartaoId":"<id do JSON>","campos":{"hora":"10:00","descricao":"..."},"texto":"..."}
+{"tipo":"addDia","apos":<n>,"cidade":"<nome exato>","texto":"..."}
 {"tipo":"trocarCidade","dia":<n>,"cidade":"<nome exato>","texto":"..."}
 
+Listas: "l1" âncora do dia (o programa principal, check-in), "l2" passeios, "l3" comer e beber, "l4" flexível.
+
 Regras:
-- Se o pedido for só uma pergunta (previsão, resumo, dúvida), responda em "fala" e devolva "acoes":[].
-- Use os ids reais que estão no JSON. Nunca invente id.
-- "dia" e "paraDia" são o número do dia mostrado no app, começando em 1.
-- Prefira sugestões do "catalogo" quando fizer sentido, mas você pode propor lugares que conheça da Colômbia, sempre com nota realista.
-- Se a previsão indicar chuva alta num dia, priorize programas cobertos e proponha adiar os que estão marcados como aoArLivre.
-- Máximo de 6 ações por resposta.
-- Nunca produza texto fora do JSON.`;
+- "dia" é o número mostrado no app, começando em 1. Se o usuário citar uma data (ex.: 28/08), converta para o número do dia usando "inicio" e a lista "dias" do JSON.
+- Para restaurante/bar/jantar use lista "l3". Para passeio "l2". Para o programa central do dia "l1".
+- Preencha "endereco" com o nome do lugar + bairro, para o mapa funcionar (ex.: "Pergamino Café, El Poblado").
+- Só use "cartaoId" com ids que aparecem no JSON. Nunca invente id.
+- Pergunta pura (previsão, resumo, dúvida) → responda em "fala" com "acoes":[].
+- Máximo 6 ações por resposta. Nunca escreva nada fora do JSON.`;
 
 async function chamarIA(pedido){
   const u=(SY.fn||'').trim();
@@ -2545,11 +2549,16 @@ function acaoDoModelo(a){
     case 'mover':return()=>{const r=acharPorId(a.cartaoId);const alvo=(a.paraDia|0)-1;
       if(!r||alvo<0||alvo>=S.dias.length)return;
       const [x]=r.d.cards.splice(r.i,1);S.dias[alvo].cards.push(x);};
-    case 'criar':return()=>{const alvo=(a.dia|0)-1;if(alvo<0||alvo>=S.dias.length)return;
-      const lid=listaDe(a.lista)?a.lista:S.listas[0].id;
-      S.dias[alvo].cards.push({id:id(),t:a.titulo||'Sem título',l:lid,ok:false,
-        h:a.hora||'',dur:a.duracao||'',rate:a.nota||'',bai:a.bairro||'',nota:a.descricao||'',
-        ar:!!a.aoArLivre,end:a.endereco||'',lat:a.lat||null,lng:a.lng||null,ig:a.instagram||''});};
+    case 'criar':return()=>{
+      let alvo=(a.dia|0)-1;
+      if(alvo<0||alvo>=S.dias.length)alvo=diaAtivo;
+      const lid=listaDe(a.lista)?a.lista:S.listas.filter(l=>!l.oculta)[0].id;
+      const dataISO=isoDia(alvo)||'';
+      S.dias[alvo].cards.push({id:id(),tipo:'atividade',t:a.titulo||'Sem título',l:lid,ok:false,
+        h:montarQuando(dataISO,a.hora||''),hora:a.hora||'',dataISO:dataISO,
+        dur:a.duracao||'',rate:a.nota||'',bai:a.bairro||'',nota:a.descricao||'',
+        ar:!!a.aoArLivre,end:a.endereco||'',lat:a.lat||null,lng:a.lng||null,
+        gm:'',ig:a.instagram||'',foto:''});};
     case 'remover':return()=>{const r=acharPorId(a.cartaoId);if(r)r.d.cards.splice(r.i,1);};
     case 'editar':return()=>{const r=acharPorId(a.cartaoId);if(!r||!a.campos)return;
       const m={titulo:'t',hora:'h',duracao:'dur',nota:'rate',bairro:'bai',descricao:'nota',
@@ -2615,9 +2624,10 @@ async function perguntar(txt){
     gravarChat('ia',p.innerHTML);
     const itens=(r.acoes||[]).map(a=>{
       const fn=acaoDoModelo(a);
-      return fn?{txt:esc(a.texto||a.tipo),acao:fn}:null;
+      return fn?{txt:esc(a.texto||a.tipo),acao:fn,raw:a}:null;
     }).filter(Boolean);
-    montarProposta(p,r.titulo,itens);
+    if(itens.length)montarProposta(p,r.titulo,itens);
+    setTimeout(()=>botaoCopiaBolha(p),0);
   }catch(e){
     orbe('');statusIA('');
     const m=String(e.message||e);
@@ -2674,7 +2684,7 @@ async function gerarRoteiro(){
     hoje:new Date().toISOString().slice(0,10)};
   try{
     const r=await fetch(SY.fn,{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({system:SIS_GERA,max_tokens:8000,
+      body:JSON.stringify({system:SIS_GERA,max_tokens:16000,
         messages:[{role:'user',content:JSON.stringify(pedido)}]})});
     if(!r.ok){let det='';try{const e=await r.json();det=e.error||'';}catch(_){}
       throw new Error('HTTP '+r.status+(det?' · '+det:''));}
@@ -2738,14 +2748,24 @@ function aplicar(btn){
   const box=btn.closest('.prop');
   const marc=[...box.querySelectorAll('.pi.sel')].map(e=>parseInt(e.dataset.k));
   if(!marc.length){toast('Marque ao menos um item.');return;}
-  marc.forEach(k=>{try{const a=plano.itens[k];if(a&&a.acao)a.acao();}catch(e){}});
+  /* descobre para qual dia navegar: o primeiro "criar" aplicado */
+  let irPara=null;
+  marc.forEach(k=>{try{const a=plano.itens[k];if(a&&a.acao){
+    a.acao();
+    if(a.raw&&(a.raw.tipo==='criar')&&irPara===null)irPara=(a.raw.dia|0)-1;
+    if(a.raw&&a.raw.tipo==='mover'&&irPara===null)irPara=(a.raw.paraDia|0)-1;
+  }}catch(e){}});
   const n=marc.length;plano=null;
+  if(irPara!==null&&irPara>=0&&irPara<S.dias.length)diaAtivo=irPara;
   box.querySelector('.pb2').innerHTML=
-    `<div style="flex:1;text-align:center;font-size:13px;font-weight:700;color:var(--verde-d);padding:10px">✓ ${n} mudança(s) aplicada(s)</div>`;
+    `<div style="flex:1;display:flex;gap:8px;align-items:center;justify-content:center;padding:8px">
+      <span style="font-size:13px;font-weight:700;color:var(--verde-d)">✓ ${n} aplicada(s)</span>
+      <button onclick="fechar('rutai')" style="background:var(--azul);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12.5px;font-weight:700">Ver no quadro →</button>
+     </div>`;
   box.querySelectorAll('.pi').forEach(e=>e.onclick=null);
   salvar();render();renderDesc();renderClima();
   if(document.getElementById('s-mapa').classList.contains('on'))renderMapa();
-  toast(`${n} mudança(s) aplicada(s).`);
+  toast(`${n} aplicada(s)`+(irPara!==null?` no Dia ${irPara+1}`:''));
 }
 function recusar(btn){
   plano=null;const box=btn.closest('.prop');
