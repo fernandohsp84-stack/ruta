@@ -255,32 +255,33 @@ body.arrastando .board{overflow:hidden!important}
 /* ===== RutAI — conversa em tela cheia, estilo GuavAI ===== */
 #rutai{height:100%;max-height:100%;border-radius:0;
   background:radial-gradient(120% 60% at 50% -8%,#1E4258 0%,#0E1B2A 52%,#0A1420 100%)}
-.chatia .iahead{flex-shrink:0;display:flex;flex-direction:column;align-items:center;
-  padding:calc(14px + env(safe-area-inset-top)) 16px 10px;position:relative}
-.chatia .ix{position:absolute;top:calc(12px + env(safe-area-inset-top));right:14px;
-  width:34px;height:34px;border-radius:50%;border:none;background:rgba(255,255,255,.12);
-  color:rgba(255,255,255,.85);font-size:15px}
-.chatia .iatit{color:#fff;font-size:16px;font-weight:800;letter-spacing:-.02em;margin-top:10px}
-.chatia .iastt{color:rgba(255,255,255,.55);font-size:12px;font-weight:600;margin-top:2px;
-  min-height:16px;transition:color .3s}
+.chatia .iahead{flex-shrink:0;display:flex;flex-direction:row;align-items:center;gap:11px;
+  padding:calc(10px + env(safe-area-inset-top)) 14px 10px;
+  border-bottom:1px solid rgba(255,255,255,.08)}
+.chatia .iainfo{flex:1;min-width:0}
+.chatia .ix{flex-shrink:0;width:32px;height:32px;border-radius:50%;border:none;
+  background:rgba(255,255,255,.12);color:rgba(255,255,255,.85);font-size:14px}
+.chatia .iatit{color:#fff;font-size:15px;font-weight:800;letter-spacing:-.02em}
+.chatia .iastt{color:rgba(255,255,255,.5);font-size:11.5px;font-weight:600;
+  min-height:14px;transition:color .3s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-/* orbe */
-.orb{position:relative;width:74px;height:74px}
+/* orbe — pequeno, na barra */
+.orb{position:relative;width:34px;height:34px;flex-shrink:0}
 .orb i{position:absolute;inset:0;border-radius:50%}
 .orb .o1{background:conic-gradient(from 0deg,#22C6E8,#8270DB,#F0483E,#E8A317,#22C6E8);
-  filter:blur(10px);opacity:.85;animation:orbgira 7s linear infinite}
-.orb .o2{inset:6px;background:conic-gradient(from 180deg,#F0483E,#22C6E8,#4BCE97,#F0483E);
-  filter:blur(7px);opacity:.7;animation:orbgira 5s linear infinite reverse}
-.orb .o3{inset:3px;border-radius:50%;box-shadow:0 0 34px 6px rgba(64,180,220,.35)}
-.orb .nuc{inset:12px;background:radial-gradient(circle at 34% 30%,#fff 0%,#CFF3FF 34%,#5FC7E8 68%,#1D6FA5 100%);
-  box-shadow:inset 0 -6px 14px rgba(13,60,90,.45)}
+  filter:blur(5px);opacity:.85;animation:orbgira 7s linear infinite}
+.orb .o2{inset:3px;background:conic-gradient(from 180deg,#F0483E,#22C6E8,#4BCE97,#F0483E);
+  filter:blur(3px);opacity:.7;animation:orbgira 5s linear infinite reverse}
+.orb .o3{inset:2px;border-radius:50%;box-shadow:0 0 14px 3px rgba(64,180,220,.35)}
+.orb .nuc{inset:6px;background:radial-gradient(circle at 34% 30%,#fff 0%,#CFF3FF 34%,#5FC7E8 68%,#1D6FA5 100%);
+  box-shadow:inset 0 -3px 7px rgba(13,60,90,.45)}
 .orb{animation:orbresp 3.4s ease-in-out infinite}
 @keyframes orbgira{to{transform:rotate(360deg)}}
-@keyframes orbresp{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+@keyframes orbresp{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
 /* estados */
 .orb.ouvindo{animation:orbresp 1s ease-in-out infinite}
-.orb.ouvindo .o1{animation-duration:2.4s;filter:blur(12px);opacity:1}
-.orb.ouvindo .o3{box-shadow:0 0 44px 12px rgba(240,72,62,.4)}
+.orb.ouvindo .o1{animation-duration:2.4s;filter:blur(6px);opacity:1}
+.orb.ouvindo .o3{box-shadow:0 0 20px 5px rgba(240,72,62,.4)}
 .orb.pensando{animation:orbresp 1.7s ease-in-out infinite}
 .orb.pensando .o1{animation-duration:1.4s}
 .orb.pensando .o2{animation-duration:1s}
@@ -324,8 +325,8 @@ body.arrastando .board{overflow:hidden!important}
 .anx .ax{width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.4);color:#fff;border:none;
   font-size:11px;flex-shrink:0}
 .chatia .bal.boasvindas{background:rgba(255,255,255,.09);color:rgba(255,255,255,.92);
-  box-shadow:none;border:1px solid rgba(255,255,255,.13);align-self:center;text-align:center;
-  max-width:94%;font-size:14px}
+  box-shadow:none;border:1px solid rgba(255,255,255,.13);text-align:left;
+  max-width:88%;font-size:14px}
 .chatia .bal.boasvindas b{color:#fff}
 .fsc{flex:1;overflow-y:auto;padding:4px 16px 12px;display:flex;flex-direction:column;gap:10px}
 .bal{max-width:88%;padding:12px 14px;border-radius:14px;font-size:14.5px;line-height:1.5;font-weight:500}
@@ -628,10 +629,12 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
 <!-- ============ RutAI ============ -->
 <div class="sheet chatia" id="rutai">
   <div class="iahead">
-    <button class="ix" onclick="fechar('rutai')">✕</button>
     <div class="orb" id="orb"><i class="o1"></i><i class="o2"></i><i class="o3"></i><i class="nuc"></i></div>
-    <div class="iatit">RutAI</div>
-    <div class="iastt" id="ia-st">pronta para ajustar o roteiro</div>
+    <div class="iainfo">
+      <div class="iatit">RutAI</div>
+      <div class="iastt" id="ia-st">pronta para ajustar o roteiro</div>
+    </div>
+    <button class="ix" onclick="fechar('rutai')">✕</button>
   </div>
   <div class="fsc" id="fsc"></div>
   <div class="sugs" id="sugs"></div>
@@ -2221,6 +2224,35 @@ function pontos(){
   }));
   return out;
 }
+/* busca coordenadas dos cartões que têm nome/lugar mas ainda não têm pino */
+let geocodando=false;
+async function geocodificarPendentes(){
+  if(geocodando)return 0;
+  geocodando=true;
+  let achou=0;
+  const pend=[];
+  S.dias.forEach((d,i)=>d.cards.forEach(c=>{
+    if(c.lat||c.lng)return;
+    if((c.tipo||'atividade')==='voo')return;
+    if(SEM_FOTO.test(c.t))return;                 /* rotina não geocodifica */
+    const nome=limparBusca(c.t);
+    if(!nome||nome.length<3)return;
+    pend.push({c,cid:nomeCid(d.cid)});
+  }));
+  for(const p of pend.slice(0,8)){                /* no máx 8 por vez, respeita o serviço */
+    const q=[limparBusca(p.c.t),p.c.bai,p.c.cid,'Colombia'].filter(Boolean).join(', ');
+    try{
+      const r=await nominatim(q);
+      if(r){p.c.lat=parseFloat(r.lat);p.c.lng=parseFloat(r.lon);
+        if(!p.c.end)p.c.end=(r.display_name||'').split(',').slice(0,3).join(',').trim();
+        achou++;}
+    }catch(e){}
+    await new Promise(r=>setTimeout(r,340));
+  }
+  geocodando=false;
+  if(achou){salvar(true);}
+  return achou;
+}
 function irMapa(cid){
   const r=achar(cid);if(!r)return;
   if(!r.c.lat){
@@ -2265,6 +2297,15 @@ function renderMapa(){
     comPtos.map(i=>`<button class="${mFiltro===i?'on':''}" onclick="filtrarMapa(${i})">Dia ${i+1}</button>`).join('');
   document.getElementById('mapa-sub').textContent=
     pts.length?`${pts.length} lugar(es) marcado(s) · toque num pino`:'Nenhum lugar marcado ainda';
+  /* busca coordenadas dos cartões novos que ainda não têm pino, e redesenha */
+  if(!geocodando){
+    const faltam=S.dias.some(d=>d.cards.some(c=>!c.lat&&(c.tipo||'atividade')!=='voo'&&
+      !SEM_FOTO.test(c.t)&&limparBusca(c.t).length>=3));
+    if(faltam){
+      document.getElementById('mapa-sub').textContent='Localizando novos lugares…';
+      geocodificarPendentes().then(n=>{if(n>0)renderMapa();});
+    }
+  }
 
   const antigo=wrap.querySelector('.mvazio');if(antigo)antigo.remove();
   if(!pts.length){
