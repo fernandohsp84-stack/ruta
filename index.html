@@ -887,6 +887,14 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
 
     <label class="fl">Versões salvas neste aparelho</label>
     <div id="sy-backups" style="font-size:12.5px;line-height:1.5"></div>
+
+    <label class="fl">Backup manual (código do roteiro)</label>
+    <p style="font-size:12.5px;color:var(--ink2);font-weight:600;line-height:1.5;margin:0 0 8px">
+      Copie o código e guarde onde quiser (e-mail, notas). Para recuperar, cole de volta a qualquer momento — funciona mesmo sem internet ou Firebase.</p>
+    <div class="fbtns" style="margin-top:0">
+      <button class="cn" onclick="copiarBackup()">⧉ Copiar código do roteiro</button>
+      <button class="sv" onclick="colarBackup()">Restaurar de um código</button>
+    </div>
   </div>
 </div>
 
@@ -1110,6 +1118,33 @@ function restaurarBackup(i){
     render();renderClima();enviarNuvem();
     fechar('sync');toast('Versão restaurada.');
   }catch(e){alert('Não consegui restaurar: '+(e.message||e));}
+}
+function copiarBackup(){
+  const codigo=JSON.stringify(S);
+  const ok=()=>toast(`Código copiado (${S.dias.length} dias). Guarde num lugar seguro.`);
+  if(navigator.clipboard&&navigator.clipboard.writeText)
+    navigator.clipboard.writeText(codigo).then(ok,()=>mostrarBackupTexto(codigo));
+  else mostrarBackupTexto(codigo);
+}
+function mostrarBackupTexto(codigo){
+  const w=window.open('','_blank');
+  if(w){w.document.write('<meta name=viewport content="width=device-width"><textarea style="width:100%;height:88vh;font-size:11px">'+
+    codigo.replace(/</g,'&lt;')+'</textarea><p style="font-family:sans-serif">Toque e segure na área acima → Selecionar tudo → Copiar. Guarde em local seguro.</p>');}
+  else prompt('Copie o código do roteiro:',codigo);
+}
+function colarBackup(){
+  const txt=prompt('Cole o código do roteiro que você salvou. O quadro atual será substituído.');
+  if(!txt)return;
+  let j;
+  try{j=JSON.parse(txt.trim());}catch(e){alert('Código inválido. Copie-o inteiro, do { ao } final.');return;}
+  if(!j||!j.dias||!j.listas){alert('Isso não parece um código de roteiro do Ruta.');return;}
+  if(!confirm(`Restaurar este roteiro (${j.dias.length} dias)? O quadro atual será substituído.`))return;
+  S=j;if(!S.cid)S.cid={};if(S.v==null)S.v=0;
+  S.n=(S.n||0)+1;S.v=Date.now();
+  normalizar();diaAtivo=0;protegidoAte=Date.now()+30000;
+  try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
+  render();renderClima();buscarClima(true);enviarNuvem();
+  fechar('sync');toast(`Roteiro restaurado: ${S.dias.length} dias.`);
 }
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');
   clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('on'),2800);}
@@ -1493,15 +1528,38 @@ function cardHTML(c,L){
    porque quase sempre casaria com o artigo errado (ex.: um mapa administrativo) */
 const SEM_FOTO=/\b(check-?in|check-?out|chegada|traslado|voo|hotel|hospedagem|aeroporto|embarque|desembarque|manh[ãa] livre|tarde livre|noite livre|dia livre|compras|descanso|reserva)\b/i;
 /* busca por pesquisa: acha o artigo mais próximo e valida que tem imagem de lugar */
+/* imagens que quase sempre são "erradas" para um cartão de viagem */
+const FOTO_RUIM=/(escudo|logo|coat.of.arms|bandera|flag|mapa|map|seal|emblem|shield|badge|ubicaci[oó]n|localizaci[oó]n|f[uú]tbol|football|club)/i;
+async function fotoWiki(titulo){
+  if(FOTOS[titulo]!==undefined)return FOTOS[titulo];
+  try{
+    const r=await fetch('https://es.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(titulo));
+    if(!r.ok)throw 0;
+    const j=await r.json();
+    /* rejeita desambiguação e artigos sem relação com lugar */
+    const u=(j.thumbnail&&j.thumbnail.source)||'';
+    const ok=u && !FOTO_RUIM.test(u) && !FOTO_RUIM.test(j.title||'') && j.type!=='disambiguation';
+    const val=ok?u.replace(/\/\d+px-/,'/640px-'):'';   /* pede resolução maior */
+    FOTOS[titulo]=val;
+    try{localStorage.setItem('ruta_fotos',JSON.stringify(FOTOS));}catch(e){}
+    return val;
+  }catch(e){FOTOS[titulo]='';return '';}
+}
 async function fotoBusca(termo){
   const k='q:'+termo;
   if(FOTOS[k]!==undefined)return FOTOS[k];
   try{
-    const r=await fetch('https://es.wikipedia.org/w/api.php?action=query&list=search&srlimit=1&format=json&origin=*&srsearch='+
+    /* pega os 3 primeiros resultados e escolhe o primeiro com foto boa */
+    const r=await fetch('https://es.wikipedia.org/w/api.php?action=query&list=search&srlimit=3&format=json&origin=*&srsearch='+
       encodeURIComponent(termo));
     const j=await r.json();
-    const hit=j.query&&j.query.search&&j.query.search[0];
-    const u=hit?await fotoWiki(hit.title):'';
+    const hits=(j.query&&j.query.search)||[];
+    let u='';
+    for(const h of hits){
+      if(FOTO_RUIM.test(h.title))continue;
+      const f=await fotoWiki(h.title);
+      if(f){u=f;break;}
+    }
     FOTOS[k]=u;
     try{localStorage.setItem('ruta_fotos',JSON.stringify(FOTOS));}catch(e){}
     return u;
@@ -1511,24 +1569,34 @@ async function fotoBusca(termo){
 function carregarFotosCards(){
   const d=S.dias[diaAtivo];if(!d)return;
   d.cards.forEach(c=>{
-    if(c.foto)return;
+    if(c.foto){pintarFoto(c);return;}          /* foto manual: usa direto */
     const el=document.getElementById('cf_'+c.id);
     if(!el)return;
     const noCat=CAT.find(x=>x.t===c.t&&x.wiki);
     let p;
-    if(noCat)p=fotoWiki(noCat.wiki);              /* catálogo: título curado, confiável */
+    if(noCat)p=fotoWiki(noCat.wiki);
     else{
-      if(SEM_FOTO.test(c.t))return;               /* logística/rotina: não arrisca */
+      if(SEM_FOTO.test(c.t))return;
       const t2=limparBusca(c.t);
-      if(!t2||t2.length<5||!/\s/.test(t2)&&t2.length<8)return; /* muito curto/genérico */
-      p=fotoBusca(t2+' '+nomeCid(d.cid)+' Colombia');
+      /* precisa ser um nome próprio razoável, não uma frase genérica */
+      if(!t2||t2.length<5)return;
+      const palavras=t2.split(/\s+/).length;
+      if(palavras>5)return;                     /* frase longa = descrição, não lugar */
+      p=fotoBusca(t2+' '+nomeCid(d.cid));
     }
     p.then(u=>{
       if(!u||!el.isConnected)return;
+      c.fotoAuto=u;                             /* memoriza para não rebuscar */
       el.classList.remove('vazia');
       el.innerHTML=`<img src="${u}" alt="" loading="lazy" onerror="this.parentNode.style.display='none'">`;
     });
   });
+}
+function pintarFoto(c){
+  const el=document.getElementById('cf_'+c.id);
+  if(!el)return;
+  el.classList.remove('vazia');
+  el.innerHTML=`<img src="${esc(c.foto)}" alt="" loading="lazy" onerror="this.parentNode.style.display='none'">`;
 }
 function render(){renderHd();renderTabs();renderBoard();renderWbar();marcaSync();salvar(true);carregarFotosCards();}
 function irDia(i){diaAtivo=i;render();document.getElementById('board').scrollTop=0;}
@@ -1988,18 +2056,6 @@ function aplicarFundo(){
 /* ---------- Descobrir: fotos (Wikipédia), distância e "perto de mim" ---------- */
 let descPos=null;
 const FOTOS=(()=>{try{return JSON.parse(localStorage.getItem('ruta_fotos'))||{};}catch(e){return{};}})();
-async function fotoWiki(titulo){
-  if(FOTOS[titulo]!==undefined)return FOTOS[titulo];
-  try{
-    const r=await fetch('https://es.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(titulo));
-    if(!r.ok)throw 0;
-    const j=await r.json();
-    const u=(j.thumbnail&&j.thumbnail.source)||'';
-    FOTOS[titulo]=u;
-    try{localStorage.setItem('ruta_fotos',JSON.stringify(FOTOS));}catch(e){}
-    return u;
-  }catch(e){FOTOS[titulo]='';return '';}
-}
 function carregarFotosDesc(){
   CAT.forEach((x,i)=>{
     if(!x.wiki)return;
