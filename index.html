@@ -253,32 +253,31 @@ body.arrastando .board{overflow:hidden!important}
   overscroll-behavior:contain}
 
 /* ===== RutAI — conversa em tela cheia, estilo GuavAI ===== */
-#rutai{height:100%;max-height:100%;border-radius:0;
-  background:radial-gradient(120% 60% at 50% -8%,#1E4258 0%,#0E1B2A 52%,#0A1420 100%)}
+/* ===== RutAI — tema claro, estilo conversa do Claude ===== */
+#rutai{height:100%;max-height:100%;border-radius:0;background:#fff;top:0}
 .chatia .iahead{flex-shrink:0;display:flex;flex-direction:row;align-items:center;gap:11px;
-  padding:calc(10px + env(safe-area-inset-top)) 14px 10px;
-  border-bottom:1px solid rgba(255,255,255,.08)}
+  padding:calc(10px + env(safe-area-inset-top)) 16px 11px;
+  border-bottom:1px solid #ECECEC;background:#fff}
 .chatia .iainfo{flex:1;min-width:0}
 .chatia .ix{flex-shrink:0;width:32px;height:32px;border-radius:50%;border:none;
-  background:rgba(255,255,255,.12);color:rgba(255,255,255,.85);font-size:14px}
-.chatia .iatit{color:#fff;font-size:15px;font-weight:800;letter-spacing:-.02em}
-.chatia .iastt{color:rgba(255,255,255,.5);font-size:11.5px;font-weight:600;
+  background:#F2F2F0;color:var(--ink2);font-size:14px}
+.chatia .iatit{color:var(--ink);font-size:15.5px;font-weight:800;letter-spacing:-.02em}
+.chatia .iastt{color:var(--ink3);font-size:11.5px;font-weight:600;
   min-height:14px;transition:color .3s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-/* orbe — pequeno, na barra */
+/* orbe — pequeno, na barra clara */
 .orb{position:relative;width:34px;height:34px;flex-shrink:0}
 .orb i{position:absolute;inset:0;border-radius:50%}
 .orb .o1{background:conic-gradient(from 0deg,#22C6E8,#8270DB,#F0483E,#E8A317,#22C6E8);
-  filter:blur(5px);opacity:.85;animation:orbgira 7s linear infinite}
+  filter:blur(5px);opacity:.9;animation:orbgira 7s linear infinite}
 .orb .o2{inset:3px;background:conic-gradient(from 180deg,#F0483E,#22C6E8,#4BCE97,#F0483E);
-  filter:blur(3px);opacity:.7;animation:orbgira 5s linear infinite reverse}
-.orb .o3{inset:2px;border-radius:50%;box-shadow:0 0 14px 3px rgba(64,180,220,.35)}
+  filter:blur(3px);opacity:.75;animation:orbgira 5s linear infinite reverse}
+.orb .o3{inset:2px;border-radius:50%;box-shadow:0 0 12px 2px rgba(64,180,220,.3)}
 .orb .nuc{inset:6px;background:radial-gradient(circle at 34% 30%,#fff 0%,#CFF3FF 34%,#5FC7E8 68%,#1D6FA5 100%);
-  box-shadow:inset 0 -3px 7px rgba(13,60,90,.45)}
+  box-shadow:inset 0 -3px 7px rgba(13,60,90,.4)}
 .orb{animation:orbresp 3.4s ease-in-out infinite}
 @keyframes orbgira{to{transform:rotate(360deg)}}
 @keyframes orbresp{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
-/* estados */
 .orb.ouvindo{animation:orbresp 1s ease-in-out infinite}
 .orb.ouvindo .o1{animation-duration:2.4s;filter:blur(6px);opacity:1}
 .orb.ouvindo .o3{box-shadow:0 0 20px 5px rgba(240,72,62,.4)}
@@ -287,47 +286,68 @@ body.arrastando .board{overflow:hidden!important}
 .orb.pensando .o2{animation-duration:1s}
 @media(prefers-reduced-motion:reduce){.orb,.orb i{animation:none!important}}
 
-/* balões sobre o fundo escuro */
-.chatia .fsc{padding:8px 16px 12px}
-.chatia .bal.ia{background:rgba(255,255,255,.96);box-shadow:0 2px 12px rgba(0,0,0,.25);position:relative;padding-bottom:26px}
-.copbal{position:absolute;right:8px;bottom:6px;background:none;border:none;color:var(--ink3);
-  font-size:15px;padding:2px 6px;border-radius:6px;line-height:1}
+/* área de conversa branca */
+.chatia .fsc{flex:1;overflow-y:auto;padding:16px 16px 14px;display:flex;flex-direction:column;gap:18px;
+  background:#fff;-webkit-overflow-scrolling:touch}
+
+/* mensagem do usuário: bolha cinza-clara à direita (como o Claude) */
+.chatia .bal.eu{background:#F0F0EE;color:var(--ink);align-self:flex-end;max-width:82%;
+  padding:12px 16px;border-radius:18px;font-size:16px;line-height:1.5;font-weight:500;
+  box-shadow:none;position:relative}
+.chatia .bal.eu .copbal{color:var(--ink3)}
+
+/* resposta da IA: SEM bolha, texto sobre o branco (como o Claude) */
+.chatia .bal.ia{background:none;box-shadow:none;align-self:stretch;max-width:100%;
+  padding:0 2px 22px;border-radius:0;font-size:16px;line-height:1.62;color:var(--ink);
+  font-weight:400;position:relative}
+.chatia .bal.ia b{font-weight:700}
+.chatia .bal.boasvindas{background:none;border:none;color:var(--ink2);text-align:left;
+  max-width:100%;font-size:16px;line-height:1.6;padding:0 2px 8px}
+.chatia .bal.boasvindas b{color:var(--ink);font-weight:700}
+
+/* botão copiar discreto */
+.copbal{position:absolute;right:2px;bottom:0;background:none;border:none;color:var(--ink3);
+  font-size:15px;padding:3px 7px;border-radius:6px;line-height:1}
 .copbal:active{background:var(--painel)}
-.chatia .bal.eu{background:var(--azul);box-shadow:0 2px 12px rgba(0,0,0,.25);position:relative;padding-bottom:26px}
-.chatia .bal.eu .copbal{color:rgba(255,255,255,.7)}
+.chatia .bal.eu .copbal{right:6px;bottom:-2px}
+
 /* digitando */
-.dots{display:inline-flex;gap:5px;padding:3px 2px}
-.dots i{width:7px;height:7px;border-radius:50%;background:var(--ink3);animation:dotp 1.2s ease-in-out infinite}
+.dots{display:inline-flex;gap:5px;padding:4px 2px}
+.dots i{width:8px;height:8px;border-radius:50%;background:var(--ink3);animation:dotp 1.2s ease-in-out infinite}
 .dots i:nth-child(2){animation-delay:.18s}
 .dots i:nth-child(3){animation-delay:.36s}
-@keyframes dotp{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-5px);opacity:1}}
+@keyframes dotp{0%,60%,100%{transform:translateY(0);opacity:.35}30%{transform:translateY(-5px);opacity:1}}
 
-/* sugestões e rodapé no escuro */
-.chatia .sugs button{background:rgba(255,255,255,.1);box-shadow:none;color:rgba(255,255,255,.85);
-  border:1px solid rgba(255,255,255,.14)}
-.chatia .ffoot{background:transparent}
-.chatia .ffoot textarea{flex:1;background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.16);
-  border-radius:20px;padding:11px 15px;font-size:15px;font-family:inherit;resize:none;
-  max-height:140px;line-height:1.35;overflow-y:auto}
-.chatia .ffoot textarea::placeholder{color:rgba(255,255,255,.4)}
-.chatia .ffoot textarea:focus{outline:none;border-color:rgba(255,255,255,.35)}
-.chatia .ffoot .snd{width:44px;flex:0 0 44px;padding:0;height:44px;border-radius:50%;font-size:19px;font-weight:800}
+/* sugestões: chips claros */
+.chatia .sugs{padding:0 14px 10px}
+.chatia .sugs button{background:#F7F7F5;box-shadow:none;color:var(--ink2);
+  border:1px solid #E8E8E4;font-size:13.5px}
+
+/* rodapé de input estilo Claude: campo arredondado grande com ícones dentro */
+.chatia .ffoot{background:#fff;border-top:1px solid #ECECEC;
+  padding:10px 14px calc(12px + env(safe-area-inset-bottom));gap:8px;align-items:flex-end}
+.chatia .ffoot textarea{flex:1;background:#F4F4F2;color:var(--ink);border:1px solid #E4E4DF;
+  border-radius:22px;padding:13px 16px;font-size:16px;font-family:inherit;resize:none;
+  max-height:150px;line-height:1.4;overflow-y:auto}
+.chatia .ffoot textarea::placeholder{color:var(--ink3)}
+.chatia .ffoot textarea:focus{outline:none;border-color:var(--azul);background:#fff}
+.chatia .ffoot .mic,.chatia #clip{width:44px;height:44px;flex:0 0 44px;border-radius:50%;
+  background:#F2F2F0;border:1px solid #E4E4DF;color:var(--ink2);font-size:18px;padding:0}
+.chatia .ffoot .snd{width:44px;flex:0 0 44px;padding:0;height:44px;border-radius:50%;
+  font-size:20px;font-weight:800;background:var(--azul);color:#fff;border:none}
 .chatia .grab{display:none}
-.chatia #clip{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);font-size:17px}
+
+/* anexos: chips claros */
 .anexos{display:flex;gap:8px;overflow-x:auto;padding:0 14px 8px;scrollbar-width:none;flex-shrink:0}
 .anexos:empty{display:none}
 .anexos::-webkit-scrollbar{display:none}
-.anx{flex-shrink:0;position:relative;background:rgba(255,255,255,.12);border-radius:10px;
+.anx{flex-shrink:0;position:relative;background:#F2F2F0;border:1px solid #E4E4DF;border-radius:10px;
   padding:8px 10px;display:flex;align-items:center;gap:8px;max-width:180px}
 .anx .ai{font-size:18px;flex-shrink:0}
 .anx img{width:34px;height:34px;border-radius:6px;object-fit:cover;flex-shrink:0}
-.anx .an{font-size:11.5px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.anx .ax{width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.4);color:#fff;border:none;
+.anx .an{font-size:11.5px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.anx .ax{width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.35);color:#fff;border:none;
   font-size:11px;flex-shrink:0}
-.chatia .bal.boasvindas{background:rgba(255,255,255,.09);color:rgba(255,255,255,.92);
-  box-shadow:none;border:1px solid rgba(255,255,255,.13);text-align:left;
-  max-width:88%;font-size:14px}
-.chatia .bal.boasvindas b{color:#fff}
 .fsc{flex:1;overflow-y:auto;padding:4px 16px 12px;display:flex;flex-direction:column;gap:10px}
 .bal{max-width:88%;padding:12px 14px;border-radius:14px;font-size:14.5px;line-height:1.5;font-weight:500}
 .bal.eu{background:var(--azul);color:#fff;align-self:flex-end;border-bottom-right-radius:4px;font-weight:600}
