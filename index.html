@@ -144,7 +144,7 @@ button,input,textarea,select{font-family:inherit;color:inherit}
 
 /* ===== QUADRO — painéis como no print ===== */
 /* ===== QUADRO — painéis estreitos, foto aparecendo nas laterais ===== */
-.board{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px 0 128px;scrollbar-width:none}
+.board{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px 0 96px;scrollbar-width:none}
 .board::-webkit-scrollbar{display:none}
 
 .lst{background:var(--painel);border-radius:12px;padding:9px 9px 5px;margin:0 auto 16px;
@@ -587,18 +587,10 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
         <button class="icb" onclick="abrirItinerario()">⚙</button>
         <button class="icb pri" onclick="novoItem()">＋</button>
       </div>
-      <div class="sub" id="sub-hd">—</div>
       <div class="wbar" id="wbar" style="display:none"></div>
     </div>
     <div class="tabs" id="tabs"></div>
     <div class="board" id="board"></div>
-    <div class="iabar">
-      <div class="iastat" id="iastat"></div>
-      <div class="box">
-        <button class="mic" id="mic1">🎙️</button>
-        <input id="ask1" placeholder="Fale com a RutAI: mova, sugira, ajuste…">
-      </div>
-    </div>
   </section>
 
   <section class="screen" id="s-clima">
@@ -1497,7 +1489,8 @@ function contarCidades(){
   return Object.entries(m).map(([k,v])=>`${nomeCid(k)} ${v}d`).join(' · ');
 }
 function renderHd(){
-  document.getElementById('sub-hd').innerHTML=
+  const sub=document.getElementById('sub-hd');
+  if(sub)sub.innerHTML=
     (S.quem?`<b>${esc(S.quem)}</b> · `:'')+`<b>${S.dias.length} dias</b> · ${esc(contarCidades())} · <b>${pctGeral()}%</b>`
     +(SY.ligado?' · ☁ em dupla':'');
 }
@@ -2992,7 +2985,8 @@ async function perguntar(txt){
     return;
   }
   diz('eu',esc(txt)+(temAnexo?` <span style="opacity:.7">· ${temAnexo} anexo(s)</span>`:''));
-  document.getElementById('ask1').value='';document.getElementById('ask2').value='';
+  const a1=document.getElementById('ask1');if(a1)a1.value='';
+  const a2=document.getElementById('ask2');if(a2){a2.value='';a2.style.height='auto';}
   const p=diz('ia','<span class="dots"><i></i><i></i><i></i></span>');
   orbe('pensando');statusIA(temAnexo?'lendo o documento…':'pensando…');
   if(!SY.fn){setTimeout(()=>{respostaLocal(p,txt);orbe('');statusIA('');},420);return;}
@@ -3266,6 +3260,7 @@ function recusar(btn){
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 function ligarMic(btnId,inputId,st){
   const b=document.getElementById(btnId);
+  if(!b)return;
   if(!SR){b.style.opacity=.4;b.addEventListener('click',()=>toast('Este navegador não reconhece voz.'));return;}
   const rec=new SR();rec.lang='pt-BR';rec.interimResults=true;rec.continuous=false;
   let on=false,to=null;
@@ -3332,9 +3327,7 @@ function entrarApp(pular){
 /* ---------- boot ---------- */
 carregar();aplicarFundo();render();buscarClima();marcaSync();
 if(SY.ligado){puxarNuvem(true);iniciarTimer();}
-ligarMic('mic1','ask1',t=>{const e=document.getElementById('iastat');e.textContent=t||'';e.classList.toggle('on',!!t);});
 ligarMic('mic2','ask2',t=>{statusIA(t);orbe(t?'ouvindo':'');});
-document.getElementById('ask1').addEventListener('keydown',e=>{if(e.key==='Enter')perguntar(e.target.value);});
 document.getElementById('ask2').addEventListener('keydown',e=>{
   if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();
     const v=e.target.value;e.target.value='';e.target.style.height='auto';perguntar(v);}
