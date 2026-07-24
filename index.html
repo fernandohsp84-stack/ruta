@@ -447,6 +447,8 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
 .mfil button{flex-shrink:0;background:rgba(255,255,255,.92);border:none;border-radius:8px;padding:7px 11px;
   font-size:12px;font-weight:700;color:var(--ink2);box-shadow:var(--sh);white-space:nowrap}
 .mfil button.on{background:var(--azul);color:#fff}
+.mfil button.sempino{opacity:.5}
+.mfil button.sempino.on{opacity:1}
 #mapwrap{flex:1;position:relative;margin:10px 12px calc(12px + env(safe-area-inset-bottom));
   border-radius:14px;overflow:hidden;box-shadow:var(--shp);min-height:0}
 #map{position:absolute;inset:0;background:#DCE6E8}
@@ -1948,7 +1950,8 @@ function salvarItem(){
       bai:document.getElementById('i-b').value.trim(),nota:document.getElementById('i-n').value.trim(),
       ar:document.getElementById('i-ar').checked,l:listaSel(),end:endEd,
       ig:document.getElementById('i-ig').value.trim(),gm:document.getElementById('i-gm').value.trim(),
-      foto:document.getElementById('i-foto').value.trim(),lat:coordEd.lat,lng:coordEd.lng};
+      foto:document.getElementById('i-foto').value.trim(),lat:coordEd.lat,lng:coordEd.lng,
+      geoNao:false};   /* o usuário mexeu: vale tentar localizar de novo */
     destino=data?diaDaData(data):parseInt(document.getElementById('i-dia').value);
   }
   if(itemEd){const r=achar(itemEd);Object.assign(r.c,dados,{docs:DOCS_ED.slice()});
@@ -2348,31 +2351,40 @@ function pontos(){
 }
 /* busca coordenadas dos cartões que têm nome/lugar mas ainda não têm pino */
 let geocodando=false;
-async function geocodificarPendentes(){
-  if(geocodando)return 0;
-  geocodando=true;
-  let achou=0;
-  const pend=[];
+/* cartões que ainda podem ganhar um pino (não tentados e sem coordenada) */
+function pendentesGeo(){
+  const out=[];
   S.dias.forEach((d,i)=>d.cards.forEach(c=>{
     if(c.lat||c.lng)return;
+    if(c.geoNao)return;                           /* já tentamos e o serviço não achou */
     if((c.tipo||'atividade')==='voo')return;
     if(SEM_FOTO.test(c.t))return;                 /* rotina não geocodifica */
     const nome=limparBusca(c.t);
     if(!nome||nome.length<3)return;
-    pend.push({c,cid:nomeCid(d.cid)});
+    out.push({c,cid:nomeCid(d.cid)});
   }));
-  for(const p of pend.slice(0,8)){                /* no máx 8 por vez, respeita o serviço */
+  return out;
+}
+async function geocodificarPendentes(){
+  if(geocodando)return 0;
+  geocodando=true;
+  let achou=0;
+  const pend=pendentesGeo();
+  for(const p of pend.slice(0,10)){               /* leva por leva, respeita o serviço */
     const q=[limparBusca(p.c.t),p.c.bai,p.c.cid,'Colombia'].filter(Boolean).join(', ');
+    let ok=false;
     try{
       const r=await nominatim(q);
       if(r){p.c.lat=parseFloat(r.lat);p.c.lng=parseFloat(r.lon);
         if(!p.c.end)p.c.end=(r.display_name||'').split(',').slice(0,3).join(',').trim();
-        achou++;}
+        achou++;ok=true;}
     }catch(e){}
+    /* não achou: marca para NÃO travar a fila tentando o mesmo cartão para sempre */
+    if(!ok)p.c.geoNao=true;
     await new Promise(r=>setTimeout(r,340));
   }
   geocodando=false;
-  if(achou){salvar(true);}
+  if(achou)salvar(true);
   return achou;
 }
 function irMapa(cid){
@@ -2412,22 +2424,18 @@ function abrirIG(cid){
 function renderMapa(){
   const wrap=document.getElementById('mapwrap');
   const pts=pontos();
-  /* filtros: todos + cada dia que tenha ponto */
-  const comPtos=[...new Set(pts.map(p=>p.dia))].sort((a,b)=>a-b);
+  const comPtos=new Set(pts.map(p=>p.dia));
+  /* filtros: todos + TODOS os dias da viagem (os sem pino ficam esmaecidos) */
   document.getElementById('mfil').innerHTML=
     `<button class="${mFiltro==='todos'?'on':''}" onclick="filtrarMapa('todos')">Viagem inteira</button>`+
-    comPtos.map(i=>`<button class="${mFiltro===i?'on':''}" onclick="filtrarMapa(${i})">Dia ${i+1}</button>`).join('');
+    S.dias.map((d,i)=>`<button class="${mFiltro===i?'on':''}${comPtos.has(i)?'':' sempino'}"
+      onclick="filtrarMapa(${i})">Dia ${i+1}</button>`).join('');
+  const pend=pendentesGeo().length;
   document.getElementById('mapa-sub').textContent=
-    pts.length?`${pts.length} lugar(es) marcado(s) · toque num pino`:'Nenhum lugar marcado ainda';
-  /* busca coordenadas dos cartões novos que ainda não têm pino, e redesenha */
-  if(!geocodando){
-    const faltam=S.dias.some(d=>d.cards.some(c=>!c.lat&&(c.tipo||'atividade')!=='voo'&&
-      !SEM_FOTO.test(c.t)&&limparBusca(c.t).length>=3));
-    if(faltam){
-      document.getElementById('mapa-sub').textContent='Localizando novos lugares…';
-      geocodificarPendentes().then(n=>{if(n>0)renderMapa();});
-    }
-  }
+    pend?`Localizando ${pend} lugar(es)…`
+       :(pts.length?`${pts.length} lugar(es) marcado(s) · toque num pino`:'Nenhum lugar marcado ainda');
+  /* continua até esgotar a fila — mesmo que uma leva não ache nada */
+  if(pend&&!geocodando)geocodificarPendentes().then(()=>renderMapa());
 
   const antigo=wrap.querySelector('.mvazio');if(antigo)antigo.remove();
   if(!pts.length){
@@ -2455,6 +2463,10 @@ function renderMapa(){
   camada=L.layerGroup().addTo(MAP);
 
   const vis=mFiltro==='todos'?pts:pts.filter(p=>p.dia===mFiltro);
+  if(mFiltro!=='todos'&&!vis.length&&!pend){
+    document.getElementById('mapa-sub').textContent=
+      `Dia ${mFiltro+1} ainda sem lugar localizado — abra um cartão e toque em Localizar.`;
+  }
   /* linhas ligando a ordem do dia */
   const porDia={};
   vis.forEach(p=>(porDia[p.dia]=porDia[p.dia]||[]).push(p));
