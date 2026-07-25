@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Ruta">
-<meta name="theme-color" content="#1B6F8C">
+<meta name="theme-color" content="#0B2E3F">
 <title>Ruta · Colômbia</title>
 <link rel="apple-touch-icon" href="icone.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icone.png">
@@ -36,14 +36,15 @@
 html,body{height:100%;height:100svh;overflow:hidden}
 @supports(height:100dvh){html,body{height:100dvh}}
 body{color:var(--ink);font-family:'Inter',-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;
-  font-weight:500;letter-spacing:-.005em;background:#1B6F8C}
+  font-weight:500;letter-spacing:-.005em;background:#0B2E3F}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 button,input,textarea,select{font-family:inherit;color:inherit}
 
 /* ===== FUNDO FOTOGRÁFICO ===== */
-#fundo{position:fixed;inset:0;z-index:0;background-image:url('fundo.jpeg');
+#fundo{position:fixed;top:0;left:0;width:100%;height:100vh;height:100lvh;z-index:0;
+  background-image:url('fundo.jpeg');
   background-size:cover;background-position:center;background-repeat:no-repeat}
-#veu{position:fixed;inset:0;z-index:1;
+#veu{position:fixed;top:0;left:0;width:100%;height:100vh;height:100lvh;z-index:1;
   background:linear-gradient(180deg,rgba(10,48,66,.58) 0%,rgba(10,48,66,.34) 22%,
     rgba(10,48,66,.16) 46%,rgba(10,48,66,.20) 100%)}
 
@@ -253,7 +254,39 @@ body.arrastando .board{overflow:hidden!important}
   overscroll-behavior:contain}
 
 /* ===== RutAI — conversa em tela cheia, estilo GuavAI ===== */
-/* ===== RutAI — tema claro, estilo conversa do Claude ===== */
+/* ===== blocos ricos do RutAI ===== */
+.blugar{margin-top:12px;border:1px solid #E6E6E1;border-radius:14px;overflow:hidden;background:#fff;
+  box-shadow:0 1px 4px rgba(9,30,66,.07)}
+.bmapa{height:132px;background:#EEF1F4;position:relative}
+.bmapa.carregando::after{content:'localizando…';position:absolute;inset:0;display:flex;
+  align-items:center;justify-content:center;font-size:12px;color:var(--ink3);font-weight:700}
+.pinm{font-size:22px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.3))}
+.bcorpo{padding:12px 13px 13px}
+.bnome{font-size:16px;font-weight:800;color:var(--ink);letter-spacing:-.01em;line-height:1.25}
+.bloc{font-size:12.5px;font-weight:600;color:var(--ink2);margin-top:3px}
+.bchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.bc{font-size:11.5px;font-weight:700;background:var(--painel);color:var(--ink2);
+  padding:4px 8px;border-radius:7px}
+.bc.nota{background:#FFF4D6;color:#8A6100}
+.bdesc{font-size:13.5px;line-height:1.5;color:var(--ink2);margin-top:9px;font-weight:500}
+.bbts{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px}
+.bb{font-size:12.5px;font-weight:700;text-decoration:none;padding:8px 11px;border-radius:9px;
+  background:var(--painel);color:var(--ink);border:1px solid #E4E4DF;display:inline-block}
+.bb.gm{background:#E6F6EC;color:var(--verde-d);border-color:#CDEBD8}
+.bb.wa{background:#25D366;color:#fff;border-color:#1FBE5A}
+.baddc{width:100%;margin-top:10px;padding:11px;border-radius:10px;border:none;
+  background:var(--azul);color:#fff;font-size:13.5px;font-weight:800}
+/* frases */
+.bfrases{margin-top:12px;border:1px solid #E6E6E1;border-radius:14px;background:#fff;padding:12px 13px}
+.fh{font-size:13px;font-weight:800;color:var(--ink);margin-bottom:9px}
+.fr{padding:9px 0;border-top:1px solid #F0F0EC}
+.fr:first-of-type{border-top:none;padding-top:0}
+.fes{font-size:15.5px;font-weight:700;color:var(--ink);line-height:1.4;padding-right:30px;position:relative}
+.fcop{position:absolute;right:0;top:0;background:none;border:none;color:var(--ink3);font-size:15px;padding:2px 4px}
+.fpt{font-size:12.5px;color:var(--ink2);font-weight:600;margin-top:3px}
+.fdica{font-size:12px;color:var(--ink3);font-weight:600;margin-top:4px;line-height:1.45}
+/* links */
+.blinks{margin-top:12px;border:1px solid #E6E6E1;border-radius:14px;background:#fff;padding:12px 13px}
 #rutai{height:100%;max-height:100%;border-radius:0;background:#fff;top:0}
 .chatia .iahead{flex-shrink:0;display:flex;flex-direction:row;align-items:center;gap:11px;
   padding:calc(10px + env(safe-area-inset-top)) 16px 11px;
@@ -1958,13 +1991,13 @@ function salvarItem(){
     const atual=S.dias.indexOf(r.d);
     if(atual!==destino){r.d.cards.splice(r.d.cards.indexOf(r.c),1);S.dias[destino].cards.push(r.c);}}
   else S.dias[destino].cards.push(Object.assign({id:id(),ok:false,docs:DOCS_ED.slice()},dados));
-  diaAtivo=destino;fechar('item');salvar();render();
+  diaAtivo=destino;geoRodou=false;fechar('item');salvar();render();
   toast(itemEd?'Atualizado.':'Adicionado ao Dia '+(destino+1)+'.');
 }
 function apagarItem(){
   if(!itemEd||!confirm('Apagar este item?'))return;
   for(const d of S.dias){const i=d.cards.findIndex(x=>x.id===itemEd);if(i>=0){d.cards.splice(i,1);break;}}
-  fechar('item');salvar();render();toast('Removido.');
+  geoRodou=false;fechar('item');salvar();render();toast('Removido.');
 }
 
 /* ---------- lista ---------- */
@@ -2328,7 +2361,7 @@ function verTela(id){
   document.getElementById(id).classList.add('on');
   if(id==='s-desc')renderDesc();
   if(id==='s-clima')renderClima();
-  if(id==='s-mapa')renderMapa();
+  if(id==='s-mapa'){geoRodou=false;renderMapa();}
 }
 document.querySelectorAll('.nav button').forEach(b=>b.addEventListener('click',()=>{
   if(b.id==='btn-ia'){abrirIA();return;}
@@ -2421,6 +2454,7 @@ function abrirIG(cid){
   if(/^https?:\/\//i.test(u))window.open(u,'_blank');
   else window.open('https://instagram.com/'+u.replace(/^@/,''),'_blank');
 }
+let geoRodou=false;  /* garante uma rodada só, não loop */
 function renderMapa(){
   const wrap=document.getElementById('mapwrap');
   const pts=pontos();
@@ -2434,8 +2468,11 @@ function renderMapa(){
   document.getElementById('mapa-sub').textContent=
     pend?`Localizando ${pend} lugar(es)…`
        :(pts.length?`${pts.length} lugar(es) marcado(s) · toque num pino`:'Nenhum lugar marcado ainda');
-  /* continua até esgotar a fila — mesmo que uma leva não ache nada */
-  if(pend&&!geocodando)geocodificarPendentes().then(()=>renderMapa());
+  /* rodada única ao abrir o mapa, não em loop contínuo */
+  if(pend&&!geocodando&&!geoRodou){
+    geoRodou=true;
+    geocodificarPendentes().then(()=>renderMapa());
+  }
 
   const antigo=wrap.querySelector('.mvazio');if(antigo)antigo.remove();
   if(!pts.length){
@@ -2509,11 +2546,11 @@ function ajustarMapa(){
 /* ==========================================================
    RutAI
    ========================================================== */
-const SUGS=['Vai chover no dia 2?','Esse dia está cheio demais','O que cabe hoje?',
-  'Onde jantar bem aqui?','Quero um dia a mais em Cartagena','Resumo do dia'];
-const SUGS_LIVRE=['Monte o Dia 1 com jantar em El Poblado','Sugira 3 lugares para hoje',
-  'Um jantar romântico com vista','Encaixe uma aula de salsa amanhã',
-  'O que fazer perto do hotel à noite?','Deixe o dia 3 mais leve'];
+const SUGS=['Vai chover no dia 2?','Como peço a conta em espanhol?','O que cabe hoje?',
+  'Onde jantar bem aqui?','Reservar mesa por WhatsApp','Resumo do dia'];
+const SUGS_LIVRE=['Uma balada boa de música latina','Como reservar mesa em espanhol?',
+  'Um jantar romântico com vista','Frases para pegar táxi e negociar',
+  'Onde tomar café especial perto daqui?','Como pedir sem comer picante?'];
 function orbe(st){
   const o=document.getElementById('orb');if(!o)return;
   o.classList.remove('ouvindo','pensando');
@@ -2830,7 +2867,7 @@ PRINCÍPIO MAIS IMPORTANTE: quando o usuário pede algo que muda o roteiro (cria
 Se o usuário mencionar um lugar (ex.: "um card do Pergamino", "jantar no Carmen"), CRIE o cartão com a ação "criar", preenchendo o que você sabe sobre o lugar (horário sugerido, bairro, nota típica, uma descrição útil). Não diga que "já existe" a menos que haja um cartão com título muito parecido no JSON — e mesmo assim, ofereça criar um novo ou editar o existente com uma ação concreta.
 
 Responda SEMPRE e SOMENTE com um JSON válido, sem markdown e sem crases:
-{"fala":"resposta curta em português (até 3 frases), pode usar <b> e <br>","titulo":"título curto do bloco de propostas","acoes":[...]}
+{"fala":"resposta curta em português (até 3 frases), pode usar <b> e <br>","titulo":"título curto do bloco de propostas","acoes":[...],"blocos":[...]}
 
 Cada ação tem "tipo", "texto" (descrição curta que o usuário lê antes de confirmar) e os campos do tipo:
 
@@ -2843,6 +2880,18 @@ Cada ação tem "tipo", "texto" (descrição curta que o usuário lê antes de c
 
 Listas: "l1" âncora do dia (o programa principal, check-in), "l2" passeios, "l3" comer e beber, "l4" flexível.
 
+ALÉM das ações, você pode devolver "blocos" — cartões visuais que aparecem na conversa. Use quando ajudarem de verdade:
+
+{"tipo":"lugar","nome":"Leyenda Urbana","bairro":"El Poblado","cidade":"Medellín","categoria":"Disco club","nota":"4,9","horario":"22h–3h","faixaPreco":"$$","descricao":"por que vale a pena, em 1 frase","telefone":"+57 300 0000000","whatsapp":"+57 300 0000000","site":"https://...","instagram":"@perfil","horaSugerida":"22:00","mensagemReserva":"texto em espanhol pronto para enviar"}
+{"tipo":"frases","titulo":"Reservar mesa por WhatsApp","whatsapp":"+57 300 0000000","mensagemPronta":"mensagem inteira em espanhol","itens":[{"es":"frase em espanhol colombiano","pt":"o que significa","dica":"quando/como usar"}]}
+{"tipo":"links","titulo":"Onde reservar","itens":[{"rotulo":"Reservar no WhatsApp","whatsapp":"+57...","mensagem":"texto em espanhol"},{"rotulo":"Site oficial","url":"https://..."}]}
+
+QUANDO USAR CADA BLOCO:
+- Falou de um lugar específico (bar, restaurante, museu, passeio) → mande UM bloco "lugar" dele. O app desenha o mini-mapa sozinho; só preencha "lat"/"lng" se tiver certeza. Máximo 3 blocos "lugar" por resposta.
+- Pediu ajuda para FALAR ESPANHOL, pedir algo, negociar, reservar, se virar numa situação → bloco "frases" com espanhol COLOMBIANO real e coloquial (usam "parcero", "¿qué más?", "a la orden", "regálame un...", "hágame el favor", "¡de una!"). Sempre em espanhol da Colômbia, não da Espanha (nada de "vosotros", nada de "coger" no sentido pegar). Explique diferenças que causam gafe.
+- Pediu para RESERVAR, marcar, entrar em contato, comprar ingresso → bloco "links" com os caminhos reais (WhatsApp do lugar, site, plataforma de reserva) e uma "mensagem" já escrita em espanhol.
+- Só invente telefone/site se souber. Sem certeza, omita o campo — melhor um botão a menos do que um número errado.
+
 Regras:
 - "dia" é o número mostrado no app, começando em 1. Se o usuário citar uma data (ex.: 28/08), converta para o número do dia usando "inicio" e a lista "dias" do JSON.
 - Para restaurante/bar/jantar use lista "l3". Para passeio "l2". Para o programa central do dia "l1".
@@ -2850,8 +2899,151 @@ Regras:
 - Preencha "endereco" com o nome do lugar + bairro, para o mapa funcionar (ex.: "Pergamino Café, El Poblado").
 - Só use "cartaoId" com ids que aparecem no JSON. Nunca invente id.
 - Cartões com "tipo":"voo" ou "tipo":"hotel" são INTOCÁVEIS: nunca proponha remover, editar ou mover esses. Eles são a espinha logística da viagem.
-- Pergunta pura (previsão, resumo, dúvida) → responda em "fala" com "acoes":[].
-- Máximo 6 ações por resposta. Nunca escreva nada fora do JSON.`;
+- Pergunta pura (previsão, resumo, dúvida) → responda em "fala" com "acoes":[]. Mesmo assim, pode mandar "blocos" (lugar, frases ou links) se ajudarem.
+- Máximo 6 ações e 4 blocos por resposta. Nunca escreva nada fora do JSON.`;
+
+/* ======= BLOCOS RICOS DO RutAI (lugar, frases, links) ======= */
+let blocoSeq=0;
+function renderBlocos(bolha,blocos){
+  if(!Array.isArray(blocos))return;
+  blocos.slice(0,4).forEach(b=>{
+    let el=null;
+    try{
+      if(b.tipo==='lugar')el=blocoLugar(b);
+      else if(b.tipo==='frases')el=blocoFrases(b);
+      else if(b.tipo==='links')el=blocoLinks(b);
+    }catch(e){}
+    if(el)bolha.appendChild(el);
+  });
+}
+/* limpa telefone para uso em wa.me / tel: */
+function soDigitos(t){return String(t||'').replace(/\D/g,'');}
+function urlWhats(tel,msg){
+  const d=soDigitos(tel);if(!d)return '';
+  return 'https://wa.me/'+d+(msg?'?text='+encodeURIComponent(msg):'');
+}
+/* ---- 1) cartão de lugar com mini-mapa ---- */
+function blocoLugar(b){
+  const id='bl'+(++blocoSeq);
+  const nome=b.nome||b.titulo||'Lugar';
+  const local=[b.bairro,b.cidade].filter(Boolean).join(' · ');
+  const box=document.createElement('div');
+  box.className='blugar';
+  const chips=[
+    b.nota?`<span class="bc nota">★ ${esc(String(b.nota))}</span>`:'',
+    b.categoria?`<span class="bc">${esc(b.categoria)}</span>`:'',
+    b.faixaPreco?`<span class="bc">${esc(b.faixaPreco)}</span>`:'',
+    b.horario?`<span class="bc">${esc(b.horario)}</span>`:''
+  ].filter(Boolean).join('');
+  const buscaGM=encodeURIComponent([nome,b.bairro,b.cidade,'Colombia'].filter(Boolean).join(', '));
+  const bts=[
+    `<a class="bb gm" href="https://www.google.com/maps/search/?api=1&query=${buscaGM}" target="_blank" rel="noopener">📍 Google Maps</a>`,
+    b.whatsapp||b.telefone
+      ? `<a class="bb wa" href="${urlWhats(b.whatsapp||b.telefone,b.mensagemReserva||'')}" target="_blank" rel="noopener">💬 WhatsApp</a>`:'',
+    b.telefone?`<a class="bb" href="tel:${esc(soDigitos(b.telefone))}">📞 Ligar</a>`:'',
+    b.site?`<a class="bb" href="${esc(b.site)}" target="_blank" rel="noopener">🌐 Site</a>`:'',
+    b.instagram?`<a class="bb" href="https://instagram.com/${esc(String(b.instagram).replace('@',''))}" target="_blank" rel="noopener">📷 Instagram</a>`:''
+  ].filter(Boolean).join('');
+  box.innerHTML=
+    `<div class="bmapa" id="mm_${id}"></div>
+     <div class="bcorpo">
+       <div class="bnome">${esc(nome)}</div>
+       ${local?`<div class="bloc">📍 ${esc(local)}</div>`:''}
+       ${chips?`<div class="bchips">${chips}</div>`:''}
+       ${b.descricao?`<div class="bdesc">${esc(b.descricao)}</div>`:''}
+       <div class="bbts">${bts}</div>
+       <button class="baddc" onclick="addLugarAoRoteiro('${id}')">＋ Adicionar ao roteiro</button>
+     </div>`;
+  LUGARES[id]=b;
+  setTimeout(()=>miniMapa('mm_'+id,b),60);
+  return box;
+}
+const LUGARES={};
+/* desenha o mini-mapa; se não veio coordenada, busca pelo nome */
+async function miniMapa(divId,b){
+  const el=document.getElementById(divId);
+  if(!el||typeof L==='undefined')return;
+  let lat=parseFloat(b.lat),lng=parseFloat(b.lng);
+  if(!isFinite(lat)||!isFinite(lng)){
+    el.classList.add('carregando');
+    try{
+      const r=await nominatim([b.nome,b.bairro,b.cidade,'Colombia'].filter(Boolean).join(', '));
+      if(r){lat=parseFloat(r.lat);lng=parseFloat(r.lon);b.lat=lat;b.lng=lng;}
+    }catch(e){}
+    el.classList.remove('carregando');
+  }
+  if(!isFinite(lat)||!isFinite(lng)){el.style.display='none';return;}
+  try{
+    const m=L.map(el,{zoomControl:false,attributionControl:false,dragging:false,
+      scrollWheelZoom:false,doubleClickZoom:false,touchZoom:false,keyboard:false}).setView([lat,lng],15);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{maxZoom:19}).addTo(m);
+    L.marker([lat,lng],{icon:L.divIcon({className:'',html:'<div class="pinm">📍</div>',
+      iconSize:[28,28],iconAnchor:[14,26]})}).addTo(m);
+    setTimeout(()=>m.invalidateSize(),120);
+  }catch(e){el.style.display='none';}
+}
+/* botão "adicionar ao roteiro" do cartão de lugar */
+function addLugarAoRoteiro(id){
+  const b=LUGARES[id];if(!b)return;
+  const cat=String(b.categoria||'').toLowerCase();
+  const lista=/bar|restaur|caf|comida|gastro|club|balada|disco/.test(cat)?'l3':'l2';
+  const fn=acaoDoModelo({tipo:'criar',dia:diaAtivo+1,lista,titulo:b.nome||b.titulo,
+    hora:b.horaSugerida||'',bairro:b.bairro||'',nota:b.nota||'',descricao:b.descricao||'',
+    endereco:[b.nome,b.bairro].filter(Boolean).join(', ')});
+  if(!fn){toast('Não consegui montar o cartão.');return;}
+  try{fn();protegidoAte=Date.now()+30000;salvar();render();
+    toast(`"${b.nome||'Lugar'}" adicionado ao Dia ${diaAtivo+1}.`);}
+  catch(e){toast('Não consegui adicionar: '+(e.message||e));}
+}
+/* ---- 2) frases em espanhol colombiano ---- */
+function blocoFrases(b){
+  const box=document.createElement('div');
+  box.className='bfrases';
+  const itens=(b.itens||[]).slice(0,8).map(f=>{
+    const es=f.es||f.espanhol||'';
+    const pt=f.pt||f.portugues||'';
+    return `<div class="fr">
+      <div class="fes">${esc(es)}
+        <button class="fcop" onclick="copiarFrase(this)" data-t="${esc(es)}">⧉</button></div>
+      ${pt?`<div class="fpt">${esc(pt)}</div>`:''}
+      ${f.dica?`<div class="fdica">💡 ${esc(f.dica)}</div>`:''}
+    </div>`;
+  }).join('');
+  const zap=b.whatsapp||b.telefone;
+  const msg=(b.itens||[]).map(f=>f.es||f.espanhol).filter(Boolean).join(' ');
+  box.innerHTML=`<div class="fh">🗣️ ${esc(b.titulo||'Como falar')}</div>${itens}
+    ${zap?`<a class="bb wa" style="margin-top:8px;display:inline-block"
+      href="${urlWhats(zap,b.mensagemPronta||msg)}" target="_blank" rel="noopener">💬 Enviar no WhatsApp</a>`:''}
+    ${b.mensagemPronta?`<button class="bb" style="margin-top:8px"
+      onclick="copiarTexto(this.dataset.t,'Mensagem copiada.')" data-t="${esc(b.mensagemPronta)}">⧉ Copiar mensagem inteira</button>`:''}`;
+  return box;
+}
+function copiarFrase(btn){copiarTexto(btn.dataset.t||'','Frase copiada.');}
+function copiarTexto(t,msg){
+  if(!t)return;
+  if(navigator.clipboard&&navigator.clipboard.writeText)
+    navigator.clipboard.writeText(t).then(()=>toast(msg||'Copiado.'),()=>toast('Não consegui copiar.'));
+  else{
+    const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);
+    ta.select();try{document.execCommand('copy');toast(msg||'Copiado.');}catch(e){toast('Não consegui copiar.');}
+    document.body.removeChild(ta);
+  }
+}
+/* ---- 3) links de reserva / atalhos ---- */
+function blocoLinks(b){
+  const box=document.createElement('div');
+  box.className='blinks';
+  const bts=(b.itens||[]).slice(0,6).map(x=>{
+    let url=x.url||'';
+    if(x.whatsapp||x.telefone)url=urlWhats(x.whatsapp||x.telefone,x.mensagem||'');
+    if(!url)return '';
+    const ic=x.icone||(/wa\.me/.test(url)?'💬':/maps/.test(url)?'📍':'🔗');
+    return `<a class="bb ${/wa\.me/.test(url)?'wa':''}" href="${esc(url)}" target="_blank" rel="noopener">${ic} ${esc(x.rotulo||'Abrir')}</a>`;
+  }).filter(Boolean).join('');
+  if(!bts)return null;
+  box.innerHTML=(b.titulo?`<div class="fh">${esc(b.titulo)}</div>`:'')+`<div class="bbts">${bts}</div>`;
+  return box;
+}
 
 async function chamarIA(pedido){
   const u=(SY.fn||'').trim();
@@ -3007,6 +3199,7 @@ async function perguntar(txt){
     orbe('');statusIA('');
     if(!r){respostaLocal(p,txt);return;}
     p.innerHTML=r.fala||'—';
+    renderBlocos(p,r.blocos||[]);
     const itens=(r.acoes||[]).map(a=>{
       const fn=acaoDoModelo(a);
       return fn?{txt:esc(a.texto||a.tipo),acao:fn,raw:a}:null;
