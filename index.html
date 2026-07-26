@@ -274,6 +274,8 @@ body.arrastando .board{overflow:hidden!important}
   background:var(--painel);color:var(--ink);border:1px solid #E4E4DF;display:inline-block}
 .bb.gm{background:#E6F6EC;color:var(--verde-d);border-color:#CDEBD8}
 .bb.wa{background:#25D366;color:#fff;border-color:#1FBE5A}
+.bb.ig{background:linear-gradient(45deg,#F58529,#DD2A7B,#8134AF);color:#fff;border:none}
+.bnota{font-size:11.5px;color:var(--ink3);font-weight:600;line-height:1.45;margin-top:9px}
 .baddc{width:100%;margin-top:10px;padding:11px;border-radius:10px;border:none;
   background:var(--azul);color:#fff;font-size:13.5px;font-weight:800}
 /* frases */
@@ -1590,11 +1592,24 @@ function logCardHTML(c){
     ${cod}${anexos}<em>›</em>
   </div>`;
 }
-function copiarTexto(txt,btn){
-  const ok=()=>{if(btn){const o=btn.innerHTML;btn.innerHTML='✓ copiado';
-    setTimeout(()=>btn.innerHTML=o,1400);}toast('Copiado.');};
-  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(ok,ok);
-  else ok();
+function copiarTexto(txt,btn,msg){
+  if(!txt){toast('Nada para copiar.');return;}
+  const ok=()=>{
+    if(btn&&btn.innerHTML!==undefined){const o=btn.innerHTML;btn.innerHTML='✓ copiado';
+      setTimeout(()=>btn.innerHTML=o,1400);}
+    toast(typeof msg==='string'&&msg?msg:'Copiado.');
+  };
+  const manual=()=>{
+    try{
+      const ta=document.createElement('textarea');ta.value=txt;
+      ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);
+      ta.focus();ta.select();document.execCommand('copy');document.body.removeChild(ta);
+      ok();
+    }catch(e){toast('Não consegui copiar. Toque e segure para copiar à mão.');}
+  };
+  if(navigator.clipboard&&navigator.clipboard.writeText)
+    navigator.clipboard.writeText(txt).then(ok,manual);
+  else manual();
 }
 function cardHTML(c,L){
   const bg=[];
@@ -1789,7 +1804,7 @@ function buscarCoordHotel(){
       if(!end)document.getElementById('h-end').value=endHotelEd;
     }else{el.innerHTML='<span style="color:var(--ink2)">Sem pin interno — o Google deve achar pela busca.</span>';}
     /* abre pela busca do NOME: mostra a ficha do hotel com endereço e avaliações */
-    window.open('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q+', Colombia'),'_blank');
+    abrirExterno('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q+', Colombia'));
   }).catch(()=>{el.innerHTML='<span style="color:var(--coral-d)">Falha. Precisa de internet.</span>';});
 }
 function pintaListasChips(sel){
@@ -1856,7 +1871,7 @@ async function buscarCoord(){
   if(!tit&&!bai){toast('Escreva o título ou o bairro primeiro.');return;}
 
   /* se já colou o link do Maps, é só abrir */
-  if(gm&&/^https?:\/\//i.test(gm)){window.open(gm,'_blank');return;}
+  if(gm&&/^https?:\/\//i.test(gm)){abrirExterno(gm);return;}
 
   el.innerHTML='<span style="color:var(--ink2)">Procurando…</span>';
   const t2=limparBusca(tit);
@@ -1881,7 +1896,7 @@ async function buscarCoord(){
   }else{
     el.innerHTML='<span style="color:var(--ink2)">Sem pin no mapa interno — o Google deve achar pela busca.</span>';
   }
-  window.open('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(consulta),'_blank');
+  abrirExterno('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(consulta));
 }
 function limparCampos(){
   ['i-t','i-d','i-r','i-b','i-n','i-ig','i-gm','i-foto','i-data','i-hora',
@@ -2234,7 +2249,7 @@ function gmDoCat(nome){
   const x=CAT.find(y=>y.t===nome);if(!x)return;
   const u=x.lat?`https://www.google.com/maps/search/?api=1&query=${x.lat},${x.lng}`
     :'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(x.t+', '+nomeCid(x.c)+', Colombia');
-  window.open(u,'_blank');
+  abrirExterno(u);
 }
 function addDoCat(nome){
   const x=CAT.find(y=>y.t===nome);if(!x)return;
@@ -2398,21 +2413,59 @@ function pendentesGeo(){
   }));
   return out;
 }
+/* apaga pinos que caíram longe da cidade do dia (bug antigo de busca sem cidade) */
+function limparPinosErrados(){
+  let n=0;
+  S.dias.forEach(d=>{
+    const ref=GEO[nomeCid(d.cid)];
+    if(!ref)return;
+    d.cards.forEach(c=>{
+      if(c.tipo==='voo'||c.tipo==='hotel')return;   /* logística pode ter coordenada própria */
+      if(!isFinite(c.lat)||!isFinite(c.lng))return;
+      if(kmEntre(ref[0],ref[1],c.lat,c.lng)>60){
+        c.lat=null;c.lng=null;c.geoNao=false;n++;   /* volta para a fila, agora com cidade certa */
+      }
+    });
+  });
+  return n;
+}
+/* distância aproximada em km entre dois pontos */
+function kmEntre(a,b,c,d){
+  const R=6371,r=Math.PI/180;
+  const dl=(c-a)*r,dg=(d-b)*r;
+  const x=Math.sin(dl/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(dg/2)**2;
+  return 2*R*Math.asin(Math.min(1,Math.sqrt(x)));
+}
+/* "Plaza Botero, Museu de Antioquia e Palácio da Cultura" -> "Plaza Botero" */
+function primeiroLugar(t){
+  let s=limparBusca(t||'');
+  s=s.split(/,| e | и |\/| \+ | · /)[0].trim();
+  return s;
+}
 async function geocodificarPendentes(){
   if(geocodando)return 0;
   geocodando=true;
   let achou=0;
   const pend=pendentesGeo();
   for(const p of pend.slice(0,10)){               /* leva por leva, respeita o serviço */
-    const q=[limparBusca(p.c.t),p.c.bai,p.c.cid,'Colombia'].filter(Boolean).join(', ');
+    /* a cidade vem do DIA (p.cid), não do cartão — sem ela o pino cai em outra cidade */
+    const q=[primeiroLugar(p.c.t),p.c.bai,p.cid,'Colombia'].filter(Boolean).join(', ');
+    const ref=GEO[p.cid];
     let ok=false;
     try{
       const r=await nominatim(q);
-      if(r){p.c.lat=parseFloat(r.lat);p.c.lng=parseFloat(r.lon);
-        if(!p.c.end)p.c.end=(r.display_name||'').split(',').slice(0,3).join(',').trim();
-        achou++;ok=true;}
+      if(r){
+        const la=parseFloat(r.lat),ln=parseFloat(r.lon);
+        /* descarta resultado que caiu longe da cidade do dia (ex.: Bogotá quando é Medellín) */
+        const longe=ref&&isFinite(la)&&isFinite(ln)&&kmEntre(ref[0],ref[1],la,ln)>60;
+        if(!longe&&isFinite(la)&&isFinite(ln)){
+          p.c.lat=la;p.c.lng=ln;
+          if(!p.c.end)p.c.end=(r.display_name||'').split(',').slice(0,3).join(',').trim();
+          achou++;ok=true;
+        }
+      }
     }catch(e){}
-    /* não achou: marca para NÃO travar a fila tentando o mesmo cartão para sempre */
+    /* não achou (ou achou na cidade errada): marca para NÃO travar a fila */
     if(!ok)p.c.geoNao=true;
     await new Promise(r=>setTimeout(r,340));
   }
@@ -2438,7 +2491,7 @@ function abrirGM(cid){
   const r=achar(cid);if(!r)return;
   const c=r.c;
   /* link colado pelo usuário sempre vence */
-  if(c.gm&&/^https?:\/\//i.test(c.gm)){window.open(c.gm,'_blank');return;}
+  if(c.gm&&/^https?:\/\//i.test(c.gm)){abrirExterno(c.gm);return;}
   /* busca pelo NOME do lugar (limpo de "jantar no", "almoço em"...) — o Google
      mostra a ficha completa: endereço, fotos, avaliações. Coordenada crua só
      mostraria um pino mudo. */
@@ -2446,17 +2499,18 @@ function abrirGM(cid){
   let q=nome;
   if(c.bai)q+=', '+c.bai;
   q+=', '+nomeCid(r.d.cid)+', Colombia';
-  window.open('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q),'_blank');
+  abrirExterno('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q));
 }
 function abrirIG(cid){
   const r=achar(cid);if(!r||!r.c.ig)return;
   let u=r.c.ig.trim();
-  if(/^https?:\/\//i.test(u))window.open(u,'_blank');
-  else window.open('https://instagram.com/'+u.replace(/^@/,''),'_blank');
+  if(/^https?:\/\//i.test(u))abrirExterno(u);
+  else abrirExterno('https://instagram.com/'+u.replace(/^@/,''));
 }
 let geoRodou=false;  /* garante uma rodada só, não loop */
 function renderMapa(){
   const wrap=document.getElementById('mapwrap');
+  if(!geoRodou){const n=limparPinosErrados();if(n)salvar(true);}
   const pts=pontos();
   const comPtos=new Set(pts.map(p=>p.dia));
   /* filtros: todos + TODOS os dias da viagem (os sem pino ficam esmaecidos) */
@@ -2793,7 +2847,7 @@ function abrirDocCard(cid,k){
     const bin=atob(d.d);const arr=new Uint8Array(bin.length);
     for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);
     const url=URL.createObjectURL(new Blob([arr],{type:d.m}));
-    window.open(url,'_blank');
+    abrirExterno(url);
     setTimeout(()=>URL.revokeObjectURL(url),60000);
   }catch(e){toast('Não consegui abrir o anexo.');}
 }
@@ -2888,9 +2942,10 @@ ALÉM das ações, você pode devolver "blocos" — cartões visuais que aparece
 
 QUANDO USAR CADA BLOCO:
 - Falou de um lugar específico (bar, restaurante, museu, passeio) → mande UM bloco "lugar" dele. O app desenha o mini-mapa sozinho; só preencha "lat"/"lng" se tiver certeza. Máximo 3 blocos "lugar" por resposta.
+- CONTATO PARA RESERVA — regra rígida: na Colômbia, restaurantes e bares recebem reserva principalmente pelo DIRECT DO INSTAGRAM. Preencha "instagram" com o @ do lugar sempre que souber. NUNCA invente número de telefone ou WhatsApp: um número errado faz o viajante mandar mensagem para um desconhecido. Só preencha "telefone"/"whatsapp" se tiver certeza real do número; na dúvida, OMITA os dois campos — o app oferece "Achar o Instagram" e "Buscar contato" sozinho. Igualmente, só preencha "site" se souber o endereço real; nada de inventar domínio.
 - Pediu ajuda para FALAR ESPANHOL, pedir algo, negociar, reservar, se virar numa situação → bloco "frases" com espanhol COLOMBIANO real e coloquial (usam "parcero", "¿qué más?", "a la orden", "regálame un...", "hágame el favor", "¡de una!"). Sempre em espanhol da Colômbia, não da Espanha (nada de "vosotros", nada de "coger" no sentido pegar). Explique diferenças que causam gafe.
-- Pediu para RESERVAR, marcar, entrar em contato, comprar ingresso → bloco "links" com os caminhos reais (WhatsApp do lugar, site, plataforma de reserva) e uma "mensagem" já escrita em espanhol.
-- Só invente telefone/site se souber. Sem certeza, omita o campo — melhor um botão a menos do que um número errado.
+- Ao escrever a mensagem de reserva, escreva um texto que sirva tanto para direct do Instagram quanto para WhatsApp.
+- Pediu para RESERVAR, marcar, entrar em contato, comprar ingresso → bloco "links" com os caminhos reais e uma "mensagem" já escrita em espanhol.
 
 Regras:
 - "dia" é o número mostrado no app, começando em 1. Se o usuário citar uma data (ex.: 28/08), converta para o número do dia usando "inicio" e a lista "dias" do JSON.
@@ -2936,14 +2991,23 @@ function blocoLugar(b){
     b.horario?`<span class="bc">${esc(b.horario)}</span>`:''
   ].filter(Boolean).join('');
   const buscaGM=encodeURIComponent([nome,b.bairro,b.cidade,'Colombia'].filter(Boolean).join(', '));
+  const ig=String(b.instagram||'').replace(/^@/,'').trim();
+  /* busca de contato: o caminho honesto quando não temos número confirmado */
+  const buscaContato=encodeURIComponent(`${nome} ${b.cidade||''} instagram reservas whatsapp`);
+  const buscaIG=encodeURIComponent(`${nome} ${b.cidade||''} instagram`);
   const bts=[
-    `<a class="bb gm" href="https://www.google.com/maps/search/?api=1&query=${buscaGM}" target="_blank" rel="noopener">📍 Google Maps</a>`,
-    b.whatsapp||b.telefone
-      ? `<a class="bb wa" href="${urlWhats(b.whatsapp||b.telefone,b.mensagemReserva||'')}" target="_blank" rel="noopener">💬 WhatsApp</a>`:'',
-    b.telefone?`<a class="bb" href="tel:${esc(soDigitos(b.telefone))}">📞 Ligar</a>`:'',
-    b.site?`<a class="bb" href="${esc(b.site)}" target="_blank" rel="noopener">🌐 Site</a>`:'',
-    b.instagram?`<a class="bb" href="https://instagram.com/${esc(String(b.instagram).replace('@',''))}" target="_blank" rel="noopener">📷 Instagram</a>`:''
+    /* Instagram primeiro: é por onde a maioria dos lugares na Colômbia recebe reserva */
+    ig?`<button class="bb ig" onclick="abrirExterno(this.dataset.u)" data-u="https://instagram.com/${esc(ig)}">📷 Instagram · reservas</button>`
+      :`<button class="bb ig" onclick="abrirExterno(this.dataset.u)" data-u="https://www.google.com/search?q=${buscaIG}">📷 Achar o Instagram</button>`,
+    `<button class="bb gm" onclick="abrirExterno(this.dataset.u)" data-u="https://www.google.com/maps/search/?api=1&query=${buscaGM}">📍 Google Maps</button>`,
+    b.site?`<button class="bb" onclick="abrirExterno(this.dataset.u)" data-u="${esc(b.site)}">🌐 Site</button>`:'',
+    (b.whatsapp||b.telefone)
+      ? `<button class="bb wa" onclick="abrirExterno(this.dataset.u)" data-u="${urlWhats(b.whatsapp||b.telefone,b.mensagemReserva||'')}">💬 WhatsApp</button>`:'',
+    `<button class="bb" onclick="abrirExterno(this.dataset.u)" data-u="https://www.google.com/search?q=${buscaContato}">🔎 Buscar contato</button>`
   ].filter(Boolean).join('');
+  const aviso=(b.whatsapp||b.telefone)
+    ? `<div class="bnota">O número pode estar desatualizado. Se o WhatsApp disser que não existe, use o Instagram.</div>`
+    : `<div class="bnota">Sem número confirmado — na Colômbia, a reserva costuma sair pelo direct do Instagram.</div>`;
   box.innerHTML=
     `<div class="bmapa" id="mm_${id}"></div>
      <div class="bcorpo">
@@ -2952,6 +3016,7 @@ function blocoLugar(b){
        ${chips?`<div class="bchips">${chips}</div>`:''}
        ${b.descricao?`<div class="bdesc">${esc(b.descricao)}</div>`:''}
        <div class="bbts">${bts}</div>
+       ${aviso}
        <button class="baddc" onclick="addLugarAoRoteiro('${id}')">＋ Adicionar ao roteiro</button>
      </div>`;
   LUGARES[id]=b;
@@ -3015,20 +3080,10 @@ function blocoFrases(b){
     ${zap?`<a class="bb wa" style="margin-top:8px;display:inline-block"
       href="${urlWhats(zap,b.mensagemPronta||msg)}" target="_blank" rel="noopener">💬 Enviar no WhatsApp</a>`:''}
     ${b.mensagemPronta?`<button class="bb" style="margin-top:8px"
-      onclick="copiarTexto(this.dataset.t,'Mensagem copiada.')" data-t="${esc(b.mensagemPronta)}">⧉ Copiar mensagem inteira</button>`:''}`;
+      onclick="copiarTexto(this.dataset.t,this,'Mensagem copiada.')" data-t="${esc(b.mensagemPronta)}">⧉ Copiar mensagem inteira</button>`:''}`;
   return box;
 }
-function copiarFrase(btn){copiarTexto(btn.dataset.t||'','Frase copiada.');}
-function copiarTexto(t,msg){
-  if(!t)return;
-  if(navigator.clipboard&&navigator.clipboard.writeText)
-    navigator.clipboard.writeText(t).then(()=>toast(msg||'Copiado.'),()=>toast('Não consegui copiar.'));
-  else{
-    const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);
-    ta.select();try{document.execCommand('copy');toast(msg||'Copiado.');}catch(e){toast('Não consegui copiar.');}
-    document.body.removeChild(ta);
-  }
-}
+function copiarFrase(btn){copiarTexto(btn.dataset.t||'',null,'Frase copiada.');}
 /* ---- 3) links de reserva / atalhos ---- */
 function blocoLinks(b){
   const box=document.createElement('div');
@@ -3069,7 +3124,7 @@ async function chamarIA(pedido){
   if(hist.length>10)hist=hist.slice(-10);
   const sys=ANEXOS.length?SISTEMA+'\n\n'+EXTRA_DOC:SISTEMA;
   const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({system:sys,messages:hist,max_tokens:3000})});
+    body:JSON.stringify({system:sys,messages:hist,max_tokens:8000})});
   ANEXOS=[];renderAnexos();
   if(!r.ok){
     let det='';try{const e=await r.json();det=e.error||'';}catch(_){}
@@ -3528,6 +3583,36 @@ function entrarApp(pular){
   S.visto=true;salvar();
   document.getElementById('ola').classList.remove('on');render();
 }
+
+/* abre link externo do jeito que o iOS lida melhor:
+   - app instalado na tela de início: nova janela (sai para o Safari e volta pelo app)
+   - Safari normal: mesma aba (o botão voltar traz o app de volta, sem aba branca) */
+function abrirExterno(url){
+  if(!url)return;
+  const standalone=(window.navigator.standalone===true)||
+    (window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches);
+  try{
+    if(standalone){const w=window.open(url,'_blank');if(!w)location.href=url;}
+    else location.href=url;
+  }catch(e){location.href=url;}
+}
+
+/* ---------- volta de link externo: evita a tela branca ---------- */
+function reanimar(){
+  try{
+    if(!S){carregar();aplicarFundo();}
+    render();
+    const tMapa=document.getElementById('s-mapa');
+    if(tMapa&&tMapa.classList.contains('on')){
+      if(typeof mapa!=='undefined'&&mapa&&mapa.invalidateSize)setTimeout(()=>mapa.invalidateSize(),80);
+      renderMapa();
+    }
+    if(SY.ligado)puxarNuvem(true);
+  }catch(e){}
+}
+window.addEventListener('pageshow',e=>{if(e.persisted)reanimar();});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)reanimar();});
+window.addEventListener('focus',()=>{if(!document.hidden)reanimar();});
 
 /* ---------- boot ---------- */
 carregar();aplicarFundo();render();buscarClima();marcaSync();
