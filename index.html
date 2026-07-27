@@ -246,6 +246,8 @@ body.arrastando .board{overflow:hidden!important}
   transition:transform .32s cubic-bezier(.32,.72,0,1);display:flex;flex-direction:column;
   box-shadow:0 -6px 30px rgba(9,30,66,.3);max-height:92%}
 .sheet.up{transform:none}
+/* backup/convite abrem por cima de outra folha já aberta (ex.: a de sincronia) */
+#bkexport,#bkimport{z-index:96}
 .grab{width:36px;height:5px;background:var(--line);border-radius:3px;margin:9px auto 2px;flex-shrink:0}
 .shd{display:flex;align-items:center;gap:10px;padding:8px 16px 12px;flex-shrink:0}
 .shd h3{font-size:18px;font-weight:800;letter-spacing:-.02em;flex:1}
@@ -1351,12 +1353,19 @@ function linkConvite(){
 }
 function gerarConvite(){
   if(!SY.cod||!SY.url){toast('Ligue a sincronia primeiro — preciso do código e do endereço.');return;}
-  const l=linkConvite();
-  document.getElementById('bk-txt').value=l;
-  document.getElementById('bk-info').textContent=
-    'Mande este link para quem vai usar o app. Ao abrir, tudo é configurado sozinho — e serve de atalho se o iPhone apagar os ajustes.';
-  document.getElementById('bkexport').querySelector('h3').textContent='Link de convite';
-  abrir('bkexport');
+  let l='';
+  try{l=linkConvite();}catch(e){alert('Não consegui montar o link: '+(e.message||e));return;}
+  try{
+    document.getElementById('bk-txt').value=l;
+    document.getElementById('bk-info').textContent=
+      'Mande este link para quem vai usar o app. Ao abrir, tudo é configurado sozinho — e serve de atalho se o iPhone apagar os ajustes.';
+    const h=document.getElementById('bkexport').querySelector('h3');
+    if(h)h.textContent='Link de convite';
+    abrir('bkexport');
+    toast('Link pronto — copie e mande para quem vai usar.');
+  }catch(e){
+    prompt('Copie o link de convite:',l);   /* se a folha falhar, ainda assim entrega o link */
+  }
 }
 let puxando=false,timerSync=null,protegidoAte=0;
 function urlNuvem(){
@@ -1939,7 +1948,9 @@ function limparBusca(t){
 async function nominatim(q){
   const r=await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q='+
     encodeURIComponent(q),{headers:{'Accept':'application/json'}});
-  if(!r.ok)return null;
+  /* erro do serviço (limite de uso, indisponível) é DIFERENTE de "não achei":
+     lança para o chamador saber que vale tentar de novo depois */
+  if(!r.ok){const e=new Error('geo-http-'+r.status);e.servico=true;throw e;}
   const j=await r.json();
   return j.length?j[0]:null;
 }
@@ -2458,7 +2469,7 @@ function verTela(id){
   document.getElementById(id).classList.add('on');
   if(id==='s-desc')renderDesc();
   if(id==='s-clima')renderClima();
-  if(id==='s-mapa'){geoRodou=false;renderMapa();}
+  if(id==='s-mapa'){geoRodou=false;levasSemProgresso=0;renderMapa();}
 }
 document.querySelectorAll('.nav button').forEach(b=>b.addEventListener('click',()=>{
   if(b.id==='btn-ia'){abrirIA();return;}
@@ -2527,13 +2538,13 @@ function primeiroLugar(t){
 async function geocodificarPendentes(){
   if(geocodando)return 0;
   geocodando=true;
-  let achou=0;
+  let achou=0,bloqueado=false;
   const pend=pendentesGeo();
-  for(const p of pend.slice(0,10)){               /* leva por leva, respeita o serviço */
+  for(const p of pend.slice(0,8)){
     /* a cidade vem do DIA (p.cid), não do cartão — sem ela o pino cai em outra cidade */
     const q=[primeiroLugar(p.c.t),p.c.bai,p.cid,'Colombia'].filter(Boolean).join(', ');
     const ref=GEO[p.cid];
-    let ok=false;
+    let ok=false,falhaServico=false;
     try{
       const r=await nominatim(q);
       if(r){
@@ -2546,15 +2557,19 @@ async function geocodificarPendentes(){
           achou++;ok=true;
         }
       }
-    }catch(e){}
-    /* não achou (ou achou na cidade errada): marca para NÃO travar a fila */
-    if(!ok)p.c.geoNao=true;
-    await new Promise(r=>setTimeout(r,340));
+    }catch(e){falhaServico=!!e.servico;}
+    /* só desiste do cartão se o serviço RESPONDEU e não achou.
+       Se foi limite de uso ou queda de rede, ele continua na fila para a próxima vez. */
+    if(!ok&&!falhaServico)p.c.geoNao=true;
+    if(falhaServico){bloqueado=true;break;}       /* nos limitaram: para a leva e espera */
+    await new Promise(r=>setTimeout(r,1100));     /* o serviço pede no máximo 1 busca por segundo */
   }
   geocodando=false;
   if(achou)salvar(true);
+  ultimoBloqueio=bloqueado?Date.now():0;
   return achou;
 }
+let ultimoBloqueio=0,levasSemProgresso=0;
 function irMapa(cid){
   const r=achar(cid);if(!r)return;
   if(!r.c.lat){
@@ -2589,10 +2604,20 @@ function abrirIG(cid){
   if(/^https?:\/\//i.test(u))abrirExterno(u);
   else abrirExterno('https://instagram.com/'+u.replace(/^@/,''));
 }
-let geoRodou=false;  /* garante uma rodada só, não loop */
+let geoRodou=false;  /* controla o encadeamento das levas */
 function renderMapa(){
   const wrap=document.getElementById('mapwrap');
-  if(!geoRodou){const n=limparPinosErrados();if(n)salvar(true);}
+  if(!geoRodou){
+    const n=limparPinosErrados();
+    /* o bug antigo (limite do serviço tratado como "lugar não existe") marcou cartões
+       bons como não-localizáveis. Limpa essa marca uma única vez. */
+    let z=0;
+    if(S.geoV!==2){
+      S.dias.forEach(d=>d.cards.forEach(c=>{if(c.geoNao){c.geoNao=false;z++;}}));
+      S.geoV=2;
+    }
+    if(n||z)salvar(true);
+  }
   const pts=pontos();
   const comPtos=new Set(pts.map(p=>p.dia));
   /* filtros: todos + TODOS os dias da viagem (os sem pino ficam esmaecidos) */
@@ -2602,12 +2627,24 @@ function renderMapa(){
       onclick="filtrarMapa(${i})">Dia ${i+1}</button>`).join('');
   const pend=pendentesGeo().length;
   document.getElementById('mapa-sub').textContent=
-    pend?`Localizando ${pend} lugar(es)…`
+    pend?`Localizando ${pend} lugar(es)… os pinos vão aparecendo`
        :(pts.length?`${pts.length} lugar(es) marcado(s) · toque num pino`:'Nenhum lugar marcado ainda');
-  /* rodada única ao abrir o mapa, não em loop contínuo */
-  if(pend&&!geocodando&&!geoRodou){
+  /* segue em levas até esgotar a fila, enquanto o Mapa estiver aberto */
+  if(pend&&!geocodando&&levasSemProgresso<5){
     geoRodou=true;
-    geocodificarPendentes().then(()=>renderMapa());
+    const espera=ultimoBloqueio?Math.max(0,8000-(Date.now()-ultimoBloqueio)):0;
+    setTimeout(()=>{
+      const tela=document.getElementById('s-mapa');
+      if(!tela||!tela.classList.contains('on'))return;   /* saiu do Mapa: para de buscar */
+      geocodificarPendentes().then(n=>{
+        levasSemProgresso=n>0?0:levasSemProgresso+1;
+        renderMapa();
+      });
+    },espera);
+  }else if(pend&&levasSemProgresso>=5){
+    document.getElementById('mapa-sub').textContent=
+      `${pts.length} marcado(s) · ${pend} não localizado(s) — toque para tentar de novo`;
+    document.getElementById('mapa-sub').onclick=()=>{levasSemProgresso=0;renderMapa();};
   }
 
   const antigo=wrap.querySelector('.mvazio');if(antigo)antigo.remove();
@@ -2684,9 +2721,9 @@ function ajustarMapa(){
    ========================================================== */
 const SUGS=['Vai chover no dia 2?','Como peço a conta em espanhol?','O que cabe hoje?',
   'Onde jantar bem aqui?','Reservar mesa por WhatsApp','Resumo do dia'];
-const SUGS_LIVRE=['Uma balada boa de música latina','Como reservar mesa em espanhol?',
+const SUGS_LIVRE=['Ache o Instagram dos lugares deste dia','Como reservar mesa em espanhol?',
   'Um jantar romântico com vista','Frases para pegar táxi e negociar',
-  'Onde tomar café especial perto daqui?','Como pedir sem comer picante?'];
+  'Onde tomar café especial perto daqui?','Uma balada boa de música latina'];
 function orbe(st){
   const o=document.getElementById('orb');if(!o)return;
   o.classList.remove('ouvindo','pensando');
@@ -2986,7 +3023,8 @@ function retratoDoQuadro(){
       dia:i+1,cidade:nomeCid(d.cid),data:S.inicio?rotuloDia(i):null,
       clima:(()=>{const c=climaDoDia(i);return c?{desc:wTxt(c.cod),max:c.max,min:c.min,chuva:c.prob}:null;})(),
       cartoes:d.cards.filter(c=>c.tipo!=='voo'&&c.tipo!=='hotel').map(c=>({id:c.id,titulo:c.t,lista:c.l,hora:c.h||null,duracao:c.dur||null,
-        nota:c.rate||null,bairro:c.bai||null,aoArLivre:!!c.ar,feito:!!c.ok})),
+        nota:c.rate||null,bairro:c.bai||null,aoArLivre:!!c.ar,feito:!!c.ok,
+        instagram:c.ig||null,temPino:!!(c.lat&&c.lng)})),
       voos:d.cards.filter(c=>c.tipo==='voo').map(c=>({id:c.id,trecho:c.t,voo:c.voo||null,partida:c.h||null,chegada:c.cheg||null,localizador:c.loc||null})),
       hoteis:d.cards.filter(c=>c.tipo==='hotel').map(c=>({id:c.id,nome:c.t,checkin:c.h||null,checkout:c.hout||null,reserva:c.loc||null}))
     })),
@@ -3025,6 +3063,7 @@ ALÉM das ações, você pode devolver "blocos" — cartões visuais que aparece
 QUANDO USAR CADA BLOCO:
 - Falou de um lugar específico (bar, restaurante, museu, passeio) → mande UM bloco "lugar" dele. O app desenha o mini-mapa sozinho; só preencha "lat"/"lng" se tiver certeza. Máximo 3 blocos "lugar" por resposta.
 - CONTATO PARA RESERVA — regra rígida: na Colômbia, restaurantes e bares recebem reserva principalmente pelo DIRECT DO INSTAGRAM. Preencha "instagram" com o @ do lugar sempre que souber. NUNCA invente número de telefone ou WhatsApp: um número errado faz o viajante mandar mensagem para um desconhecido. Só preencha "telefone"/"whatsapp" se tiver certeza real do número; na dúvida, OMITA os dois campos — o app oferece "Achar o Instagram" e "Buscar contato" sozinho. Igualmente, só preencha "site" se souber o endereço real; nada de inventar domínio.
+- INSTAGRAM DOS CARTÕES JÁ EXISTENTES: cada cartão do quadro traz o campo "instagram" (null quando ainda não tem). Se o viajante pedir para achar/preencher os Instagram, devolva uma ação "editar" por cartão: {"tipo":"editar","cartaoId":"<id do cartão>","campos":{"instagram":"@perfil"}}. Só para lugares com perfil próprio de verdade (restaurante, bar, museu, agência do passeio) e só quando você tiver razoável certeza do @ — pule caminhadas, praças públicas, "manhã livre" e qualquer coisa sem perfil. É melhor preencher 4 com segurança do que 10 no chute. Diga em "fala" quantos preencheu e quais pulou.
 - Pediu ajuda para FALAR ESPANHOL, pedir algo, negociar, reservar, se virar numa situação → bloco "frases" com espanhol COLOMBIANO real e coloquial (usam "parcero", "¿qué más?", "a la orden", "regálame un...", "hágame el favor", "¡de una!"). Sempre em espanhol da Colômbia, não da Espanha (nada de "vosotros", nada de "coger" no sentido pegar). Explique diferenças que causam gafe.
 - Ao escrever a mensagem de reserva, escreva um texto que sirva tanto para direct do Instagram quanto para WhatsApp.
 - Pediu para RESERVAR, marcar, entrar em contato, comprar ingresso → bloco "links" com os caminhos reais e uma "mensagem" já escrita em espanhol.
@@ -3037,7 +3076,7 @@ Regras:
 - Só use "cartaoId" com ids que aparecem no JSON. Nunca invente id.
 - Cartões com "tipo":"voo" ou "tipo":"hotel" são INTOCÁVEIS: nunca proponha remover, editar ou mover esses. Eles são a espinha logística da viagem.
 - Pergunta pura (previsão, resumo, dúvida) → responda em "fala" com "acoes":[]. Mesmo assim, pode mandar "blocos" (lugar, frases ou links) se ajudarem.
-- Máximo 6 ações e 4 blocos por resposta. Nunca escreva nada fora do JSON.`;
+- Máximo 6 ações e 4 blocos por resposta. Exceção: quando forem só edições de "instagram" em cartões existentes, pode mandar até 15. Nunca escreva nada fora do JSON.`;
 
 /* ======= TRAZER LUGARES DE UM REELS ======= */
 const RE_SOCIAL=/https?:\/\/(www\.)?(instagram\.com|instagr\.am|tiktok\.com|vm\.tiktok\.com|youtube\.com\/shorts|youtu\.be)\/\S+/i;
