@@ -366,10 +366,11 @@ body.arrastando .board{overflow:hidden!important}
   max-height:150px;line-height:1.4;overflow-y:auto}
 .chatia .ffoot textarea::placeholder{color:var(--ink3)}
 .chatia .ffoot textarea:focus{outline:none;border-color:var(--azul);background:#fff}
-.chatia .ffoot .mic,.chatia #clip{width:44px;height:44px;flex:0 0 44px;border-radius:50%;
-  background:#F2F2F0;border:1px solid #E4E4DF;color:var(--ink2);font-size:18px;padding:0}
-.chatia .ffoot .snd{width:44px;flex:0 0 44px;padding:0;height:44px;border-radius:50%;
-  font-size:20px;font-weight:800;background:var(--azul);color:#fff;border:none}
+.chatia .ffoot .mic,.chatia #clip{width:38px;height:38px;flex:0 0 38px;border-radius:50%;
+  background:#F2F2F0;border:1px solid #E4E4DF;color:var(--ink2);font-size:16px;padding:0}
+.chatia .ffoot{gap:6px}
+.chatia .ffoot .snd{width:40px;flex:0 0 40px;padding:0;height:40px;border-radius:50%;
+  font-size:19px;font-weight:800;background:var(--azul);color:#fff;border:none}
 .chatia .grab{display:none}
 
 /* anexos: chips claros */
@@ -691,6 +692,7 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
   <div class="ffoot">
     <button class="mic" id="clip" onclick="document.getElementById('arq').click()">📎</button>
     <input type="file" id="arq" accept="image/*,application/pdf" style="display:none" multiple>
+    <button class="mic" id="rlbtn" onclick="abrirReelsCom('')" title="Trazer de um Reels">🎬</button>
     <button class="mic" id="mic2">🎙️</button>
     <textarea id="ask2" placeholder="Pergunte ou anexe uma reserva…" rows="1" autocomplete="off"
       oninput="autoCresce(this)"></textarea>
@@ -899,6 +901,39 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
   </div>
 </div>
 
+<!-- ============ TRAZER DE UM REELS ============ -->
+<div class="sheet" id="reels">
+  <div class="grab"></div>
+  <div class="shd"><h3>Trazer lugares de um Reels</h3><button class="x" onclick="fechar('reels')">✕</button></div>
+  <div class="sbody">
+    <p style="font-size:13px;color:var(--ink2);font-weight:600;line-height:1.55">
+      Não consigo abrir o vídeo sozinho — o Instagram bloqueia leitura de fora. Mas com a legenda ou uns prints eu extraio os lugares e monto os cartões.</p>
+
+    <label class="fl">Link do Reels</label>
+    <div class="cpwrap"><input class="fi" id="rl-url" placeholder="https://www.instagram.com/reel/…">
+      <button class="cpbtn" onclick="abrirReels()">Abrir</button></div>
+
+    <label class="fl">1 · Cole a legenda do vídeo</label>
+    <textarea class="fi" id="rl-leg" style="min-height:120px"
+      placeholder="No Reels: toque em … → Copiar legenda (ou selecione o texto e copie). Cole aqui."></textarea>
+
+    <label class="fl">2 · Ou anexe prints do vídeo <span style="font-weight:600;color:var(--ink3)">(opcional, ajuda muito)</span></label>
+    <p style="font-size:12.5px;color:var(--ink3);font-weight:600;line-height:1.5;margin:0 0 8px">
+      Prints onde apareça o nome do lugar, a placa, a marcação de localização ou os comentários. Leio as imagens.</p>
+    <div class="anexos" id="rl-anexos"></div>
+    <button class="cn" style="width:100%" onclick="document.getElementById('rl-arq').click()">📎 Anexar prints</button>
+    <input type="file" id="rl-arq" accept="image/*" style="display:none" multiple>
+
+    <label class="fl">Onde encaixar</label>
+    <select class="fi" id="rl-dia"></select>
+
+    <div class="fbtns">
+      <button class="cn" onclick="fechar('reels')">Cancelar</button>
+      <button class="sv" onclick="extrairDoReels()">Extrair lugares</button>
+    </div>
+  </div>
+</div>
+
 <!-- ============ EXPORTAR BACKUP ============ -->
 <div class="sheet" id="bkexport">
   <div class="grab"></div>
@@ -950,6 +985,14 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
     <div class="fbtns">
       <button class="cn" onclick="desligarSync()">Desligar</button>
       <button class="sv" onclick="ligarSync()">Ligar sincronia</button>
+    </div>
+    <div class="fbtns" style="margin-top:8px">
+      <button class="cn" style="width:100%" onclick="gerarConvite()">🔗 Gerar link de convite</button>
+    </div>
+    <div class="aviso">
+      <b>Link de convite.</b> Mande esse link para quem vai usar o app junto com você.
+      Ao abrir, o código, o endereço do Firebase e a RutAI já vêm configurados — sem digitar nada.
+      Vale guardar o link: o iPhone apaga os ajustes de sites pouco usados, e basta reabri-lo para voltar ao normal.
     </div>
     <div class="aviso">
       <b>Como funciona.</b> O quadro inteiro é gravado como um registro só, sob o código escolhido.
@@ -1216,6 +1259,8 @@ function mostrarBackupTexto(codigo){
   /* folha interna com o código selecionável e um botão que copia de dentro do textarea
      (funciona no iOS porque a cópia parte de uma interação direta no campo) */
   document.getElementById('bk-txt').value=codigo;
+  const h=document.getElementById('bkexport').querySelector('h3');
+  if(h)h.textContent='Copiar código do roteiro';
   document.getElementById('bk-info').textContent=
     `${S.dias.length} dias · guarde este código num e-mail para você mesmo.`;
   abrir('bkexport');
@@ -1276,6 +1321,43 @@ function isoDia(i){const d=dataDoDia(i);return d?d.toISOString().slice(0,10):nul
    ========================================================== */
 let SY={url:'',cod:'',ligado:false,fn:''};
 try{const s=JSON.parse(localStorage.getItem('ruta_sync'));if(s)SY=Object.assign(SY,s);}catch(e){}
+/* ---- link de convite: #ruta=<config em base64> ----
+   O Safari do iPhone apaga os dados de sites pouco visitados (e o app na tela de início
+   tem armazenamento separado do Safari). Com o link, basta reabri-lo para reconfigurar. */
+function aplicarConvite(){
+  try{
+    const h=location.hash||'';
+    const m=h.match(/ruta=([^&]+)/);
+    if(!m)return false;
+    const cfg=JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(m[1])))));
+    if(!cfg||(!cfg.cod&&!cfg.fn))return false;
+    let mudou=false;
+    if(cfg.cod&&cfg.url&&(SY.cod!==cfg.cod||SY.url!==cfg.url)){
+      SY.cod=cfg.cod;SY.url=cfg.url;SY.ligado=true;mudou=true;
+    }
+    if(cfg.fn&&SY.fn!==cfg.fn){SY.fn=cfg.fn;mudou=true;}
+    if(mudou)localStorage.setItem('ruta_sync',JSON.stringify(SY));
+    /* limpa o endereço para o link não ficar exposto na barra */
+    try{history.replaceState(null,'',location.pathname+location.search);}catch(e){}
+    return mudou;
+  }catch(e){return false;}
+}
+const CONVITE_APLICADO=aplicarConvite();
+/* gera o link para mandar para a outra pessoa */
+function linkConvite(){
+  const cfg={cod:SY.cod,url:SY.url,fn:SY.fn};
+  const b64=btoa(unescape(encodeURIComponent(JSON.stringify(cfg))));
+  return location.origin+location.pathname+'#ruta='+encodeURIComponent(b64);
+}
+function gerarConvite(){
+  if(!SY.cod||!SY.url){toast('Ligue a sincronia primeiro — preciso do código e do endereço.');return;}
+  const l=linkConvite();
+  document.getElementById('bk-txt').value=l;
+  document.getElementById('bk-info').textContent=
+    'Mande este link para quem vai usar o app. Ao abrir, tudo é configurado sozinho — e serve de atalho se o iPhone apagar os ajustes.';
+  document.getElementById('bkexport').querySelector('h3').textContent='Link de convite';
+  abrir('bkexport');
+}
 let puxando=false,timerSync=null,protegidoAte=0;
 function urlNuvem(){
   if(!SY.url||!SY.cod)return null;
@@ -2957,7 +3039,71 @@ Regras:
 - Pergunta pura (previsão, resumo, dúvida) → responda em "fala" com "acoes":[]. Mesmo assim, pode mandar "blocos" (lugar, frases ou links) se ajudarem.
 - Máximo 6 ações e 4 blocos por resposta. Nunca escreva nada fora do JSON.`;
 
-/* ======= BLOCOS RICOS DO RutAI (lugar, frases, links) ======= */
+/* ======= TRAZER LUGARES DE UM REELS ======= */
+const RE_SOCIAL=/https?:\/\/(www\.)?(instagram\.com|instagr\.am|tiktok\.com|vm\.tiktok\.com|youtube\.com\/shorts|youtu\.be)\/\S+/i;
+let ANEXOS_RL=[];
+function abrirReelsCom(url){
+  document.getElementById('rl-url').value=url||'';
+  document.getElementById('rl-leg').value='';
+  ANEXOS_RL=[];renderAnexosRL();
+  const sel=document.getElementById('rl-dia');
+  sel.innerHTML=S.dias.map((d,i)=>
+    `<option value="${i}"${i===diaAtivo?' selected':''}>Dia ${i+1} · ${esc(nomeCid(d.cid))}</option>`).join('')
+    +'<option value="-1">Só me mostrar, sem escolher o dia</option>';
+  abrir('reels');
+}
+function abrirReels(){
+  const u=(document.getElementById('rl-url').value||'').trim();
+  if(!u){toast('Cole o link primeiro.');return;}
+  abrirExterno(u);
+}
+document.getElementById('rl-arq').addEventListener('change',async e=>{
+  const fs=[...e.target.files].slice(0,4);
+  for(const f of fs){
+    if(f.size>2*1024*1024){toast(`"${f.name}" passa de 2MB.`);continue;}
+    try{
+      const d=await new Promise((res,rej)=>{const r=new FileReader();
+        r.onload=()=>res(String(r.result).split(',')[1]);r.onerror=rej;r.readAsDataURL(f);});
+      ANEXOS_RL.push({nome:f.name,media:f.type||'image/jpeg',dados:d});
+    }catch(x){}
+  }
+  e.target.value='';renderAnexosRL();
+});
+function renderAnexosRL(){
+  document.getElementById('rl-anexos').innerHTML=ANEXOS_RL.map((a,i)=>
+    `<div class="anx"><span class="ai">🖼️</span><span class="an">${esc(a.nome)}</span>
+     <button class="ax" onclick="tirarAnexoRL(${i})">✕</button></div>`).join('');
+}
+function tirarAnexoRL(i){ANEXOS_RL.splice(i,1);renderAnexosRL();}
+function extrairDoReels(){
+  const url=(document.getElementById('rl-url').value||'').trim();
+  const leg=(document.getElementById('rl-leg').value||'').trim();
+  const dia=parseInt(document.getElementById('rl-dia').value);
+  if(!leg&&!ANEXOS_RL.length){
+    alert('Preciso da legenda colada ou de pelo menos um print. Só o link eu não consigo abrir.');return;
+  }
+  /* passa os prints para o canal normal de anexos da RutAI */
+  ANEXOS=ANEXOS_RL.map(a=>({tipo:'img',nome:a.nome,media:a.media,dados:a.dados}));
+  ANEXOS_RL=[];renderAnexosRL();renderAnexos();
+  const alvo=isFinite(dia)&&dia>=0?`Encaixe no Dia ${dia+1}.`:'Não escolha o dia; só me mostre os lugares.';
+  const pedido=[
+    'MODO REELS: extraia os lugares deste vídeo de viagem.',
+    url?`Link: ${url}`:'',
+    leg?`Legenda do vídeo:\n"""${leg}"""`:'',
+    ANEXOS.length?'Há prints do vídeo anexados — leia os nomes, placas e marcações de local nas imagens.':'',
+    alvo
+  ].filter(Boolean).join('\n');
+  fechar('reels');
+  perguntar(pedido);
+}
+const EXTRA_REELS=`MODO REELS — você recebeu a legenda e/ou prints de um vídeo de viagem.
+Sua tarefa: identificar os LUGARES REAIS citados e devolvê-los de forma aproveitável.
+- Extraia nome do lugar, cidade, bairro e o que o vídeo diz sobre ele (o "porquê ir").
+- Ignore hashtags, chamadas de engajamento, nome do criador e frases de efeito. Interessa lugar.
+- Se o vídeo cita um lugar que NÃO fica nas cidades do roteiro, diga isso claramente em "fala" e não crie cartão.
+- Para cada lugar aproveitável mande um bloco "lugar" (com instagram quando souber) E uma ação "criar" no dia indicado.
+- Se não der para identificar nenhum lugar com segurança, diga com franqueza o que faltou (ex.: a legenda só tem hashtags; peça um print onde apareça o nome ou a marcação de local).
+- Nunca invente um lugar que não está na legenda nem nas imagens.`;
 let blocoSeq=0;
 function renderBlocos(bolha,blocos){
   if(!Array.isArray(blocos))return;
@@ -3122,7 +3268,8 @@ async function chamarIA(pedido){
   }
   hist.push({role:'user',content:conteudo});
   if(hist.length>10)hist=hist.slice(-10);
-  const sys=ANEXOS.length?SISTEMA+'\n\n'+EXTRA_DOC:SISTEMA;
+  let sys=ANEXOS.length?SISTEMA+'\n\n'+EXTRA_DOC:SISTEMA;
+  if(/^MODO REELS:/m.test(String(pedido)))sys=SISTEMA+'\n\n'+EXTRA_REELS;
   const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({system:sys,messages:hist,max_tokens:8000})});
   ANEXOS=[];renderAnexos();
@@ -3232,6 +3379,17 @@ async function perguntar(txt){
   if(!txt)return;
   abrir('rutai');
   const temAnexo=ANEXOS.length;
+  /* colou um link de Reels/TikTok → abre o fluxo que realmente funciona */
+  if(!temAnexo&&!/^MODO REELS:/m.test(txt)&&RE_SOCIAL.test(txt)){
+    const url=(txt.match(RE_SOCIAL)||[])[0];
+    diz('eu',esc(txt));
+    diz('ia','Não consigo abrir o vídeo pelo link — o Instagram bloqueia leitura de fora. '+
+      'Mas se você colar a legenda ou mandar uns prints, eu extraio os lugares e monto os cartões.<br><br>'+
+      'Vou abrir esse caminho pra você.');
+    const a2b=document.getElementById('ask2');if(a2b){a2b.value='';a2b.style.height='auto';}
+    setTimeout(()=>abrirReelsCom(url),900);
+    return;
+  }
   /* pedido de roteiro completo → o gerador é muito mais confiável que 6 ações soltas */
   if(!temAnexo&&/\b(roteiro|itinerário)\b.*\b(complet|inteir|todos os dias|toda|período|viagem)\b/i.test(txt)
      ||/\b(monte|montar|elabore|crie|criar|gere|gerar)\b.*\broteiro\b/i.test(txt)){
@@ -3616,6 +3774,7 @@ window.addEventListener('focus',()=>{if(!document.hidden)reanimar();});
 
 /* ---------- boot ---------- */
 carregar();aplicarFundo();render();buscarClima();marcaSync();
+if(CONVITE_APLICADO)setTimeout(()=>toast('Pronto — sincronia e RutAI já configuradas por aqui.'),2600);
 if(SY.ligado){puxarNuvem(true);iniciarTimer();}
 ligarMic('mic2','ask2',t=>{statusIA(t);orbe(t?'ouvindo':'');});
 document.getElementById('ask2').addEventListener('keydown',e=>{
