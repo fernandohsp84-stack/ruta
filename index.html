@@ -262,6 +262,7 @@ body.arrastando .board{overflow:hidden!important}
 .bmapa{height:132px;background:#EEF1F4;position:relative}
 .bmapa.carregando::after{content:'localizando…';position:absolute;inset:0;display:flex;
   align-items:center;justify-content:center;font-size:12px;color:var(--ink3);font-weight:700}
+.bmapa.semmapa{height:0;border:none}
 .pinm{font-size:22px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.3))}
 .bcorpo{padding:12px 13px 13px}
 .bnome{font-size:16px;font-weight:800;color:var(--ink);letter-spacing:-.01em;line-height:1.25}
@@ -693,10 +694,10 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
   <div class="anexos" id="anexos"></div>
   <div class="ffoot">
     <button class="mic" id="clip" onclick="document.getElementById('arq').click()">📎</button>
-    <input type="file" id="arq" accept="image/*,application/pdf" style="display:none" multiple>
+    <input type="file" id="arq" accept="image/*,application/pdf,text/*,.txt,.csv,.md,.json,.ics,.eml" style="display:none" multiple>
     <button class="mic" id="rlbtn" onclick="abrirReelsCom('')" title="Trazer de um Reels">🎬</button>
     <button class="mic" id="mic2">🎙️</button>
-    <textarea id="ask2" placeholder="Pergunte ou anexe uma reserva…" rows="1" autocomplete="off"
+    <textarea id="ask2" placeholder="Pergunte, anexe um voucher ou mande um Reels…" rows="1" autocomplete="off"
       oninput="autoCresce(this)"></textarea>
     <button class="snd" id="snd2">↑</button>
   </div>
@@ -1713,7 +1714,10 @@ function cardHTML(c,L){
   const lk=[];
   if(c.lat||c.end)lk.push(`<button class="lk" onclick="irMapa('${c.id}')">📍 Mapa</button>`);
   if(c.gm||c.lat||c.end)lk.push(`<button class="lk gm" onclick="abrirGM('${c.id}')">Google Maps ↗</button>`);
-  if(c.ig)lk.push(`<button class="lk ig" onclick="abrirIG('${c.id}')">Instagram ↗</button>`);
+  if(c.ig){
+    const at=String(c.ig).replace(/^https?:\/\/(www\.)?instagram\.com\//i,'').replace(/^@|\/$/g,'');
+    lk.push(`<button class="lk ig" onclick="abrirIG('${c.id}')">@${esc(at)} ↗</button>`);
+  }
   (c.docs||[]).forEach((d,k)=>lk.push(
     `<button class="lk doc" onclick="abrirDocCard('${c.id}',${k})">📎 ${esc(d.n.length>16?d.n.slice(0,14)+'…':d.n)}</button>`));
   return `<article class="cd ${c.ok?'ok':''}" data-id="${c.id}">
@@ -1888,7 +1892,7 @@ function buscarCoordHotel(){
   if(!q){toast('Escreva o nome ou o endereço do hotel.');return;}
   const el=document.getElementById('h-coord');
   el.innerHTML='<span style="color:var(--ink2)">Procurando…</span>';
-  nominatim(q+', Colombia').then(r=>{
+  geocodificar(q+', Colombia').then(r=>{
     if(r){coordHotelEd={lat:parseFloat(r.lat),lng:parseFloat(r.lon)};
       endHotelEd=(r.display_name||'').split(',').slice(0,4).join(',').trim();
       el.innerHTML=`<span style="color:var(--verde-d)">✓ ${esc(endHotelEd)}</span>`;
@@ -1954,6 +1958,33 @@ async function nominatim(q){
   const j=await r.json();
   return j.length?j[0]:null;
 }
+/* segundo serviço de busca (Photon/Komoot): mesmos dados do OpenStreetMap,
+   porém com limite de uso bem mais folgado para uso em navegador */
+async function photon(q){
+  const r=await fetch('https://photon.komoot.io/api/?limit=1&q='+encodeURIComponent(q));
+  if(!r.ok){const e=new Error('photon-'+r.status);e.servico=true;throw e;}
+  const j=await r.json();
+  const f=j&&j.features&&j.features[0];
+  if(!f||!f.geometry||!f.geometry.coordinates)return null;
+  const c=f.geometry.coordinates,p=f.properties||{};
+  return {lat:String(c[1]),lon:String(c[0]),
+    display_name:[p.name,p.street,p.district,p.city].filter(Boolean).join(', ')};
+}
+/* tenta os dois: se o primeiro estiver bloqueado, o segundo assume */
+let geoFalhas=0;
+async function geocodificar(q){
+  const ordem=geoFalhas>=3?[nominatim,photon]:[photon,nominatim];
+  let erroServico=null;
+  for(const fn of ordem){
+    try{
+      const r=await fn(q);
+      geoFalhas=0;
+      return r;                       /* achou, ou respondeu que não existe */
+    }catch(e){ if(e.servico)erroServico=e; }
+  }
+  if(erroServico){geoFalhas++;throw erroServico;}
+  return null;
+}
 let endEd='';
 async function buscarCoord(){
   const tit=document.getElementById('i-t').value.trim();
@@ -1975,7 +2006,7 @@ async function buscarCoord(){
 
   let achou=null;
   for(const q of tent){
-    try{achou=await nominatim(q);}catch(e){break;}
+    try{achou=await geocodificar(q);}catch(e){break;}
     if(achou)break;
     await new Promise(r=>setTimeout(r,320));
   }
@@ -2546,7 +2577,7 @@ async function geocodificarPendentes(){
     const ref=GEO[p.cid];
     let ok=false,falhaServico=false;
     try{
-      const r=await nominatim(q);
+      const r=await geocodificar(q);
       if(r){
         const la=parseFloat(r.lat),ln=parseFloat(r.lon);
         /* descarta resultado que caiu longe da cidade do dia (ex.: Bogotá quando é Medellín) */
@@ -2562,7 +2593,7 @@ async function geocodificarPendentes(){
        Se foi limite de uso ou queda de rede, ele continua na fila para a próxima vez. */
     if(!ok&&!falhaServico)p.c.geoNao=true;
     if(falhaServico){bloqueado=true;break;}       /* nos limitaram: para a leva e espera */
-    await new Promise(r=>setTimeout(r,1100));     /* o serviço pede no máximo 1 busca por segundo */
+    await new Promise(r=>setTimeout(r,650));
   }
   geocodando=false;
   if(achou)salvar(true);
@@ -2642,9 +2673,15 @@ function renderMapa(){
       });
     },espera);
   }else if(pend&&levasSemProgresso>=5){
-    document.getElementById('mapa-sub').textContent=
-      `${pts.length} marcado(s) · ${pend} não localizado(s) — toque para tentar de novo`;
-    document.getElementById('mapa-sub').onclick=()=>{levasSemProgresso=0;renderMapa();};
+    const sub=document.getElementById('mapa-sub');
+    sub.textContent=ultimoBloqueio
+      ? `${pts.length} marcado(s) · o serviço de mapas não respondeu — toque para tentar de novo`
+      : `${pts.length} marcado(s) · ${pend} sem localização — toque para tentar de novo`;
+    sub.onclick=()=>{levasSemProgresso=0;geoFalhas=0;renderMapa();};
+    sub.style.textDecoration='underline';
+  }else{
+    const sub=document.getElementById('mapa-sub');
+    sub.onclick=null;sub.style.textDecoration='none';
   }
 
   const antigo=wrap.querySelector('.mvazio');if(antigo)antigo.remove();
@@ -2980,6 +3017,7 @@ function lerArquivo(file){
     r.readAsDataURL(file);
   });
 }
+let ULTIMOS_ANEXOS=[];   /* ficam disponíveis para arquivar num cartão depois */
 async function addAnexos(files){
   if(!SY.fn){
     toast('Para ler documentos, ligue a RutAI na nuvem no ☁ do topo.');
@@ -2988,11 +3026,23 @@ async function addAnexos(files){
   for(const f of files){
     if(f.size>4.5*1024*1024){toast(`"${f.name}" passa de 4,5 MB — muito grande.`);continue;}
     const ehPdf=f.type==='application/pdf'||/\.pdf$/i.test(f.name);
-    const ehImg=f.type.startsWith('image/');
-    if(!ehPdf&&!ehImg){toast('Envie PDF ou imagem.');continue;}
+    const ehImg=(f.type||'').startsWith('image/');
+    const ehTexto=/^text\//.test(f.type||'')||
+      /\.(txt|csv|md|json|ics|eml|vcf|log|html?)$/i.test(f.name);
+    if(!ehPdf&&!ehImg&&!ehTexto){
+      toast(`"${f.name}": envie PDF, imagem ou texto. Para outros formatos, mande um print.`);
+      continue;
+    }
     try{
-      const b64=await lerArquivo(f);
-      ANEXOS.push({nome:f.name,tipo:ehPdf?'pdf':'img',media:f.type||(ehPdf?'application/pdf':'image/jpeg'),dados:b64});
+      if(ehTexto){
+        const t=await new Promise((res,rej)=>{const r=new FileReader();
+          r.onload=()=>res(String(r.result));r.onerror=rej;r.readAsText(f);});
+        ANEXOS.push({nome:f.name,tipo:'txt',texto:t.slice(0,120000)});
+      }else{
+        const b64=await lerArquivo(f);
+        ANEXOS.push({nome:f.name,tipo:ehPdf?'pdf':'img',
+          media:f.type||(ehPdf?'application/pdf':'image/jpeg'),dados:b64});
+      }
     }catch(e){toast('Não consegui ler '+f.name);}
   }
   renderAnexos();
@@ -3062,7 +3112,8 @@ ALÉM das ações, você pode devolver "blocos" — cartões visuais que aparece
 
 QUANDO USAR CADA BLOCO:
 - Falou de um lugar específico (bar, restaurante, museu, passeio) → mande UM bloco "lugar" dele. O app desenha o mini-mapa sozinho; só preencha "lat"/"lng" se tiver certeza. Máximo 3 blocos "lugar" por resposta.
-- CONTATO PARA RESERVA — regra rígida: na Colômbia, restaurantes e bares recebem reserva principalmente pelo DIRECT DO INSTAGRAM. Preencha "instagram" com o @ do lugar sempre que souber. NUNCA invente número de telefone ou WhatsApp: um número errado faz o viajante mandar mensagem para um desconhecido. Só preencha "telefone"/"whatsapp" se tiver certeza real do número; na dúvida, OMITA os dois campos — o app oferece "Achar o Instagram" e "Buscar contato" sozinho. Igualmente, só preencha "site" se souber o endereço real; nada de inventar domínio.
+- CONTATO PARA RESERVA — regra rígida: na Colômbia, restaurantes e bares recebem reserva principalmente pelo DIRECT DO INSTAGRAM. MAS só preencha "instagram" se você tiver certeza real de que aquele @ existe — nada de deduzir o perfil a partir do nome do lugar (tipo "@demente" para o bar Demente). Um @ inventado leva o viajante a uma página de erro. Na dúvida, OMITA o campo: o app oferece "Achar o Instagram" pela busca, que sempre funciona. A mesma regra vale, com rigor ainda maior, para telefone e WhatsApp: número errado faz o viajante escrever para um desconhecido. Só preencha "site" se souber o endereço real.
+- DOCUMENTO ANEXADO: depois de ler um voucher, bilhete ou reserva, além de criar/atualizar o cartão, ofereça guardar o arquivo dentro dele: {"tipo":"arquivar","cartaoId":"<id>","texto":"Guardar o arquivo no cartão X"}. Assim o comprovante fica junto do voo/hotel, acessível sem internet.
 - INSTAGRAM DOS CARTÕES JÁ EXISTENTES: cada cartão do quadro traz o campo "instagram" (null quando ainda não tem). Se o viajante pedir para achar/preencher os Instagram, devolva uma ação "editar" por cartão: {"tipo":"editar","cartaoId":"<id do cartão>","campos":{"instagram":"@perfil"}}. Só para lugares com perfil próprio de verdade (restaurante, bar, museu, agência do passeio) e só quando você tiver razoável certeza do @ — pule caminhadas, praças públicas, "manhã livre" e qualquer coisa sem perfil. É melhor preencher 4 com segurança do que 10 no chute. Diga em "fala" quantos preencheu e quais pulou.
 - Pediu ajuda para FALAR ESPANHOL, pedir algo, negociar, reservar, se virar numa situação → bloco "frases" com espanhol COLOMBIANO real e coloquial (usam "parcero", "¿qué más?", "a la orden", "regálame un...", "hágame el favor", "¡de una!"). Sempre em espanhol da Colômbia, não da Espanha (nada de "vosotros", nada de "coger" no sentido pegar). Explique diferenças que causam gafe.
 - Ao escrever a mensagem de reserva, escreva um texto que sirva tanto para direct do Instagram quanto para WhatsApp.
@@ -3146,14 +3197,21 @@ Sua tarefa: identificar os LUGARES REAIS citados e devolvê-los de forma aprovei
 let blocoSeq=0;
 function renderBlocos(bolha,blocos){
   if(!Array.isArray(blocos))return;
+  const paraMapear=[];
   blocos.slice(0,4).forEach(b=>{
     let el=null;
     try{
-      if(b.tipo==='lugar')el=blocoLugar(b);
+      if(b.tipo==='lugar'){el=blocoLugar(b);paraMapear.push({el,b});}
       else if(b.tipo==='frases')el=blocoFrases(b);
       else if(b.tipo==='links')el=blocoLinks(b);
     }catch(e){}
     if(el)bolha.appendChild(el);
+  });
+  /* os mapas só nascem DEPOIS de o cartão estar na tela — o Leaflet precisa
+     medir o espaço real, senão desenha em cima de um container de tamanho zero */
+  paraMapear.forEach(({el,b})=>{
+    const div=el.querySelector('.bmapa');
+    if(div)setTimeout(()=>miniMapa(div,b),120);
   });
 }
 /* limpa telefone para uso em wa.me / tel: */
@@ -3177,22 +3235,20 @@ function blocoLugar(b){
   ].filter(Boolean).join('');
   const buscaGM=encodeURIComponent([nome,b.bairro,b.cidade,'Colombia'].filter(Boolean).join(', '));
   const ig=String(b.instagram||'').replace(/^@/,'').trim();
-  /* busca de contato: o caminho honesto quando não temos número confirmado */
-  const buscaContato=encodeURIComponent(`${nome} ${b.cidade||''} instagram reservas whatsapp`);
-  const buscaIG=encodeURIComponent(`${nome} ${b.cidade||''} instagram`);
+  /* busca de contato: o caminho honesto quando não temos perfil confirmado */
+  const buscaContato=encodeURIComponent(`${nome} ${b.cidade||''} instagram reservas`);
   const bts=[
-    /* Instagram primeiro: é por onde a maioria dos lugares na Colômbia recebe reserva */
-    ig?`<button class="bb ig" onclick="abrirExterno(this.dataset.u)" data-u="https://instagram.com/${esc(ig)}">📷 Instagram · reservas</button>`
-      :`<button class="bb ig" onclick="abrirExterno(this.dataset.u)" data-u="https://www.google.com/search?q=${buscaIG}">📷 Achar o Instagram</button>`,
+    /* o @ vem da RutAI e pode estar errado — mostramos qual é, para você conferir antes */
+    ig?`<button class="bb ig" onclick="abrirExterno(this.dataset.u)" data-u="https://instagram.com/${esc(ig)}">📷 @${esc(ig)}</button>`:'',
+    `<button class="bb ${ig?'':'ig'}" onclick="abrirExterno(this.dataset.u)" data-u="https://www.google.com/search?q=${buscaContato}">🔎 ${ig?'Achar o perfil certo':'Achar o Instagram'}</button>`,
     `<button class="bb gm" onclick="abrirExterno(this.dataset.u)" data-u="https://www.google.com/maps/search/?api=1&query=${buscaGM}">📍 Google Maps</button>`,
     b.site?`<button class="bb" onclick="abrirExterno(this.dataset.u)" data-u="${esc(b.site)}">🌐 Site</button>`:'',
     (b.whatsapp||b.telefone)
-      ? `<button class="bb wa" onclick="abrirExterno(this.dataset.u)" data-u="${urlWhats(b.whatsapp||b.telefone,b.mensagemReserva||'')}">💬 WhatsApp</button>`:'',
-    `<button class="bb" onclick="abrirExterno(this.dataset.u)" data-u="https://www.google.com/search?q=${buscaContato}">🔎 Buscar contato</button>`
+      ? `<button class="bb wa" onclick="abrirExterno(this.dataset.u)" data-u="${urlWhats(b.whatsapp||b.telefone,b.mensagemReserva||'')}">💬 WhatsApp</button>`:''
   ].filter(Boolean).join('');
-  const aviso=(b.whatsapp||b.telefone)
-    ? `<div class="bnota">O número pode estar desatualizado. Se o WhatsApp disser que não existe, use o Instagram.</div>`
-    : `<div class="bnota">Sem número confirmado — na Colômbia, a reserva costuma sair pelo direct do Instagram.</div>`;
+  const aviso=ig
+    ? `<div class="bnota">O @ acima é um palpite meu e pode não existir. Se der erro, use "Achar o perfil certo".</div>`
+    : `<div class="bnota">Sem perfil confirmado — na Colômbia, a reserva costuma sair pelo direct do Instagram.</div>`;
   box.innerHTML=
     `<div class="bmapa" id="mm_${id}"></div>
      <div class="bcorpo">
@@ -3205,32 +3261,35 @@ function blocoLugar(b){
        <button class="baddc" onclick="addLugarAoRoteiro('${id}')">＋ Adicionar ao roteiro</button>
      </div>`;
   LUGARES[id]=b;
-  setTimeout(()=>miniMapa('mm_'+id,b),60);
   return box;
 }
 const LUGARES={};
 /* desenha o mini-mapa; se não veio coordenada, busca pelo nome */
-async function miniMapa(divId,b){
-  const el=document.getElementById(divId);
-  if(!el||typeof L==='undefined')return;
+async function miniMapa(el,b){
+  if(!el)return;
+  /* o Leaflet pode ainda estar carregando: espera até 5s por ele */
+  for(let i=0;i<25&&typeof L==='undefined';i++)await new Promise(r=>setTimeout(r,200));
+  if(typeof L==='undefined'){el.classList.add('semmapa');return;}
   let lat=parseFloat(b.lat),lng=parseFloat(b.lng);
   if(!isFinite(lat)||!isFinite(lng)){
     el.classList.add('carregando');
     try{
-      const r=await nominatim([b.nome,b.bairro,b.cidade,'Colombia'].filter(Boolean).join(', '));
+      const r=await geocodificar([b.nome,b.bairro,b.cidade,'Colombia'].filter(Boolean).join(', '));
       if(r){lat=parseFloat(r.lat);lng=parseFloat(r.lon);b.lat=lat;b.lng=lng;}
     }catch(e){}
     el.classList.remove('carregando');
   }
-  if(!isFinite(lat)||!isFinite(lng)){el.style.display='none';return;}
+  if(!isFinite(lat)||!isFinite(lng)){el.classList.add('semmapa');return;}
   try{
     const m=L.map(el,{zoomControl:false,attributionControl:false,dragging:false,
       scrollWheelZoom:false,doubleClickZoom:false,touchZoom:false,keyboard:false}).setView([lat,lng],15);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{maxZoom:19}).addTo(m);
     L.marker([lat,lng],{icon:L.divIcon({className:'',html:'<div class="pinm">📍</div>',
       iconSize:[28,28],iconAnchor:[14,26]})}).addTo(m);
-    setTimeout(()=>m.invalidateSize(),120);
-  }catch(e){el.style.display='none';}
+    /* o Leaflet só acerta o tamanho depois que o cartão assenta na tela */
+    setTimeout(()=>{try{m.invalidateSize();}catch(e){}},150);
+    setTimeout(()=>{try{m.invalidateSize();}catch(e){}},600);
+  }catch(e){el.classList.add('semmapa');}
 }
 /* botão "adicionar ao roteiro" do cartão de lugar */
 function addLugarAoRoteiro(id){
@@ -3295,6 +3354,8 @@ async function chamarIA(pedido){
     ANEXOS.forEach(a=>{
       if(a.tipo==='pdf')conteudo.push({type:'document',
         source:{type:'base64',media_type:'application/pdf',data:a.dados}});
+      else if(a.tipo==='txt')conteudo.push({type:'text',
+        text:`Arquivo anexado "${a.nome}":\n"""\n${a.texto}\n"""`});
       else conteudo.push({type:'image',
         source:{type:'base64',media_type:a.media,data:a.dados}});
     });
@@ -3311,6 +3372,8 @@ async function chamarIA(pedido){
   if(/^MODO REELS:/m.test(String(pedido)))sys=SISTEMA+'\n\n'+EXTRA_REELS;
   const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({system:sys,messages:hist,max_tokens:8000})});
+  /* guarda os arquivos (menos os de texto) para poder anexá-los a um cartão depois */
+  ULTIMOS_ANEXOS=ANEXOS.filter(a=>a.tipo!=='txt'&&a.dados).map(a=>({n:a.nome,m:a.media,d:a.dados}));
   ANEXOS=[];renderAnexos();
   if(!r.ok){
     let det='';try{const e=await r.json();det=e.error||'';}catch(_){}
@@ -3361,6 +3424,12 @@ function acaoDoModelo(a){
         dur:a.duracao||'',rate:a.nota||'',bai:a.bairro||'',nota:a.descricao||'',
         ar:!!a.aoArLivre,end:a.endereco||'',lat:a.lat||null,lng:a.lng||null,
         gm:'',ig:a.instagram||'',foto:''});};
+    case 'arquivar':return()=>{const r=acharPorId(a.cartaoId);
+      if(!r||!ULTIMOS_ANEXOS.length)return;
+      if(!Array.isArray(r.c.docs))r.c.docs=[];
+      ULTIMOS_ANEXOS.forEach(d=>{
+        if(r.c.docs.length<4&&!r.c.docs.some(x=>x.n===d.n))r.c.docs.push({n:d.n,m:d.m,d:d.d});
+      });};
     case 'remover':return()=>{const r=acharPorId(a.cartaoId);if(r&&!protegido(r))r.d.cards.splice(r.i,1);};
     case 'editar':return()=>{const r=acharPorId(a.cartaoId);if(!r||protegido(r)||!a.campos)return;
       const m={titulo:'t',hora:'h',duracao:'dur',nota:'rate',bairro:'bai',descricao:'nota',
