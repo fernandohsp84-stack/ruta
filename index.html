@@ -3003,7 +3003,16 @@ function abrirDocCard(cid,k){
     const bin=atob(d.d);const arr=new Uint8Array(bin.length);
     for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);
     const url=URL.createObjectURL(new Blob([arr],{type:d.m}));
-    abrirExterno(url);
+    /* NUNCA navega a aba do app para um blob local — isso é o que fazia o
+       "voltar" recarregar o Ruta do zero em vez de retornar ao estado.
+       Anexo sempre abre em aba/janela separada, mesmo no Safari comum. */
+    const w=window.open(url,'_blank');
+    if(!w){
+      /* pop-up bloqueado: oferece baixar/compartilhar em vez de navegar embora */
+      const a=document.createElement('a');
+      a.href=url;a.download=d.n||'anexo';a.target='_blank';a.rel='noopener';
+      document.body.appendChild(a);a.click();document.body.removeChild(a);
+    }
     setTimeout(()=>URL.revokeObjectURL(url),60000);
   }catch(e){toast('Não consegui abrir o anexo.');}
 }
