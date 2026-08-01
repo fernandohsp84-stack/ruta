@@ -156,32 +156,39 @@ button,input,textarea,select{font-family:inherit;color:inherit}
 .lhd .mn{background:none;border:none;color:var(--ink2);font-size:19px;padding:0 4px;line-height:.6;letter-spacing:.06em}
 
 /* cartão branco com rótulo textual */
-.cd{background:var(--surf);border-radius:9px;box-shadow:var(--sh);padding:10px 12px;margin-bottom:7px;transition:transform .14s}
-.cd:active{transform:scale(.99)}
-.tag{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:5px;margin-bottom:8px;letter-spacing:-.01em}
+.cd{background:var(--surf);border-radius:14px;box-shadow:var(--sh);padding:0 0 4px;
+  margin-bottom:10px;transition:transform .14s;overflow:hidden}
+.cd:active{transform:scale(.992)}
+.cd .cbody{padding:12px 14px 2px}
+/* topo do cartão: horário como marcador de itinerário */
+.cd .ctopo{display:flex;align-items:center;gap:7px;margin-bottom:5px}
+.cd .chora{font-size:15px;font-weight:800;color:var(--azul);letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums;flex-shrink:0}
+.cd .cdia{font-size:11px;font-weight:700;color:var(--ink3)}
+.cd.ok .chora{color:var(--ink3)}
+.tag{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:20px;
+  letter-spacing:.01em;flex-shrink:0}
 .tag.azul{background:var(--azulr);color:var(--azulr-d)}
 .tag.verde{background:var(--verde);color:var(--verde-d)}
 .tag.oro{background:var(--oro);color:var(--oro-d)}
 .tag.coral{background:var(--coral);color:var(--coral-d)}
 .tag.roxo{background:var(--roxo);color:var(--roxo-d)}
 .tag.ciano{background:var(--ciano);color:#0A4A58}
-.cd .l1{display:flex;align-items:flex-start;gap:11px}
-.cd .chk{width:23px;height:23px;border-radius:50%;border:2px solid #B3BAC5;background:none;flex-shrink:0;
-  font-size:13px;color:transparent;display:flex;align-items:center;justify-content:center;padding:0;margin-top:-1px}
+/* marcar como feito: discreto, encostado à direita */
+.cd .chk{width:22px;height:22px;border-radius:50%;border:1.5px solid #CFD6DE;background:none;
+  flex-shrink:0;margin-left:auto;font-size:12px;color:transparent;display:flex;
+  align-items:center;justify-content:center;padding:0}
 .cd.ok .chk{background:var(--verde-d);border-color:var(--verde-d);color:#fff}
-.cd .t{flex:1;font-size:16px;font-weight:600;line-height:1.3;letter-spacing:-.015em;padding-top:1px}
-.cd.ok .t{color:var(--ink3)}
-.cd .desc{margin-top:7px;padding-left:34px;display:flex;align-items:center;gap:6px}
-.cd .desc .gl{display:inline-block;width:15px;height:2px;background:#8C9BAB;border-radius:2px;position:relative}
-.cd .desc .gl::after{content:'';position:absolute;top:4px;left:0;width:9px;height:2px;background:#8C9BAB;border-radius:2px}
-.cd .badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;padding-left:34px;align-items:center}
-.bg{display:inline-flex;align-items:center;gap:3px;font-size:11.5px;font-weight:700;color:var(--ink2);
-  padding:2px 6px;border-radius:5px;background:var(--painel)}
-.bg.hora{background:var(--azul-t);color:#0055CC}
+.cd .t{font-size:17px;font-weight:700;line-height:1.28;letter-spacing:-.02em;color:var(--ink)}
+.cd.ok .t{color:var(--ink3);text-decoration:line-through;text-decoration-color:#C9D2DA}
+.cd .cnota{font-size:12.5px;line-height:1.45;color:var(--ink2);font-weight:500;margin-top:5px}
+.cd .badges{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px;align-items:center}
+.bg{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:700;color:var(--ink2);
+  padding:3px 7px;border-radius:20px;background:var(--painel)}
 .bg.rate{background:var(--oro-t);color:var(--oro-d)}
 .bg.ar{background:#CCF4FB;color:#0A4A58}
-.cd .links{display:flex;gap:6px;margin-top:9px;padding-left:34px;flex-wrap:wrap}
-.cd .lk{background:var(--azul-t);border:none;border-radius:6px;padding:5px 10px;
+.cd .links{display:flex;gap:5px;margin:10px 14px 0;flex-wrap:wrap}
+.cd .lk{background:var(--azul-t);border:none;border-radius:20px;padding:5px 11px;
   font-size:11.5px;font-weight:700;color:#0055CC}
 .cd .lk.ig{background:#FCE7F3;color:#9D174D}
 .cd .lk.gm{background:var(--verde-t);color:var(--verde-d)}
@@ -201,8 +208,8 @@ button,input,textarea,select{font-family:inherit;color:inherit}
 body.arrastando{overscroll-behavior:none}
 .tabs,.lst,.cd,.cd *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 body.arrastando .board{overflow:hidden!important}
-.cd .mv{display:flex;gap:6px;margin-top:9px;padding-top:9px;border-top:1px solid var(--painel)}
-.cd .mv button{flex:1;background:var(--painel);border:none;border-radius:6px;padding:7px;
+.cd .mv{display:flex;gap:6px;margin:10px 14px 0;padding-top:9px;border-top:1px solid #F0F3F6}
+.cd .mv button{flex:1;background:none;border:none;border-radius:8px;padding:6px;
   font-size:11.5px;font-weight:700;color:var(--ink2)}
 .cd .mv button:disabled{opacity:.32}
 
@@ -415,7 +422,12 @@ body.arrastando .board{overflow:hidden!important}
 .ffoot input{flex:1;background:var(--surf);border:none;border-radius:12px;padding:13px 15px;font-size:15px;font-weight:500;box-shadow:var(--sh)}
 .ffoot .snd{background:var(--azul);border:none;color:#fff;border-radius:11px;padding:13px 15px;font-size:14px;font-weight:700}
 
-.fl{display:block;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--ink2);margin:14px 0 6px}
+.fl{display:block;font-size:12.5px;font-weight:700;letter-spacing:-.01em;color:var(--ink2);margin:15px 0 6px}
+.maisdet{width:100%;margin-top:16px;background:none;border:1px dashed #D3DAE1;border-radius:10px;
+  padding:11px;font-size:13px;font-weight:700;color:var(--ink2);display:flex;
+  align-items:center;justify-content:center;gap:7px}
+.maisdet.on{border-style:solid;background:var(--painel)}
+.maisdet span{font-size:11px}
 .fi{width:100%;background:var(--surf);border:2px solid transparent;border-radius:8px;padding:12px;
   font-size:15px;font-weight:500;box-shadow:var(--sh)}
 .fi:focus{outline:none;border-color:var(--azul)}
@@ -522,7 +534,7 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
 #clima,#log,#desc{padding-left:12px;padding-right:12px}
 .dfoto{height:130px;border-radius:9px;overflow:hidden;margin-bottom:11px;background:var(--painel)}
 .dfoto img{width:100%;height:100%;object-fit:cover;display:block}
-.cfoto{height:112px;border-radius:7px;overflow:hidden;margin:-2px 0 9px;background:var(--painel)}
+.cfoto{height:150px;overflow:hidden;margin:0;background:var(--painel)}
 .cfoto.vazia{display:none}
 .cfoto img{width:100%;height:100%;object-fit:cover;display:block}
 .cd.ok .cfoto{filter:grayscale(.55)}
@@ -716,34 +728,44 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
 
     <!-- ===== campos de ATIVIDADE ===== -->
     <div id="campos-atividade">
-      <label class="fl">Título</label>
+      <label class="fl">O lugar</label>
       <input class="fi" id="i-t" placeholder="Ex.: Comuna 13 com guia local">
       <button class="chip" style="width:100%;justify-content:center;margin-top:9px" onclick="buscarCoord()">📍 Localizar e abrir no Google Maps</button>
       <div id="i-coord" style="font-size:12px;font-weight:700;color:var(--ink2);margin-top:7px;line-height:1.5"></div>
-      <label class="fl">Rótulo</label>
+
+      <label class="fl">Que tipo de programa é</label>
       <div class="chips" id="i-listas"></div>
+
+      <label class="fl">Quando</label>
       <div class="frow">
-        <div><label class="fl">Data</label><input class="fi" type="date" id="i-data"></div>
-        <div><label class="fl">Hora</label><input class="fi" type="time" id="i-hora"></div>
+        <div><input class="fi" type="date" id="i-data"></div>
+        <div><input class="fi" type="time" id="i-hora"></div>
       </div>
+
       <div class="frow">
-        <div><label class="fl">Duração</label><input class="fi" id="i-d" placeholder="3h"></div>
-        <div><label class="fl">Nota Google</label><input class="fi" id="i-r" placeholder="4,7"></div>
+        <div><label class="fl">Quanto tempo leva</label><input class="fi" id="i-d" placeholder="3h"></div>
+        <div><label class="fl">Nota no Google</label><input class="fi" id="i-r" placeholder="4,7"></div>
       </div>
+
       <label class="fl">Bairro</label>
       <input class="fi" id="i-b" placeholder="El Poblado">
-      <label class="fl">Descrição</label>
-      <textarea class="fi" id="i-n" placeholder="Reserva feita? Preço? Quem sugeriu?"></textarea>
-      <label class="fl">Foto do lugar</label>
-      <input class="fi" id="i-foto" placeholder="URL de uma foto (deixe vazio para buscar sozinho)" oninput="previewFoto()">
-      <div id="i-foto-prev" style="margin-top:8px"></div>
-      <label class="fl">Link do Google Maps</label>
-      <input class="fi" id="i-gm" placeholder="Cole o link compartilhado do Maps (opcional)">
-      <label class="fl">Instagram</label>
-      <input class="fi" id="i-ig" placeholder="@perfil ou o link completo">
-      <label class="fl">Depende do tempo</label>
-      <div class="tgl"><div class="tx">É ao ar livre — a RutAI remaneja se chover</div>
+
+      <label class="fl">Anotações de vocês</label>
+      <textarea class="fi" id="i-n" placeholder="Reserva feita? Quanto custa? Quem indicou?"></textarea>
+
+      <div class="tgl" style="margin-top:11px"><div class="tx">É ao ar livre — a RutAI remaneja se chover</div>
         <input type="checkbox" id="i-ar"></div>
+
+      <button class="maisdet" id="i-mais" onclick="toggleMais()">Foto, mapa e Instagram <span>▾</span></button>
+      <div id="i-avancado" style="display:none">
+        <label class="fl">Foto do lugar</label>
+        <input class="fi" id="i-foto" placeholder="Cole o endereço de uma foto — ou deixe vazio e eu procuro" oninput="previewFoto()">
+        <div id="i-foto-prev" style="margin-top:8px"></div>
+        <label class="fl">Link do Google Maps</label>
+        <input class="fi" id="i-gm" placeholder="Cole o link compartilhado do Maps (opcional)">
+        <label class="fl">Instagram</label>
+        <input class="fi" id="i-ig" placeholder="@perfil ou o link completo">
+      </div>
     </div>
 
     <!-- ===== campos de VOO ===== -->
@@ -1703,13 +1725,25 @@ function copiarTexto(txt,btn,msg){
     navigator.clipboard.writeText(txt).then(ok,manual);
   else manual();
 }
+/* extrai só o horário de textos como "Dia 2 · 14:00" */
+function soHora(h){
+  const m=String(h||'').match(/(\d{1,2}):(\d{2})/);
+  return m?`${m[1].padStart(2,'0')}:${m[2]}`:'';
+}
+/* o resto do "quando" (ex.: "Dia 2") quando não é só hora */
+function restoQuando(h){
+  const t=String(h||'').trim();
+  const hh=soHora(t);
+  if(!hh)return t;
+  const r=t.replace(/\d{1,2}:\d{2}/,'').replace(/[·•\-–—]\s*$/,'').replace(/^\s*[·•\-–—]/,'').trim();
+  return r;
+}
 function cardHTML(c,L){
   const bg=[];
-  if(c.h)bg.push(`<span class="bg hora">🕐 ${esc(c.h)}</span>`);
   if(c.rate)bg.push(`<span class="bg rate">★ ${esc(c.rate)}</span>`);
   if(c.dur)bg.push(`<span class="bg">⏱ ${esc(c.dur)}</span>`);
   if(c.bai)bg.push(`<span class="bg">📍 ${esc(c.bai)}</span>`);
-  if(c.ar)bg.push(`<span class="bg ar">ao ar livre</span>`);
+  if(c.ar)bg.push(`<span class="bg ar">☀ ao ar livre</span>`);
   const ant=diaAtivo>0,prox=diaAtivo<S.dias.length-1;
   const lk=[];
   if(c.lat||c.end)lk.push(`<button class="lk" onclick="irMapa('${c.id}')">📍 Mapa</button>`);
@@ -1720,19 +1754,25 @@ function cardHTML(c,L){
   }
   (c.docs||[]).forEach((d,k)=>lk.push(
     `<button class="lk doc" onclick="abrirDocCard('${c.id}',${k})">📎 ${esc(d.n.length>16?d.n.slice(0,14)+'…':d.n)}</button>`));
+  const hh=soHora(c.h),resto=restoQuando(c.h);
   return `<article class="cd ${c.ok?'ok':''}" data-id="${c.id}">
     ${c.foto?`<div class="cfoto"><img src="${esc(c.foto)}" alt="" loading="lazy"
       onerror="this.parentNode.style.display='none'"></div>`:`<div class="cfoto vazia" id="cf_${c.id}"></div>`}
-    ${L.rot?`<span class="tag ${L.c}">${esc(L.rot)}</span>`:''}
-    <div class="l1">
-      <button class="chk" onclick="marcar('${c.id}')">✓</button>
-      <span class="t" onclick="editarItem('${c.id}')">${esc(c.t)}</span></div>
-    ${c.nota?`<div class="desc"><span class="gl"></span></div>`:''}
-    ${bg.length?`<div class="badges">${bg.join('')}</div>`:''}
+    <div class="cbody" onclick="editarItem('${c.id}')">
+      <div class="ctopo">
+        ${hh?`<span class="chora">${esc(hh)}</span>`:''}
+        ${L.rot?`<span class="tag ${L.c}">${esc(L.rot)}</span>`:''}
+        ${resto?`<span class="cdia">${esc(resto)}</span>`:''}
+        <button class="chk" onclick="event.stopPropagation();marcar('${c.id}')" title="Marcar como feito">✓</button>
+      </div>
+      <div class="t">${esc(c.t)}</div>
+      ${c.nota?`<div class="cnota">${esc(c.nota.length>110?c.nota.slice(0,105)+'…':c.nota)}</div>`:''}
+      ${bg.length?`<div class="badges">${bg.join('')}</div>`:''}
+    </div>
     ${lk.length?`<div class="links">${lk.join('')}</div>`:''}
     <div class="mv">
-      <button ${ant?'':'disabled'} onclick="mover('${c.id}',-1)">◀ ${esc(rotuloCurto(diaAtivo-1))}</button>
-      <button ${prox?'':'disabled'} onclick="mover('${c.id}',1)">${esc(rotuloCurto(diaAtivo+1))} ▶</button>
+      <button ${ant?'':'disabled'} onclick="mover('${c.id}',-1)" title="Mover para o dia anterior">◀ ${esc(rotuloCurto(diaAtivo-1))}</button>
+      <button ${prox?'':'disabled'} onclick="mover('${c.id}',1)" title="Mover para o próximo dia">${esc(rotuloCurto(diaAtivo+1))} ▶</button>
     </div></article>`;
 }
 /* palavras que indicam logística/rotina — nesses cartões NÃO buscamos foto,
@@ -2029,6 +2069,7 @@ function limparCampos(){
    .forEach(i=>{const e=document.getElementById(i);if(e)e.value='';});
   document.getElementById('i-ar').checked=false;
   document.getElementById('h-coord').innerHTML='';
+  ajustarMais(null);
 }
 function novoItem(lid){
   itemEd=null;coordEd={lat:null,lng:null};endEd='';DOCS_ED=[];renderDocsEd();coordHotelEd={lat:null,lng:null};endHotelEd='';
@@ -2046,6 +2087,23 @@ function novoItem(lid){
 function selTipoChip(t){
   document.querySelectorAll('#i-tipo .chip').forEach(x=>x.classList.toggle('on',x.dataset.t===t));
   itemTipo=t;trocarTipoItem(document.querySelector('#i-tipo .chip[data-t="'+t+'"]'));
+}
+function toggleMais(){
+  const d=document.getElementById('i-avancado'),b=document.getElementById('i-mais');
+  if(!d||!b)return;
+  const abrir=d.style.display==='none';
+  d.style.display=abrir?'block':'none';
+  b.classList.toggle('on',abrir);
+  const s=b.querySelector('span');if(s)s.textContent=abrir?'▴':'▾';
+}
+/* abre a seção sozinha quando já há algo preenchido lá dentro */
+function ajustarMais(c){
+  const d=document.getElementById('i-avancado'),b=document.getElementById('i-mais');
+  if(!d||!b)return;
+  const tem=!!(c&&(c.foto||c.gm||c.ig));
+  d.style.display=tem?'block':'none';
+  b.classList.toggle('on',tem);
+  const s=b.querySelector('span');if(s)s.textContent=tem?'▴':'▾';
 }
 function editarItem(cid){
   const r=achar(cid);if(!r)return;itemEd=cid;
@@ -2086,6 +2144,7 @@ function editarItem(cid){
     document.getElementById('i-ar').checked=!!c.ar;
     coordEd={lat:c.lat||null,lng:c.lng||null};mostraCoord();previewFoto();
     pintaListasChips(c.l);
+    ajustarMais(c);
   }
   pintaDias(S.dias.indexOf(r.d));
   DOCS_ED=(c.docs||[]).slice();renderDocsEd();
