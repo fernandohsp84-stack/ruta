@@ -254,7 +254,7 @@ body.arrastando .board{overflow:hidden!important}
   box-shadow:0 -6px 30px rgba(9,30,66,.3);max-height:92%}
 .sheet.up{transform:none}
 /* backup/convite abrem por cima de outra folha já aberta (ex.: a de sincronia) */
-#bkexport,#bkimport,#bknuvem{z-index:96}
+#bkexport,#bkimport,#bknuvem,#espaco{z-index:96}
 .bkl{display:flex;align-items:center;gap:9px;background:var(--surf);border-radius:10px;
   box-shadow:var(--sh);padding:9px 11px;margin-bottom:7px}
 .bkli{flex:1;min-width:0;font-size:12.5px;line-height:1.4}
@@ -1083,6 +1083,32 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
   </div>
 </div>
 
+<!-- ============ ARMAZENAMENTO ============ -->
+<div class="sheet" id="espaco">
+  <div class="grab"></div>
+  <div class="shd"><h3>Armazenamento</h3><button class="x" onclick="fechar('espaco')">✕</button></div>
+  <div class="sbody">
+    <p id="esp-total" style="font-size:13px;color:var(--ink2);font-weight:700"></p>
+    <p style="font-size:12.5px;color:var(--ink2);font-weight:600;line-height:1.55">
+      O navegador reserva um espaço limitado para o app. Anexos (PDFs e fotos nos cartões)
+      são o que mais ocupa.</p>
+    <label class="fl">O que está guardado</label>
+    <div id="esp-lista"></div>
+    <label class="fl">Anexos desta viagem</label>
+    <p id="esp-anexos" style="font-size:12.5px;color:var(--ink2);font-weight:600;line-height:1.5"></p>
+    <div class="fbtns" style="margin-top:12px">
+      <button class="cn" style="width:100%" onclick="limparCache()">🧹 Liberar espaço (seguro)</button>
+    </div>
+    <div class="fbtns" style="margin-top:6px">
+      <button class="cn" style="width:100%" onclick="tirarAnexosDaViagem()">📎 Remover anexos desta viagem</button>
+    </div>
+    <div class="aviso">
+      <b>Antes de remover anexos</b>, faça o <b>Backup na nuvem</b> no ☁. Lá os arquivos ficam
+      guardados por inteiro e você pode restaurá-los depois.
+    </div>
+  </div>
+</div>
+
 <!-- ============ BACKUP NA NUVEM ============ -->
 <div class="sheet" id="bknuvem">
   <div class="grab"></div>
@@ -1139,8 +1165,10 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
     <div class="resumo" id="sy-est">—</div>
     <label class="fl">Código do quadro</label>
     <input class="fi" id="sy-cod" placeholder="Ex.: colombia-2026-a7k3" autocomplete="off">
+    <button class="chip" style="width:100%;justify-content:center;margin-top:8px" onclick="sugerirCodigo()">🎲 Gerar código seguro</button>
     <p style="font-size:12.5px;color:var(--ink2);font-weight:600;line-height:1.5;margin-top:7px">
-      Todos os aparelhos que usarem este código veem o mesmo quadro. Quem editar, atualiza o dos outros.</p>
+      Todos os aparelhos que usarem este código veem o mesmo quadro. Quem editar, atualiza o dos outros.
+      <b>Use um código difícil de adivinhar</b> — se outra pessoa escolher o mesmo, os quadros se misturam.</p>
     <label class="fl">Endereço do Firebase</label>
     <input class="fi" id="sy-url" placeholder="https://SEU-PROJETO-default-rtdb.firebaseio.com" autocomplete="off">
     <p style="font-size:12.5px;color:var(--ink2);font-weight:600;line-height:1.5;margin-top:7px">
@@ -1150,12 +1178,18 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
       <button class="sv" onclick="ligarSync()">Ligar sincronia</button>
     </div>
     <div class="fbtns" style="margin-top:8px">
-      <button class="cn" style="width:100%" onclick="gerarConvite()">🔗 Gerar link de convite</button>
+      <button class="cn" style="width:100%" onclick="gerarConvite()">🔗 Convidar para ESTA viagem</button>
+    </div>
+    <div class="fbtns" style="margin-top:6px">
+      <button class="cn" style="width:100%" onclick="compartilharApp()">📤 Compartilhar o app com outra pessoa</button>
+    </div>
+    <div class="fbtns" style="margin-top:6px">
+      <button class="cn" style="width:100%" onclick="abrirEspaco()">💾 Armazenamento do aparelho</button>
     </div>
     <div class="aviso">
-      <b>Link de convite.</b> Mande esse link para quem vai usar o app junto com você.
-      Ao abrir, o código, o endereço do Firebase e a RutAI já vêm configurados — sem digitar nada.
-      Vale guardar o link: o iPhone apaga os ajustes de sites pouco usados, e basta reabri-lo para voltar ao normal.
+      <b>São dois links diferentes.</b> O de <b>convite</b> dá acesso a este roteiro — use com quem viaja com você.
+      O de <b>compartilhar o app</b> não leva nada do seu quadro: a pessoa abre o Ruta vazio e cria as viagens dela.
+      Vale guardar o de convite: o iPhone apaga os ajustes de sites pouco usados, e basta reabri-lo para voltar ao normal.
     </div>
     <div class="aviso">
       <b>Como funciona.</b> O quadro inteiro é gravado como um registro só, sob o código escolhido.
@@ -1267,7 +1301,7 @@ function quadroDe(id){
 /* troca a viagem aberta, preservando o que estiver na tela */
 function abrirViagem(id){
   if(!acharViagem(id))return;
-  if(S)try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
+  if(S)guardar(KEY,JSON.stringify(S));
   viagemAtual=id;
   try{localStorage.setItem('ruta_atual',id);}catch(e){}
   KEY=chaveDe(id);
@@ -1335,9 +1369,9 @@ async function criarViagem(){
     q.dias.push({id:'d'+i+Date.now().toString(36),cid:chave,cards:[]});
   }
   q.n=1;q.v=Date.now();
-  try{localStorage.setItem(chaveDe(id),JSON.stringify(q));}catch(e){
+  if(!guardar(chaveDe(id),JSON.stringify(q))){
     if(btn){btn.disabled=false;btn.textContent='Criar viagem';}
-    alert('Não consegui guardar a viagem — o armazenamento do navegador está cheio.');return;
+    avisarEspacoCheio();return;
   }
   VIAGENS.unshift({id,nome:nome||('Viagem a '+cidades[0]),destino:cidades.join(' · '),
     inicio:ini,capa:'',cod:''});
@@ -1542,7 +1576,7 @@ function salvar(local){
   S.n=(S.n||0)+1;
   S.v=Date.now();               /* mantido só para desempate/informação */
   S.editadoPor=meuId();
-  try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
+  guardar(KEY,JSON.stringify(S));
   /* mantém o índice de viagens em dia (destino e data podem ter mudado) */
   const v=acharViagem(viagemAtual);
   if(v){
@@ -1561,13 +1595,117 @@ function meuId(){
   return m;
 }
 /* guarda as últimas 5 versões do quadro, para resgate se algo se perder */
+function avisarEspacoCheio(){
+  const u=usoEspaco();
+  const maior=u.itens[0];
+  alert('O armazenamento do navegador encheu.\n\n'+
+    `Em uso: cerca de ${u.total} KB`+(maior?`\nMaior item: ${maior.nome} (${maior.kb} KB)`:'')+
+    '\n\nO que costuma ocupar espaço são os anexos (PDFs e fotos) guardados nos cartões.\n\n'+
+    'Vou abrir a tela de armazenamento para você liberar espaço.');
+  abrirEspaco();
+}
+function abrirEspaco(){renderEspaco();abrir('espaco');}
+function renderEspaco(){
+  const el=document.getElementById('esp-lista');
+  if(!el)return;
+  const u=usoEspaco();
+  const sub=document.getElementById('esp-total');
+  if(sub)sub.textContent=`Cerca de ${u.total} KB em uso neste aparelho`;
+  el.innerHTML=u.itens.map(i=>
+    `<div class="bkl"><div class="bkli"><b>${esc(i.nome)}</b>
+      <span>${i.kb} KB</span></div></div>`).join('')||
+    '<p class="bkvazio">Nada guardado ainda.</p>';
+  /* quanto os anexos ocupam dentro da viagem aberta */
+  const r=semAnexos(S);
+  const dif=Math.round((JSON.stringify(S).length-JSON.stringify(r.quadro).length)/1024);
+  const av=document.getElementById('esp-anexos');
+  if(av){
+    av.innerHTML=r.tirados
+      ? `Esta viagem tem <b>${r.tirados} anexo(s)</b> ocupando cerca de <b>${dif} KB</b>.`
+      : 'Esta viagem não tem anexos guardados.';
+  }
+}
+function limparCache(){
+  if(!confirm('Liberar espaço apagando o que dá para recuperar sozinho?\n\n'+
+    'Serão apagados: fotos guardadas, cópias locais antigas, conversa da RutAI e previsão salva.\n\n'+
+    'Seu roteiro, anexos e viagens NÃO são tocados.'))return;
+  liberarEspaco(2);
+  renderEspaco();
+  toast('Espaço liberado.');
+}
+function tirarAnexosDaViagem(){
+  const r=semAnexos(S);
+  if(!r.tirados){toast('Esta viagem não tem anexos guardados.');return;}
+  if(!confirm(`Remover ${r.tirados} anexo(s) desta viagem para liberar espaço?\n\n`+
+    'ATENÇÃO: os arquivos serão apagados deste aparelho.\n\n'+
+    'Faça o backup na nuvem antes — lá eles ficam guardados e podem voltar.'))return;
+  S=r.quadro;
+  salvar();render();renderEspaco();
+  toast(`${r.tirados} anexo(s) removidos.`);
+}
 function backupLocal(){
   try{
+    /* backups locais vão SEM anexos: 5 cópias com PDFs em base64 estouram
+       o espaço do navegador. O backup completo é o da nuvem. */
+    const leve=semAnexos(S).quadro;
     const bk=JSON.parse(localStorage.getItem('ruta_backups')||'[]');
     bk.unshift({em:new Date().toISOString(),dias:S.dias.length,
-      cards:S.dias.reduce((a,d)=>a+d.cards.length,0),n:S.n||0,estado:JSON.stringify(S)});
-    localStorage.setItem('ruta_backups',JSON.stringify(bk.slice(0,5)));
+      cards:S.dias.reduce((a,d)=>a+d.cards.length,0),n:S.n||0,estado:JSON.stringify(leve)});
+    guardar('ruta_backups',JSON.stringify(bk.slice(0,3)));
   }catch(e){}
+}
+/* grava no navegador; se o espaço acabar, libera o que é descartável e tenta de novo */
+function guardar(chave,valor){
+  try{localStorage.setItem(chave,valor);return true;}
+  catch(e){
+    if(!ehCotaCheia(e))throw e;
+    liberarEspaco(1);
+    try{localStorage.setItem(chave,valor);return true;}
+    catch(e2){
+      if(!ehCotaCheia(e2))throw e2;
+      liberarEspaco(2);
+      try{localStorage.setItem(chave,valor);return true;}
+      catch(e3){return false;}
+    }
+  }
+}
+function ehCotaCheia(e){
+  return e&&(e.name==='QuotaExceededError'||e.code===22||e.code===1014||
+    /quota|storage|cheio|full/i.test(String(e.message||'')));
+}
+/* nível 1: cache de fotos e backups locais. nível 2: também o histórico do chat. */
+function liberarEspaco(nivel){
+  try{localStorage.removeItem('ruta_fotos');}catch(e){}
+  try{
+    const bk=JSON.parse(localStorage.getItem('ruta_backups')||'[]');
+    localStorage.setItem('ruta_backups',JSON.stringify(bk.slice(0,1)));
+  }catch(e){try{localStorage.removeItem('ruta_backups');}catch(x){}}
+  if(nivel>=2){
+    try{localStorage.removeItem('ruta_chat');}catch(e){}
+    try{localStorage.removeItem('ruta_backups');}catch(e){}
+    try{localStorage.removeItem('ruta_clima');}catch(e){}
+  }
+}
+/* quanto cada coisa ocupa, para mostrar ao usuário */
+function usoEspaco(){
+  let total=0;const itens=[];
+  const rotulos={'ruta_backups':'Cópias locais','ruta_fotos':'Fotos guardadas',
+    'ruta_chat':'Conversa da RutAI','ruta_clima':'Previsão do tempo'};
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);
+    const v=localStorage.getItem(k)||'';
+    const kb=Math.round(v.length/1024);
+    total+=kb;
+    let nome=rotulos[k]||null;
+    if(k.startsWith('ruta_v4')){
+      const vid=k.replace('ruta_v4_','');
+      const via=acharViagem(vid);
+      nome='Viagem: '+((via&&via.nome)||'quadro');
+    }
+    if(nome&&kb>0)itens.push({nome,kb,chave:k});
+  }
+  itens.sort((a,b)=>b.kb-a.kb);
+  return {total,itens};
 }
 function listarBackups(){
   try{return JSON.parse(localStorage.getItem('ruta_backups')||'[]');}catch(e){return[];}
@@ -1624,7 +1762,7 @@ function confirmarColarBackup(){
   S=j;if(!S.cid)S.cid={};if(S.v==null)S.v=0;
   S.n=(S.n||0)+1;S.v=Date.now();
   normalizar();diaAtivo=0;protegidoAte=Date.now()+30000;
-  try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
+  guardar(KEY,JSON.stringify(S));
   render();renderClima();buscarClima(true);enviarNuvem();
   fechar('bkimport');fechar('sync');toast(`Roteiro restaurado: ${S.dias.length} dias.`);
 }
@@ -1683,6 +1821,41 @@ function linkConvite(){
   const cfg={cod:SY.cod,url:SY.url,fn:SY.fn};
   const b64=btoa(unescape(encodeURIComponent(JSON.stringify(cfg))));
   return location.origin+location.pathname+'#ruta='+encodeURIComponent(b64);
+}
+/* link para dar o APP a outra pessoa: leva a RutAI, mas NUNCA o código do quadro.
+   Assim o amigo cria as viagens dele, sem enxergar nem tocar nas suas. */
+function linkApp(comIA){
+  const cfg=comIA?{fn:SY.fn}:{};
+  if(!comIA||!SY.fn)return location.origin+location.pathname;
+  const b64=btoa(unescape(encodeURIComponent(JSON.stringify(cfg))));
+  return location.origin+location.pathname+'#ruta='+encodeURIComponent(b64);
+}
+function compartilharApp(){
+  const comIA=SY.fn?confirm(
+    'Incluir a RutAI no link?\n\n'+
+    'SIM — seu amigo usa a assistente, mas o consumo entra na SUA conta da Anthropic.\n\n'+
+    'NÃO — ele usa o app sem a assistente (pode ligar a dele depois).'):false;
+  const l=linkApp(comIA);
+  document.getElementById('bk-txt').value=l;
+  const h=document.getElementById('bkexport').querySelector('h3');
+  if(h)h.textContent='Link do app';
+  document.getElementById('bk-info').textContent=
+    comIA?'Com a RutAI incluída. O roteiro de vocês NÃO vai neste link — ele começa do zero.'
+         :'Sem a RutAI. O roteiro de vocês NÃO vai neste link — ele começa do zero.';
+  abrir('bkexport');
+  toast('Link pronto — este não dá acesso às suas viagens.');
+}
+/* código de quadro aleatório: evita que duas pessoas escolham o mesmo por acaso */
+function codigoAleatorio(){
+  const a='abcdefghijkmnopqrstuvwxyz23456789';
+  let s='';for(let i=0;i<10;i++)s+=a[Math.floor(Math.random()*a.length)];
+  return s.slice(0,5)+'-'+s.slice(5);
+}
+function sugerirCodigo(){
+  const c=document.getElementById('sy-cod');
+  if(!c)return;
+  c.value=codigoAleatorio();
+  toast('Código novo gerado. Use o link de convite para passar à outra pessoa.');
 }
 function gerarConvite(){
   if(!SY.cod||!SY.url){toast('Ligue a sincronia primeiro — preciso do código e do endereço.');return;}
@@ -1794,7 +1967,7 @@ async function restaurarBackupNuvem(id){
     if(!S.cid)S.cid={};if(S.v==null)S.v=0;
     S.n=Math.max((S.n||0),(b.n||0))+1;S.v=Date.now();
     normalizar();diaAtivo=0;protegidoAte=Date.now()+30000;
-    try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
+    guardar(KEY,JSON.stringify(S));
     render();renderClima();buscarClima(true);enviarNuvem();
     fechar('bknuvem');fechar('sync');
     toast(`Restaurado: ${S.dias.length} dias.`);
@@ -1821,7 +1994,7 @@ async function enviarNuvem(){
       if(j&&j.dias&&(j.n||0)>(S.n||0)&&Date.now()>=protegidoAte){
         /* a nuvem está mais adiantada: puxa em vez de empurrar */
         puxando=true;S=j;normalizar();
-        try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
+        guardar(KEY,JSON.stringify(S));
         if(diaAtivo>=S.dias.length)diaAtivo=S.dias.length-1;
         render();renderClima();puxando=false;
         toast('O outro aparelho tinha uma versão mais nova.');
@@ -1830,6 +2003,20 @@ async function enviarNuvem(){
     }
     await fetch(u,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(S)});
   }catch(e){}
+}
+function cidadesDe(q){
+  if(!q||!q.dias)return [];
+  const dic=q.cid||{};
+  return [...new Set(q.dias.map(d=>(dic[d.cid]||d.cid||'')).filter(Boolean))];
+}
+/* o quadro da nuvem parece ser de outra viagem? (nenhuma cidade em comum) */
+function quadroEstranho(j){
+  if(!S||!S.dias||!S.dias.length)return false;      /* quadro local vazio: pode aceitar */
+  const meu=cidadesDe(S).map(x=>x.toLowerCase());
+  const dele=cidadesDe(j).map(x=>x.toLowerCase());
+  if(!meu.length||!dele.length)return false;
+  const comum=dele.some(c=>meu.includes(c));
+  return !comum;
 }
 async function puxarNuvem(silencioso){
   const u=urlNuvem();if(!u||!SY.ligado)return;
@@ -1841,8 +2028,27 @@ async function puxarNuvem(silencioso){
     const nNuvem=(j&&j.n)||0, nLocal=S.n||0;
     if(j&&j.dias&&nNuvem>nLocal){
       if(Date.now()<protegidoAte){enviarNuvem();return;}
+      /* PROTEÇÃO: se o quadro da nuvem parece ser de OUTRA viagem (destino
+         totalmente diferente), não substitui em silêncio — pergunta antes.
+         É o que impede um código repetido de apagar o roteiro de alguém. */
+      if(quadroEstranho(j)){
+        const cidN=cidadesDe(j).join(', ')||'sem cidade';
+        const cidL=cidadesDe(S).join(', ')||'sem cidade';
+        if(!confirm(`Atenção: a nuvem tem um roteiro diferente do seu.\n\n`+
+          `Na nuvem: ${cidN} (${j.dias.length} dias)\n`+
+          `Neste aparelho: ${cidL} (${S.dias.length} dias)\n\n`+
+          `Isso costuma acontecer quando duas pessoas usam o mesmo código.\n\n`+
+          `Trocar o seu roteiro pelo da nuvem?`)){
+          SY.ligado=false;
+          try{localStorage.setItem('ruta_sync',JSON.stringify(SY));}catch(e){}
+          clearInterval(timerSync);marcaSync();
+          alert('Sincronia desligada para proteger o seu roteiro.\n\n'+
+            'Use um código diferente no ☁ — e "Gerar código seguro" evita novas colisões.');
+          return;
+        }
+      }
       puxando=true;S=j;normalizar();
-      try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
+      guardar(KEY,JSON.stringify(S));
       if(diaAtivo>=S.dias.length)diaAtivo=S.dias.length-1;
       render();renderClima();puxando=false;
       if(!silencioso)toast('Quadro atualizado pelo outro aparelho.');
@@ -1881,6 +2087,12 @@ function ligarSync(){
   const cod=document.getElementById('sy-cod').value.trim();
   const url=document.getElementById('sy-url').value.trim();
   if(!cod||!url){toast('Preencha o código e o endereço do Firebase.');return;}
+  /* código curto/óbvio pode colidir com o de outra pessoa e sobrescrever o quadro dela */
+  if(cod.length<8||/^(teste|viagem|casa|ferias|férias|123|abc)/i.test(cod)){
+    if(!confirm('Esse código é curto ou fácil de adivinhar.\n\n'+
+      'Se outra pessoa usar o mesmo, os dois quadros se misturam. '+
+      'Quer usar assim mesmo?\n\n(Toque em Cancelar e use "Gerar código seguro".)'))return;
+  }
   SY.cod=cod;SY.url=url;SY.ligado=true;
   try{localStorage.setItem('ruta_sync',JSON.stringify(SY));}catch(e){}
   /* o código pertence à viagem aberta: ao trocar de viagem, ele acompanha */
@@ -2689,7 +2901,7 @@ function importarQuadro(){
   S.n=(S.n||0)+1;S.v=Date.now();
   normalizar();
   diaAtivo=0;protegidoAte=Date.now()+30000;
-  try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
+  guardar(KEY,JSON.stringify(S));
   render();renderClima();buscarClima(true);enviarNuvem();
   fechar('itin');toast(`Roteiro importado: ${S.dias.length} dias.`);
 }
@@ -3837,8 +4049,8 @@ function criarViagemDoBloco(bid){
     q.dias.push({id:'d'+i+Date.now().toString(36),cid:chave,cards});
   });
   q.n=1;q.v=Date.now();
-  try{localStorage.setItem(chaveDe(id),JSON.stringify(q));}catch(e){
-    alert('Não consegui guardar a viagem — o armazenamento do navegador está cheio.');return;}
+  if(!guardar(chaveDe(id),JSON.stringify(q))){
+    avisarEspacoCheio();return;}
   VIAGENS.unshift({id,nome:b.nome||('Viagem a '+cidades[0]),destino:cidades.join(' · '),
     inicio:q.inicio,capa:'',cod:''});
   gravarViagens();
