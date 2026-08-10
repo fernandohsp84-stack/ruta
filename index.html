@@ -254,7 +254,15 @@ body.arrastando .board{overflow:hidden!important}
   box-shadow:0 -6px 30px rgba(9,30,66,.3);max-height:92%}
 .sheet.up{transform:none}
 /* backup/convite abrem por cima de outra folha já aberta (ex.: a de sincronia) */
-#bkexport,#bkimport{z-index:96}
+#bkexport,#bkimport,#bknuvem{z-index:96}
+.bkl{display:flex;align-items:center;gap:9px;background:var(--surf);border-radius:10px;
+  box-shadow:var(--sh);padding:9px 11px;margin-bottom:7px}
+.bkli{flex:1;min-width:0;font-size:12.5px;line-height:1.4}
+.bkli b{display:block;color:var(--ink);font-weight:700}
+.bkli span{color:var(--ink2);font-weight:600;font-size:11.5px}
+.bkl button{flex-shrink:0;border:none;border-radius:8px;padding:7px 12px;background:var(--azul-t);
+  color:#0055CC;font-size:12px;font-weight:700}
+.bkvazio{font-size:12.5px;color:var(--ink3);font-weight:600;line-height:1.5;margin:0}
 .grab{width:36px;height:5px;background:var(--line);border-radius:3px;margin:9px auto 2px;flex-shrink:0}
 .shd{display:flex;align-items:center;gap:10px;padding:8px 16px 12px;flex-shrink:0}
 .shd h3{font-size:18px;font-weight:800;letter-spacing:-.02em;flex:1}
@@ -263,6 +271,57 @@ body.arrastando .board{overflow:hidden!important}
   overscroll-behavior:contain}
 
 /* ===== RutAI — conversa em tela cheia, estilo GuavAI ===== */
+/* ===== tela de entrada ===== */
+#entrada{position:fixed;inset:0;z-index:200;background:#0B2E3F;display:none;
+  overflow-y:auto;-webkit-overflow-scrolling:touch}
+#entrada.on{display:block}
+#entrada::before{content:'';position:fixed;inset:0;background-image:url('fundo.jpeg');
+  background-size:cover;background-position:center;opacity:.30}
+.entwrap{position:relative;z-index:1;max-width:520px;margin:0 auto;
+  padding:calc(46px + env(safe-area-inset-top)) 20px calc(30px + env(safe-area-inset-bottom))}
+.enthd{text-align:center;margin-bottom:24px}
+.enthd .pin{width:46px;height:59px;margin-bottom:10px}
+.enthd h1{font-size:31px;font-weight:800;color:#fff;letter-spacing:-.03em;margin:0}
+.enthd p{font-size:14.5px;color:rgba(255,255,255,.72);font-weight:600;margin:5px 0 0}
+.entlista{margin-bottom:16px}
+.entc{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.97);
+  border-radius:15px;padding:10px;margin-bottom:9px;border:none;width:100%;text-align:left}
+.entcapa{width:80px;height:64px;border-radius:11px;flex-shrink:0;background:var(--painel);
+  background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center}
+.entcapa span{font-size:25px;opacity:.4}
+.entinfo{flex:1;min-width:0}
+.entn{font-size:16px;font-weight:700;color:var(--ink);letter-spacing:-.02em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.entd{font-size:12.5px;font-weight:600;color:var(--ink2);margin-top:3px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.entseta{font-size:17px;color:var(--ink3);flex-shrink:0;padding-right:5px}
+.entnova{width:100%;border:none;border-radius:15px;padding:15px;background:var(--azul);
+  color:#fff;text-align:left;margin-bottom:9px}
+.entnova .en1{display:block;font-size:15.5px;font-weight:800;letter-spacing:-.02em}
+.entnova .en2{display:block;font-size:12.5px;font-weight:600;opacity:.85;margin-top:2px}
+.entman{width:100%;border:1px solid rgba(255,255,255,.28);border-radius:13px;padding:12px;
+  background:rgba(255,255,255,.09);color:rgba(255,255,255,.9);font-size:13.5px;font-weight:700}
+
+/* ===== galeria de viagens ===== */
+.vgc{display:flex;align-items:center;gap:11px;background:var(--surf);border-radius:13px;
+  box-shadow:var(--sh);padding:9px;margin-bottom:9px;position:relative}
+.vgc.atual{outline:2px solid var(--azul);outline-offset:-1px}
+.vgcapa{width:74px;height:60px;border-radius:9px;flex-shrink:0;background:var(--painel);
+  background-size:cover;background-position:center;display:flex;align-items:center;
+  justify-content:center;position:relative;overflow:hidden}
+.vgsem{font-size:24px;opacity:.45}
+.vgtag{position:absolute;left:0;right:0;bottom:0;background:rgba(28,96,171,.9);color:#fff;
+  font-size:8.5px;font-weight:800;text-align:center;padding:2px 0;letter-spacing:.03em}
+.vginfo{flex:1;min-width:0}
+.vgn{font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.015em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vgd{font-size:12px;font-weight:600;color:var(--ink2);margin-top:2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vgx{width:32px;height:32px;flex-shrink:0;border:none;border-radius:9px;background:var(--painel);
+  font-size:14px;color:var(--ink3)}
+.hsel{font-size:13px;opacity:.6;vertical-align:middle}
+.fsub{display:block;font-size:11px;font-weight:700;color:var(--ink3);margin-bottom:4px}
+
 /* ===== blocos ricos do RutAI ===== */
 .blugar{margin-top:12px;border:1px solid #E6E6E1;border-radius:14px;overflow:hidden;background:#fff;
   box-shadow:0 1px 4px rgba(9,30,66,.07)}
@@ -297,6 +356,16 @@ body.arrastando .board{overflow:hidden!important}
 .fcop{position:absolute;right:0;top:0;background:none;border:none;color:var(--ink3);font-size:15px;padding:2px 4px}
 .fpt{font-size:12.5px;color:var(--ink2);font-weight:600;margin-top:3px}
 .fdica{font-size:12px;color:var(--ink3);font-weight:600;margin-top:4px;line-height:1.45}
+.bviagem{margin-top:12px;border:1px solid #D6E4F0;border-radius:14px;background:#F7FBFF;padding:13px}
+.bvh{font-size:16px;font-weight:800;color:var(--ink);letter-spacing:-.02em}
+.bvr{font-size:12.5px;font-weight:700;color:var(--azul);margin:3px 0 10px}
+.bvd{font-size:12.5px;color:var(--ink2);line-height:1.45;padding:5px 0;border-top:1px solid #E6EFF7}
+.bvd b{color:var(--ink);font-weight:700}
+.bvd span{display:block;color:var(--ink3);font-size:11.5px;margin-top:1px}
+.bvmais{font-size:11.5px;color:var(--ink3);font-weight:600;padding:6px 0 0}
+.bvok{width:100%;margin-top:11px;padding:12px;border:none;border-radius:11px;
+  background:var(--azul);color:#fff;font-size:14.5px;font-weight:800}
+.bvnota{font-size:11px;color:var(--ink3);font-weight:600;text-align:center;margin-top:7px}
 /* links */
 .blinks{margin-top:12px;border:1px solid #E6E6E1;border-radius:14px;background:#fff;padding:12px 13px}
 #rutai{height:100%;max-height:100%;border-radius:0;background:#fff;top:0}
@@ -635,7 +704,7 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
     <div class="hd">
       <div class="r1">
         <svg class="pin" viewBox="0 0 100 128"><path d="M50 2C26 2 8 20 8 44c0 30 33 60 42 82 9-22 42-52 42-82C92 20 74 2 50 2z" fill="#22C6E8"/><path d="M50 2c24 0 42 18 42 42 0 30-33 60-42 82V2z" fill="#F0483E"/><circle cx="50" cy="44" r="30" fill="#12384F"/><circle cx="50" cy="44" r="23" fill="#0E7C93"/><path d="M30 26 L52 46 L44 54Z" fill="#F0483E"/><path d="M70 62 L48 42 L56 34Z" fill="#EDEFF2"/></svg>
-        <h1>Ruta</h1>
+        <h1 onclick="abrirMinhasViagens()" style="cursor:pointer">Ruta <span class="hsel">▾</span></h1>
         <button class="icb sync" id="btn-sync" onclick="abrirSync()">☁</button>
         <button class="icb" onclick="abrirItinerario()">⚙</button>
         <button class="icb pri" onclick="novoItem()">＋</button>
@@ -738,8 +807,8 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
 
       <label class="fl">Quando</label>
       <div class="frow">
-        <div><input class="fi" type="date" id="i-data"></div>
-        <div><input class="fi" type="time" id="i-hora"></div>
+        <div><span class="fsub">Dia</span><input class="fi" type="date" id="i-data"></div>
+        <div><span class="fsub">Hora</span><input class="fi" type="time" id="i-hora"></div>
       </div>
 
       <div class="frow">
@@ -926,6 +995,61 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
   </div>
 </div>
 
+<!-- ============ ENTRADA: escolher a viagem ============ -->
+<div id="entrada">
+  <div class="entwrap">
+    <div class="enthd">
+      <svg class="pin" viewBox="0 0 100 128"><path d="M50 2C26 2 8 20 8 44c0 30 33 60 42 82 9-22 42-52 42-82C92 20 74 2 50 2z" fill="#22C6E8"/><path d="M50 2c24 0 42 18 42 42 0 30-33 60-42 82V2z" fill="#F0483E"/><circle cx="50" cy="44" r="30" fill="#12384F"/><circle cx="50" cy="44" r="23" fill="#0E7C93"/><path d="M30 26 L52 46 L44 54Z" fill="#F0483E"/><path d="M70 62 L48 42 L56 34Z" fill="#EDEFF2"/></svg>
+      <h1>Ruta</h1>
+      <p id="ent-sub">Para onde vamos?</p>
+    </div>
+    <div class="entlista" id="ent-lista"></div>
+    <button class="entnova" onclick="novaViagemConversa()">
+      <span class="en1">✨ Planejar uma viagem nova</span>
+      <span class="en2">converse comigo e eu monto o roteiro</span>
+    </button>
+    <button class="entman" onclick="abrirNovaViagem()">Prefiro preencher eu mesmo</button>
+  </div>
+</div>
+
+<!-- ============ MINHAS VIAGENS ============ -->
+<div class="sheet" id="viagens">
+  <div class="grab"></div>
+  <div class="shd"><h3>Minhas viagens</h3><button class="x" onclick="fechar('viagens')">✕</button></div>
+  <div class="sbody">
+    <div id="vg-lista"></div>
+    <button class="sv" style="width:100%;margin-top:14px" onclick="abrirNovaViagem()">＋ Nova viagem</button>
+  </div>
+</div>
+
+<!-- ============ NOVA VIAGEM ============ -->
+<div class="sheet" id="novaviagem">
+  <div class="grab"></div>
+  <div class="shd"><h3>Nova viagem</h3><button class="x" onclick="fechar('novaviagem')">✕</button></div>
+  <div class="sbody">
+    <label class="fl">Para onde vocês vão</label>
+    <input class="fi" id="nv-dest" placeholder="Ex.: Medellín, Cartagena, Bogotá">
+    <p style="font-size:12px;color:var(--ink3);font-weight:600;line-height:1.5;margin:6px 0 0">
+      Separe por vírgula se forem várias cidades — os dias são divididos entre elas na ordem.</p>
+
+    <label class="fl">Quando</label>
+    <div class="frow">
+      <div><span class="fsub">Ida</span><input class="fi" type="date" id="nv-ini"></div>
+      <div><span class="fsub">Volta</span><input class="fi" type="date" id="nv-fim"></div>
+    </div>
+
+    <label class="fl">Como quer chamar</label>
+    <input class="fi" id="nv-nome" placeholder="Colômbia 2026 (opcional)">
+
+    <div class="fbtns">
+      <button class="cn" onclick="fechar('novaviagem')">Cancelar</button>
+      <button class="sv" id="nv-ok" onclick="criarViagem()">Criar viagem</button>
+    </div>
+    <p style="font-size:12px;color:var(--ink3);font-weight:600;line-height:1.5;margin-top:4px">
+      Depois de criar, ofereço montar uma sugestão de roteiro com a RutAI.</p>
+  </div>
+</div>
+
 <!-- ============ TRAZER DE UM REELS ============ -->
 <div class="sheet" id="reels">
   <div class="grab"></div>
@@ -956,6 +1080,20 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
       <button class="cn" onclick="fechar('reels')">Cancelar</button>
       <button class="sv" onclick="extrairDoReels()">Extrair lugares</button>
     </div>
+  </div>
+</div>
+
+<!-- ============ BACKUP NA NUVEM ============ -->
+<div class="sheet" id="bknuvem">
+  <div class="grab"></div>
+  <div class="shd"><h3>Backup na nuvem</h3><button class="x" onclick="fechar('bknuvem')">✕</button></div>
+  <div class="sbody">
+    <p style="font-size:13px;color:var(--ink2);font-weight:600;line-height:1.55">
+      Guarda o roteiro <b>inteiro</b> — com anexos e fotos — no mesmo Firebase da sincronia.
+      Ficam as 10 cópias mais recentes, e qualquer aparelho de vocês pode restaurar.</p>
+    <button class="sv" id="bkn-salvar" style="width:100%" onclick="salvarBackupNuvem()">☁ Guardar backup agora</button>
+    <label class="fl">Cópias guardadas</label>
+    <div id="bkn-lista"></div>
   </div>
 </div>
 
@@ -1039,11 +1177,16 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
     <label class="fl">Versões salvas neste aparelho</label>
     <div id="sy-backups" style="font-size:12.5px;line-height:1.5"></div>
 
-    <label class="fl">Backup manual (código do roteiro)</label>
+    <label class="fl">Backup na nuvem <span style="font-weight:600;color:var(--ink3)">— recomendado</span></label>
     <p style="font-size:12.5px;color:var(--ink2);font-weight:600;line-height:1.5;margin:0 0 8px">
-      Copie o código e guarde onde quiser (e-mail, notas). Para recuperar, cole de volta a qualquer momento — funciona mesmo sem internet ou Firebase.</p>
+      Guarda o roteiro completo, com anexos, no seu Firebase. É o backup mais seguro e não trava nada.</p>
+    <button class="sv" style="width:100%" onclick="abrirBackupNuvem()">☁ Backup na nuvem</button>
+
+    <label class="fl">Backup manual (código de texto)</label>
+    <p style="font-size:12.5px;color:var(--ink2);font-weight:600;line-height:1.5;margin:0 0 8px">
+      Alternativa que funciona sem internet e sem Firebase. Vai <b>sem os anexos</b>, para não travar ao copiar.</p>
     <div class="fbtns" style="margin-top:0">
-      <button class="cn" onclick="copiarBackup()">⧉ Copiar código do roteiro</button>
+      <button class="cn" onclick="copiarBackup()">⧉ Copiar código</button>
       <button class="sv" onclick="colarBackup()">Restaurar de um código</button>
     </div>
   </div>
@@ -1070,7 +1213,155 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
 /* ==========================================================
    RUTA v4
    ========================================================== */
-const KEY='ruta_v4';
+/* ---------- múltiplas viagens ----------
+   Cada viagem tem seu próprio quadro, guardado em ruta_v4_<id>.
+   A chave antiga ('ruta_v4') pertence à primeira viagem e é migrada na abertura. */
+const KEY_BASE='ruta_v4';
+let KEY=KEY_BASE;                 /* aponta para a viagem aberta no momento */
+let VIAGENS=[];                   /* índice: {id,nome,destino,capa,cod,inicio} */
+let viagemAtual=null;
+
+function lerViagens(){
+  try{const v=JSON.parse(localStorage.getItem('ruta_viagens'));
+    if(Array.isArray(v))VIAGENS=v.filter(x=>x&&x.id);}catch(e){VIAGENS=[];}
+  return VIAGENS;
+}
+function gravarViagens(){
+  try{localStorage.setItem('ruta_viagens',JSON.stringify(VIAGENS));}catch(e){}
+}
+function chaveDe(id){return id?KEY_BASE+'_'+id:KEY_BASE;}
+function acharViagem(id){return VIAGENS.find(v=>v.id===id)||null;}
+
+/* traz a viagem que existia antes do suporte a várias para dentro do índice */
+function migrarViagemAntiga(){
+  const antigo=localStorage.getItem(KEY_BASE);
+  if(!antigo)return;
+  if(VIAGENS.some(v=>v.origem==='v4'))return;      /* já migrada */
+  let q=null;
+  try{q=JSON.parse(antigo);}catch(e){return;}
+  if(!q||!q.dias)return;
+  const id='v'+Date.now().toString(36);
+  /* IMPORTANTE: aqui o estado global S ainda é null — lemos as cidades
+     do próprio quadro salvo, sem usar nomeCid (que depende de S). */
+  const dic=q.cid||{};
+  const cidades=[...new Set((q.dias||[]).map(d=>(dic[d.cid]||d.cid||'')).filter(Boolean))];
+  VIAGENS.unshift({id,origem:'v4',
+    nome:q.quem?`Viagem de ${q.quem}`:(cidades[0]?'Viagem a '+cidades[0]:'Minha viagem'),
+    destino:cidades.join(' · '),inicio:q.inicio||'',capa:q.fundo||'',
+    cod:(SY&&SY.cod)||''});
+  try{localStorage.setItem(chaveDe(id),antigo);}catch(e){}
+  gravarViagens();
+  try{localStorage.setItem('ruta_atual',id);}catch(e){}
+}
+/* ---------- gestão de viagens ---------- */
+function resumoViagem(q){
+  if(!q||!q.dias)return '';
+  const n=q.dias.length;
+  const dic=q.cid||{};        /* cada viagem tem seu próprio dicionário de cidades */
+  const cid=[...new Set(q.dias.map(d=>(dic[d.cid]||d.cid||'')).filter(Boolean))];
+  return `${n} dia${n>1?'s':''}${cid.length?' · '+cid.slice(0,3).join(' · '):''}`;
+}
+function quadroDe(id){
+  try{return JSON.parse(localStorage.getItem(chaveDe(id)));}catch(e){return null;}
+}
+/* troca a viagem aberta, preservando o que estiver na tela */
+function abrirViagem(id){
+  if(!acharViagem(id))return;
+  if(S)try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
+  viagemAtual=id;
+  try{localStorage.setItem('ruta_atual',id);}catch(e){}
+  KEY=chaveDe(id);
+  const v=acharViagem(id);
+  SY.cod=v.cod||'';
+  try{localStorage.setItem('ruta_sync',JSON.stringify(SY));}catch(e){}
+  let q=null;
+  try{q=JSON.parse(localStorage.getItem(KEY));}catch(e){}
+  S=(q&&q.dias&&q.listas)?q:semente();
+  if(!S.cid)S.cid={};if(S.v==null)S.v=0;if(S.n==null)S.n=1;
+  normalizar();
+  diaAtivo=0;geoRodou=false;levasSemProgresso=0;
+  fechar('viagens');
+  aplicarFundo();render();renderClima();buscarClima(true);marcaSync();
+  if(SY.ligado&&SY.cod)puxarNuvem(true);
+  toast(`Abrindo "${v.nome}".`);
+}
+function apagarViagem(id){
+  const v=acharViagem(id);if(!v)return;
+  if(VIAGENS.length<2){alert('Esta é a sua única viagem — crie outra antes de apagar esta.');return;}
+  if(!confirm(`Apagar "${v.nome}" deste aparelho? O roteiro será perdido aqui.\n\nSe estiver sincronizada, ela continua na nuvem sob o código.`))return;
+  VIAGENS=VIAGENS.filter(x=>x.id!==id);
+  try{localStorage.removeItem(chaveDe(id));}catch(e){}
+  gravarViagens();
+  if(viagemAtual===id)abrirViagem(VIAGENS[0].id);
+  else renderViagens();
+  toast('Viagem apagada.');
+}
+/* busca uma foto da cidade para usar como capa e fundo */
+async function capaDoDestino(cidade){
+  if(!cidade)return '';
+  try{
+    const r=await fetch('https://es.wikipedia.org/api/rest_v1/page/summary/'+
+      encodeURIComponent(cidade.trim()));
+    if(!r.ok)return '';
+    const j=await r.json();
+    let u=(j.originalimage&&j.originalimage.source)||(j.thumbnail&&j.thumbnail.source)||'';
+    if(!u||FOTO_RUIM.test(u)||j.type==='disambiguation')return '';
+    return u.replace(/\/\d+px-/,'/1200px-');
+  }catch(e){return '';}
+}
+/* cria a viagem e já abre o quadro dela */
+async function criarViagem(){
+  const nome=(document.getElementById('nv-nome').value||'').trim();
+  const dest=(document.getElementById('nv-dest').value||'').trim();
+  const ini=document.getElementById('nv-ini').value;
+  const fim=document.getElementById('nv-fim').value;
+  if(!dest){toast('Diga para onde vocês vão.');return;}
+  if(!ini){toast('Escolha a data de partida.');return;}
+  if(fim&&fim<ini){toast('A volta não pode ser antes da ida.');return;}
+  const cidades=dest.split(/,|·|;| e /).map(x=>x.trim()).filter(Boolean);
+  const dias=fim?Math.min(60,Math.round((new Date(fim+'T12:00')-new Date(ini+'T12:00'))/86400000)+1):5;
+  const btn=document.getElementById('nv-ok');
+  if(btn){btn.disabled=true;btn.textContent='Criando…';}
+
+  const id='v'+Date.now().toString(36);
+  const q=semente();
+  q.inicio=ini;q.quem='';q.dias=[];q.cid={};
+  /* distribui os dias entre as cidades informadas, na ordem em que vieram */
+  const porCidade=Math.max(1,Math.ceil(dias/cidades.length));
+  for(let i=0;i<dias;i++){
+    const idx=Math.min(cidades.length-1,Math.floor(i/porCidade));
+    const chave='c'+idx;
+    q.cid[chave]=cidades[idx]||cidades[0];
+    q.dias.push({id:'d'+i+Date.now().toString(36),cid:chave,cards:[]});
+  }
+  q.n=1;q.v=Date.now();
+  try{localStorage.setItem(chaveDe(id),JSON.stringify(q));}catch(e){
+    if(btn){btn.disabled=false;btn.textContent='Criar viagem';}
+    alert('Não consegui guardar a viagem — o armazenamento do navegador está cheio.');return;
+  }
+  VIAGENS.unshift({id,nome:nome||('Viagem a '+cidades[0]),destino:cidades.join(' · '),
+    inicio:ini,capa:'',cod:''});
+  gravarViagens();
+  /* a capa é buscada em segundo plano: se falhar, a viagem já está criada */
+  capaDoDestino(cidades[0]).then(u=>{
+    if(!u)return;
+    const v=acharViagem(id);if(!v)return;
+    v.capa=u;gravarViagens();
+    if(viagemAtual===id){S.fundo=u;salvar(true);aplicarFundo();}
+    renderViagens();
+  });
+  if(btn){btn.disabled=false;btn.textContent='Criar viagem';}
+  fechar('novaviagem');
+  abrirViagem(id);
+  setTimeout(()=>perguntarMontar(cidades,dias),800);
+}
+/* logo após criar, oferece montar o roteiro */
+function perguntarMontar(cidades,dias){
+  if(!SY.fn){toast('Viagem criada. Toque em ＋ para montar os dias.');return;}
+  if(!confirm(`Viagem criada com ${dias} dia(s).\n\nQuer que a RutAI monte uma sugestão de roteiro para ${cidades.join(', ')}?`))return;
+  const g=document.getElementById('gera');
+  if(g)abrir('gera');else toast('Abra a RutAI e peça: "monte um roteiro".');
+}
 const CORES=['azul','ciano','verde','oro','coral','roxo'];
 const HEX={azul:'#579DFF',ciano:'#22C6E8',verde:'#4BCE97',oro:'#F5CD47',coral:'#F87168',roxo:'#9F8FEF'};
 const DIAS_SEM=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
@@ -1173,8 +1464,23 @@ const CAT=[
 
 /* ---------- persistência ---------- */
 function carregar(){
-  try{const s=JSON.parse(localStorage.getItem(KEY));
-    if(s&&s.dias&&s.listas){S=s;if(!S.cid)S.cid={};if(S.v==null)S.v=0;if(S.n==null)S.n=1;normalizar();return;}}catch(e){}
+  try{lerViagens();}catch(e){VIAGENS=[];}
+  try{migrarViagemAntiga();}catch(e){}   /* falha aqui não pode impedir o app de abrir */
+  let salvo=null;
+  try{salvo=localStorage.getItem('ruta_atual');}catch(e){}
+  viagemAtual=(salvo&&acharViagem(salvo))?salvo:(VIAGENS[0]?VIAGENS[0].id:null);
+  KEY=chaveDe(viagemAtual);
+  /* o código de sincronia é por viagem — evita dois roteiros no mesmo registro */
+  const v=acharViagem(viagemAtual);
+  if(v&&v.cod!==undefined&&v.cod)SY.cod=v.cod;
+  /* tenta a chave da viagem; se vazia, cai para a chave antiga (segurança) */
+  for(const k of [KEY,KEY_BASE]){
+    try{const s=JSON.parse(localStorage.getItem(k));
+      if(s&&s.dias&&s.listas){
+        S=s;if(!S.cid)S.cid={};if(S.v==null)S.v=0;if(S.n==null)S.n=1;
+        normalizar();return;
+      }}catch(e){}
+  }
   S=semente();
 }
 /* garante que estados salvos por versões anteriores continuem funcionando */
@@ -1237,6 +1543,14 @@ function salvar(local){
   S.v=Date.now();               /* mantido só para desempate/informação */
   S.editadoPor=meuId();
   try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
+  /* mantém o índice de viagens em dia (destino e data podem ter mudado) */
+  const v=acharViagem(viagemAtual);
+  if(v){
+    const cid=[...new Set((S.dias||[]).map(d=>nomeCid(d.cid)).filter(Boolean))];
+    const novoDest=cid.join(' · ');
+    if(novoDest&&v.destino!==novoDest){v.destino=novoDest;gravarViagens();}
+    if(S.inicio&&v.inicio!==S.inicio){v.inicio=S.inicio;gravarViagens();}
+  }
   backupLocal();
   if(!local)enviarNuvem();
 }
@@ -1271,23 +1585,19 @@ function restaurarBackup(i){
   }catch(e){alert('Não consegui restaurar: '+(e.message||e));}
 }
 function copiarBackup(){
-  const codigo=JSON.stringify(S);
-  /* tenta a cópia automática, mas SEMPRE abre a tela de seleção manual como garantia,
-     porque o Safari costuma bloquear o clipboard silenciosamente */
-  if(navigator.clipboard&&navigator.clipboard.writeText){
-    navigator.clipboard.writeText(codigo).then(
-      ()=>toast(`Tentei copiar. Se não colar, use a tela que abri.`),()=>{});
-  }
-  mostrarBackupTexto(codigo);
+  /* os anexos (PDF e fotos) viram texto gigante e travam o campo e o app de Notas.
+     O código de texto vai sem eles; para backup completo existe o da nuvem. */
+  const r=semAnexos(S);
+  const codigo=JSON.stringify(r.quadro);
+  mostrarBackupTexto(codigo,r.tirados);
 }
-function mostrarBackupTexto(codigo){
-  /* folha interna com o código selecionável e um botão que copia de dentro do textarea
-     (funciona no iOS porque a cópia parte de uma interação direta no campo) */
+function mostrarBackupTexto(codigo,tirados){
   document.getElementById('bk-txt').value=codigo;
   const h=document.getElementById('bkexport').querySelector('h3');
   if(h)h.textContent='Copiar código do roteiro';
   document.getElementById('bk-info').textContent=
-    `${S.dias.length} dias · guarde este código num e-mail para você mesmo.`;
+    `${S.dias.length} dias · ${pesoTexto(codigo)}`+
+    (tirados?` · sem ${tirados} anexo(s), para não travar` : '');
   abrir('bkexport');
 }
 function copiarDaCaixa(){
@@ -1391,6 +1701,106 @@ function gerarConvite(){
   }
 }
 let puxando=false,timerSync=null,protegidoAte=0;
+function urlBackups(){
+  if(!SY.url||!SY.cod)return null;
+  const base=SY.url.replace(/\/+$/,'');
+  return `${base}/backups/${encodeURIComponent(SY.cod)}`;
+}
+/* remove os arquivos pesados (anexos e fotos em base64) de uma cópia do quadro */
+function semAnexos(q){
+  const c=JSON.parse(JSON.stringify(q));
+  let tirados=0;
+  (c.dias||[]).forEach(d=>(d.cards||[]).forEach(x=>{
+    if(Array.isArray(x.docs)&&x.docs.length){tirados+=x.docs.length;x.docs=[];}
+    if(typeof x.foto==='string'&&x.foto.startsWith('data:')){x.foto='';tirados++;}
+  }));
+  if(typeof c.fundo==='string'&&c.fundo.startsWith('data:'))c.fundo='';
+  return {quadro:c,tirados};
+}
+function pesoTexto(t){
+  const kb=Math.round((t.length/1024)*10)/10;
+  return kb>1024?`${Math.round(kb/102.4)/10} MB`:`${Math.round(kb)} KB`;
+}
+/* ---- backup na nuvem (usa o mesmo Firebase da sincronia) ---- */
+async function salvarBackupNuvem(){
+  const u=urlBackups();
+  if(!u){toast('Ligue a sincronia no ☁ primeiro — o backup usa o mesmo Firebase.');return;}
+  const btn=document.getElementById('bkn-salvar');
+  if(btn){btn.disabled=true;btn.textContent='Enviando…';}
+  try{
+    const id='b'+Date.now();
+    const corpo={quando:Date.now(),dispositivo:meuId(),
+      dias:(S.dias||[]).length,
+      cartoes:(S.dias||[]).reduce((a,d)=>a+(d.cards||[]).length,0),
+      nome:(acharViagem(viagemAtual)||{}).nome||'Viagem',
+      n:S.n||0,quadro:S};
+    const r=await fetch(`${u}/${id}.json`,{method:'PUT',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify(corpo)});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    /* mantém só os 10 backups mais recentes */
+    try{
+      const lr=await fetch(`${u}.json?shallow=true`);
+      if(lr.ok){
+        const ids=Object.keys(await lr.json()||{}).sort();
+        for(const velho of ids.slice(0,Math.max(0,ids.length-10)))
+          await fetch(`${u}/${velho}.json`,{method:'DELETE'});
+      }
+    }catch(e){}
+    toast('Backup guardado na nuvem.');
+    listarBackupsNuvem();
+  }catch(e){
+    alert('Não consegui enviar o backup: '+(e.message||e)+
+      '\n\nConfira se a sincronia está ligada e se há internet.');
+  }
+  if(btn){btn.disabled=false;btn.textContent='☁ Guardar backup agora';}
+}
+async function listarBackupsNuvem(){
+  const el=document.getElementById('bkn-lista');
+  if(!el)return;
+  const u=urlBackups();
+  if(!u){el.innerHTML='<p class="bkvazio">Ligue a sincronia para usar o backup na nuvem.</p>';return;}
+  el.innerHTML='<p class="bkvazio">Buscando…</p>';
+  try{
+    const r=await fetch(`${u}.json?t=`+Date.now());
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const j=await r.json()||{};
+    const ids=Object.keys(j).sort().reverse();
+    if(!ids.length){el.innerHTML='<p class="bkvazio">Nenhum backup na nuvem ainda.</p>';return;}
+    el.innerHTML=ids.map(id=>{
+      const b=j[id]||{};
+      const d=new Date(b.quando||0);
+      const quando=isNaN(d)?'':`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')} às ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+      const meu=b.dispositivo===meuId();
+      return `<div class="bkl">
+        <div class="bkli"><b>${esc(quando)}</b>
+          <span>${b.dias||0} dias · ${b.cartoes||0} cartões${meu?'':' · outro aparelho'}</span></div>
+        <button onclick="restaurarBackupNuvem('${id}')">Restaurar</button></div>`;
+    }).join('');
+  }catch(e){
+    el.innerHTML=`<p class="bkvazio">Não consegui ler os backups (${esc(String(e.message||e))}).</p>`;
+  }
+}
+async function restaurarBackupNuvem(id){
+  const u=urlBackups();if(!u)return;
+  try{
+    const r=await fetch(`${u}/${id}.json?t=`+Date.now());
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const b=await r.json();
+    if(!b||!b.quadro||!b.quadro.dias)throw new Error('backup vazio');
+    const d=new Date(b.quando||0);
+    if(!confirm(`Restaurar o backup de ${d.toLocaleString('pt-BR')}?\n\n`+
+      `${b.dias||0} dias · ${b.cartoes||0} cartões\n\nO quadro atual será substituído.`))return;
+    S=b.quadro;
+    if(!S.cid)S.cid={};if(S.v==null)S.v=0;
+    S.n=Math.max((S.n||0),(b.n||0))+1;S.v=Date.now();
+    normalizar();diaAtivo=0;protegidoAte=Date.now()+30000;
+    try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
+    render();renderClima();buscarClima(true);enviarNuvem();
+    fechar('bknuvem');fechar('sync');
+    toast(`Restaurado: ${S.dias.length} dias.`);
+  }catch(e){alert('Não consegui restaurar: '+(e.message||e));}
+}
+function abrirBackupNuvem(){listarBackupsNuvem();abrir('bknuvem');}
 function urlNuvem(){
   if(!SY.url||!SY.cod)return null;
   const base=SY.url.replace(/\/+$/,'');
@@ -1473,6 +1883,9 @@ function ligarSync(){
   if(!cod||!url){toast('Preencha o código e o endereço do Firebase.');return;}
   SY.cod=cod;SY.url=url;SY.ligado=true;
   try{localStorage.setItem('ruta_sync',JSON.stringify(SY));}catch(e){}
+  /* o código pertence à viagem aberta: ao trocar de viagem, ele acompanha */
+  const v=acharViagem(viagemAtual);
+  if(v){v.cod=cod;gravarViagens();}
   marcaSync();fechar('sync');toast('Sincronia ligada. Buscando o quadro…');
   puxarNuvem();iniciarTimer();
 }
@@ -1862,7 +2275,19 @@ function mover(cid,delta){
   toast(`"${c.t}" → Dia ${alvo+1}`+(muda?` (${nomeCid(S.dias[alvo].cid)})`:''));
 }
 function abrir(n){document.getElementById(n).classList.add('up');}
-function fechar(n){document.getElementById(n).classList.remove('up');}
+function fechar(n){
+  const e=document.getElementById(n);
+  if(e)e.classList.remove('up');
+  /* sair do chat encerra o modo "planejar viagem nova" */
+  if(n==='rutai'&&modoNovaViagem){
+    modoNovaViagem=false;hist=[];
+    const fsc=document.getElementById('fsc');if(fsc)fsc.innerHTML='';
+    const s=document.getElementById('sugs');
+    if(s)s.innerHTML=(SY.fn?SUGS_LIVRE:SUGS).map(x=>
+      `<button onclick="perguntar('${x.replace(/'/g,"\\'")}')">${esc(x)}</button>`).join('');
+    if(!VIAGENS.length)setTimeout(()=>mostrarEntrada(),200);
+  }
+}
 
 /* ---------- cartão ---------- */
 let itemEd=null;
@@ -2695,6 +3120,80 @@ function abrirIG(cid){
   else abrirExterno('https://instagram.com/'+u.replace(/^@/,''));
 }
 let geoRodou=false;  /* controla o encadeamento das levas */
+/* ---------- tela de entrada ---------- */
+function mostrarEntrada(){
+  lerViagens();
+  const el=document.getElementById('ent-lista');
+  const sub=document.getElementById('ent-sub');
+  if(el){
+    if(!VIAGENS.length){
+      el.innerHTML='';
+      if(sub)sub.textContent='Vamos planejar a primeira?';
+    }else{
+      if(sub)sub.textContent=VIAGENS.length===1?'Sua viagem':'Escolha uma viagem';
+      el.innerHTML=VIAGENS.map(v=>{
+        const q=quadroDe(v.id);
+        const res=resumoViagem(q)||v.destino||'';
+        const quando=v.inicio?fmtDataCurta(v.inicio):'';
+        return `<button class="entc" onclick="entrarNaViagem('${v.id}')">
+          <div class="entcapa" ${v.capa?`style="background-image:url('${esc(v.capa)}')"`:''}>
+            ${v.capa?'':'<span>🧭</span>'}</div>
+          <div class="entinfo">
+            <div class="entn">${esc(v.nome)}</div>
+            <div class="entd">${esc(res)}${quando?' · '+esc(quando):''}</div>
+          </div><span class="entseta">›</span></button>`;
+      }).join('');
+    }
+  }
+  document.getElementById('entrada').classList.add('on');
+}
+function esconderEntrada(){
+  const e=document.getElementById('entrada');
+  if(e)e.classList.remove('on');
+}
+function entrarNaViagem(id){
+  esconderEntrada();
+  if(id===viagemAtual){aplicarFundo();render();return;}
+  abrirViagem(id);
+}
+function renderViagens(){
+  const el=document.getElementById('vg-lista');
+  if(!el)return;
+  if(!VIAGENS.length){
+    el.innerHTML=`<p style="font-size:13px;color:var(--ink2);font-weight:600;line-height:1.55">
+      Nenhuma viagem ainda. Crie a primeira aqui embaixo.</p>`;
+    return;
+  }
+  el.innerHTML=VIAGENS.map(v=>{
+    const q=quadroDe(v.id);
+    const res=resumoViagem(q)||v.destino||'';
+    const atual=v.id===viagemAtual;
+    const quando=v.inicio?fmtDataCurta(v.inicio):'';
+    return `<div class="vgc ${atual?'atual':''}">
+      <div class="vgcapa" ${v.capa?`style="background-image:url('${esc(v.capa)}')"`:''}
+        onclick="abrirViagem('${v.id}')">
+        ${v.capa?'':'<span class="vgsem">🧭</span>'}
+        ${atual?'<span class="vgtag">aberta</span>':''}
+      </div>
+      <div class="vginfo" onclick="abrirViagem('${v.id}')">
+        <div class="vgn">${esc(v.nome)}</div>
+        <div class="vgd">${esc(res)}${quando?' · a partir de '+esc(quando):''}</div>
+      </div>
+      <button class="vgx" onclick="event.stopPropagation();apagarViagem('${v.id}')" title="Apagar">🗑</button>
+    </div>`;
+  }).join('');
+}
+function abrirMinhasViagens(){lerViagens();renderViagens();abrir('viagens');}
+function abrirNovaViagem(){
+  ['nv-dest','nv-nome','nv-ini','nv-fim'].forEach(i=>{
+    const e=document.getElementById(i);if(e)e.value='';});
+  fechar('viagens');
+  setTimeout(()=>abrir('novaviagem'),160);
+}
+function fmtDataCurta(iso){
+  try{const d=new Date(iso+'T12:00');
+    return d.getDate()+' '+MES_ABREV[d.getMonth()]+' '+d.getFullYear();}catch(e){return iso;}
+}
 function renderMapa(){
   const wrap=document.getElementById('mapwrap');
   if(!geoRodou){
@@ -2873,6 +3372,7 @@ function diz(quem,html,semGravar){
   return b;
 }
 function gravarChat(quem,html){
+  if(modoNovaViagem)return;   /* conversa de planejamento é efêmera */
   try{
     const h=JSON.parse(localStorage.getItem('ruta_chat')||'[]');
     h.push({q:quem,h:html});
@@ -3263,6 +3763,121 @@ Sua tarefa: identificar os LUGARES REAIS citados e devolvê-los de forma aprovei
 - Se não der para identificar nenhum lugar com segurança, diga com franqueza o que faltou (ex.: a legenda só tem hashtags; peça um print onde apareça o nome ou a marcação de local).
 - Nunca invente um lugar que não está na legenda nem nas imagens.`;
 let blocoSeq=0;
+/* ---------- planejar viagem nova conversando ---------- */
+let modoNovaViagem=false;
+const SIS_NOVA=`Você é a RutAI ajudando alguém a planejar uma viagem NOVA, do zero, numa conversa.
+
+Sua missão: descobrir, conversando de forma leve e natural, o que precisa para montar a viagem:
+- para onde vão (cidade ou cidades)
+- quando vão (data de ida e de volta)
+- quem viaja (sozinho, casal, família, amigos) — opcional
+- o estilo de vocês (ritmo tranquilo ou intenso, gastronomia, natureza, cultura, balada) — opcional
+
+REGRAS DA CONVERSA:
+- Pergunte UMA coisa por vez, no máximo duas. Nada de questionário.
+- Aceite respostas vagas e trabalhe com elas ("uma semana em setembro" já serve; proponha datas concretas e confirme).
+- Se a pessoa já disser tudo na primeira mensagem, não fique perguntando: vá direto para a proposta.
+- Fale em português do Brasil, tom de amigo que viaja bem. Curto.
+
+QUANDO TIVER destino e as duas datas, devolva o bloco "viagem" com o roteiro JÁ MONTADO:
+{"tipo":"viagem","nome":"Colômbia 2026","cidades":["Medellín","Cartagena"],"inicio":"2026-08-28","fim":"2026-09-07","resumo":"11 dias · Medellín e Cartagena","dias":[{"data":"2026-08-28","cidade":"Medellín","cartoes":[{"titulo":"Nome próprio do lugar","lista":"l2","hora":"09:00","duracao":"2h","nota":"4,7","bairro":"El Poblado","descricao":"por que vale","aoArLivre":true}]}]}
+
+REGRAS DO ROTEIRO:
+- Um objeto por dia, do primeiro ao último, sem pular datas. Formato de data AAAA-MM-DD.
+- 3 a 5 cartões por dia. Listas: "l1" âncora do dia, "l2" passeios, "l3" comer e beber, "l4" flexível.
+- Título = nome próprio do lugar ("Museu de Antioquia"), nunca "Almoço no centro". Exceção: itens sem lugar definido ("Manhã livre", "Check-in").
+- Primeiro e último dia mais leves (chegada e partida).
+- Considere deslocamento real: não jogue no mesmo dia lugares em pontas opostas da cidade.
+- Marque aoArLivre:true no que depende do tempo.
+- Se forem várias cidades, agrupe os dias por cidade em blocos contínuos, na ordem geográfica que faça sentido.
+
+Responda SEMPRE só com JSON: {"fala":"sua mensagem curta em português","blocos":[...]}
+Enquanto faltar informação, mande "blocos":[] e faça a pergunta em "fala". Nunca escreva nada fora do JSON.`;
+
+function novaViagemConversa(){
+  if(!SY.fn){
+    toast('Para planejar conversando, ligue a RutAI no ☁. Abrindo o formulário.');
+    setTimeout(()=>abrirNovaViagem(),900);return;
+  }
+  modoNovaViagem=true;
+  esconderEntrada();
+  hist=[];
+  const fsc=document.getElementById('fsc');
+  if(fsc)fsc.innerHTML='';
+  abrir('rutai');
+  statusIA('');
+  diz('ia','Vamos planejar! Me conta: <b>para onde vocês vão</b> e <b>quando</b>?<br><br>'+
+    '<span style="color:var(--ink2);font-size:14px">Pode falar solto — "uma semana no Chile em outubro" já me serve.</span>');
+  const s=document.getElementById('sugs');
+  if(s)s.innerHTML=['5 dias em Buenos Aires em março','Uma semana no Peru','Chile em outubro, 8 dias']
+    .map(x=>`<button onclick="perguntar('${x.replace(/'/g,"\\'")}')">${x}</button>`).join('');
+}
+/* cria a viagem a partir do que a RutAI montou */
+function criarViagemDoBloco(bid){
+  const b=VIAGENS_PROP[bid];
+  if(!b){toast('Não achei a proposta. Peça de novo à RutAI.');return;}
+  const cidades=(b.cidades||[]).filter(Boolean);
+  const dias=Array.isArray(b.dias)?b.dias:[];
+  if(!cidades.length||!dias.length){toast('A proposta veio incompleta.');return;}
+  const id='v'+Date.now().toString(36);
+  const q=semente();
+  q.inicio=b.inicio||(dias[0]&&dias[0].data)||'';
+  q.quem='';q.dias=[];q.cid={};
+  const mapaCid={};
+  cidades.forEach((c,i)=>{mapaCid[c.toLowerCase()]='c'+i;q.cid['c'+i]=c;});
+  dias.forEach((d,i)=>{
+    const nomeC=d.cidade||cidades[0];
+    let chave=mapaCid[String(nomeC).toLowerCase()];
+    if(!chave){chave='c'+Object.keys(q.cid).length;q.cid[chave]=nomeC;mapaCid[String(nomeC).toLowerCase()]=chave;}
+    const cards=(d.cartoes||[]).slice(0,8).map(c=>({
+      id:id2(),tipo:'atividade',t:c.titulo||'Sem título',
+      l:['l1','l2','l3','l4'].includes(c.lista)?c.lista:'l4',
+      h:c.hora||'',dur:c.duracao||'',rate:c.nota||'',bai:c.bairro||'',
+      nota:c.descricao||'',ar:!!c.aoArLivre,ok:false,docs:[]}));
+    q.dias.push({id:'d'+i+Date.now().toString(36),cid:chave,cards});
+  });
+  q.n=1;q.v=Date.now();
+  try{localStorage.setItem(chaveDe(id),JSON.stringify(q));}catch(e){
+    alert('Não consegui guardar a viagem — o armazenamento do navegador está cheio.');return;}
+  VIAGENS.unshift({id,nome:b.nome||('Viagem a '+cidades[0]),destino:cidades.join(' · '),
+    inicio:q.inicio,capa:'',cod:''});
+  gravarViagens();
+  capaDoDestino(cidades[0]).then(u=>{
+    if(!u)return;
+    const v=acharViagem(id);if(!v)return;
+    v.capa=u;gravarViagens();
+    if(viagemAtual===id){S.fundo=u;salvar(true);aplicarFundo();}
+  });
+  modoNovaViagem=false;
+  fechar('rutai');
+  abrirViagem(id);
+  const tot=q.dias.reduce((a,d)=>a+d.cards.length,0);
+  toast(`Viagem criada: ${q.dias.length} dias, ${tot} atividades.`);
+}
+const VIAGENS_PROP={};
+let vpSeq=0;
+function id2(){return 'i'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+/* cartão de proposta de viagem dentro da conversa */
+function blocoViagem(b){
+  const bid='vp'+(++vpSeq);
+  VIAGENS_PROP[bid]=b;
+  const dias=Array.isArray(b.dias)?b.dias:[];
+  const tot=dias.reduce((a,d)=>a+((d.cartoes||[]).length),0);
+  const box=document.createElement('div');
+  box.className='bviagem';
+  const amostra=dias.slice(0,3).map(d=>{
+    const its=(d.cartoes||[]).slice(0,3).map(c=>esc(c.titulo||'')).join(' · ');
+    return `<div class="bvd"><b>${esc(fmtDataCurta(d.data)||d.data||'')}</b> ${esc(d.cidade||'')}
+      <span>${its}</span></div>`;
+  }).join('');
+  box.innerHTML=`<div class="bvh">✨ ${esc(b.nome||'Sua viagem')}</div>
+    <div class="bvr">${esc(b.resumo||`${dias.length} dias · ${tot} atividades`)}</div>
+    ${amostra}
+    ${dias.length>3?`<div class="bvmais">e mais ${dias.length-3} dia(s)…</div>`:''}
+    <button class="bvok" onclick="criarViagemDoBloco('${bid}')">Criar esta viagem</button>
+    <div class="bvnota">Nada é criado até você tocar. Pode pedir ajustes antes.</div>`;
+  return box;
+}
 function renderBlocos(bolha,blocos){
   if(!Array.isArray(blocos))return;
   const paraMapear=[];
@@ -3272,6 +3887,7 @@ function renderBlocos(bolha,blocos){
       if(b.tipo==='lugar'){el=blocoLugar(b);paraMapear.push({el,b});}
       else if(b.tipo==='frases')el=blocoFrases(b);
       else if(b.tipo==='links')el=blocoLinks(b);
+      else if(b.tipo==='viagem')el=blocoViagem(b);
     }catch(e){}
     if(el)bolha.appendChild(el);
   });
@@ -3432,12 +4048,15 @@ async function chamarIA(pedido){
       JSON.stringify({pedido:pedido+' (há documento(s) anexado(s) — leia e extraia as reservas)',
         quadro:retratoDoQuadro()})};
   }else{
-    conteudo=JSON.stringify({pedido,quadro:retratoDoQuadro()});
+    conteudo=modoNovaViagem
+      ? JSON.stringify({pedido,hoje:new Date().toISOString().slice(0,10)})
+      : JSON.stringify({pedido,quadro:retratoDoQuadro()});
   }
   hist.push({role:'user',content:conteudo});
   if(hist.length>10)hist=hist.slice(-10);
   let sys=ANEXOS.length?SISTEMA+'\n\n'+EXTRA_DOC:SISTEMA;
   if(/^MODO REELS:/m.test(String(pedido)))sys=SISTEMA+'\n\n'+EXTRA_REELS;
+  if(modoNovaViagem)sys=SIS_NOVA;   /* planejando uma viagem do zero */
   const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({system:sys,messages:hist,max_tokens:8000})});
   /* guarda os arquivos (menos os de texto) para poder anexá-los a um cartão depois */
@@ -3949,7 +4568,12 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)reanimar()
 window.addEventListener('focus',()=>{if(!document.hidden)reanimar();});
 
 /* ---------- boot ---------- */
-carregar();aplicarFundo();render();buscarClima();marcaSync();
+try{carregar();}catch(e){try{S=semente();}catch(x){}}
+try{aplicarFundo();}catch(e){}
+try{render();}catch(e){}
+try{buscarClima();marcaSync();}catch(e){}
+/* na abertura, o app pergunta qual viagem — ou oferece planejar a primeira */
+setTimeout(()=>{try{mostrarEntrada();}catch(e){}},60);
 if(CONVITE_APLICADO)setTimeout(()=>toast('Pronto — sincronia e RutAI já configuradas por aqui.'),2600);
 if(SY.ligado){puxarNuvem(true);iniciarTimer();}
 ligarMic('mic2','ask2',t=>{statusIA(t);orbe(t?'ouvindo':'');});
