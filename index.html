@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Ruta">
 <meta name="theme-color" content="#0B2E3F">
-<title>Ruta · Colômbia</title>
+<title>Ruta</title>
 <link rel="apple-touch-icon" href="icone.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icone.png">
 <link rel="icon" type="image/png" sizes="512x512" href="icone-512.png">
@@ -191,6 +191,7 @@ button,input,textarea,select{font-family:inherit;color:inherit}
 .cd .lk{background:var(--azul-t);border:none;border-radius:20px;padding:5px 11px;
   font-size:11.5px;font-weight:700;color:#0055CC}
 .cd .lk.ig{background:#FCE7F3;color:#9D174D}
+.cd .lk.igb{background:var(--painel);color:var(--ink2)}
 .cd .lk.gm{background:var(--verde-t);color:var(--verde-d)}
 .cd .lk.doc{background:#EDE9FE;color:#5B21B6}
 .docl{display:flex;align-items:center;gap:9px;background:var(--painel);border-radius:9px;
@@ -670,7 +671,7 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
     </svg>
   </div>
   <div class="word"><span class="a">Rut</span><span class="b">a</span></div>
-  <div class="tag">Colômbia, do jeito de vocês</div>
+  <div class="tag">Viagem, do jeito de vocês</div>
 </div>
 
 <!-- ===================== SAUDAÇÃO ===================== -->
@@ -1039,7 +1040,7 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
     </div>
 
     <label class="fl">Como quer chamar</label>
-    <input class="fi" id="nv-nome" placeholder="Colômbia 2026 (opcional)">
+    <input class="fi" id="nv-nome" placeholder="Ex.: Chile 2027 (opcional)">
 
     <div class="fbtns">
       <button class="cn" onclick="fechar('novaviagem')">Cancelar</button>
@@ -1164,7 +1165,7 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
   <div class="sbody">
     <div class="resumo" id="sy-est">—</div>
     <label class="fl">Código do quadro</label>
-    <input class="fi" id="sy-cod" placeholder="Ex.: colombia-2026-a7k3" autocomplete="off">
+    <input class="fi" id="sy-cod" placeholder="toque em Gerar código seguro" autocomplete="off">
     <button class="chip" style="width:100%;justify-content:center;margin-top:8px" onclick="sugerirCodigo()">🎲 Gerar código seguro</button>
     <p style="font-size:12.5px;color:var(--ink2);font-weight:600;line-height:1.5;margin-top:7px">
       Todos os aparelhos que usarem este código veem o mesmo quadro. Quem editar, atualiza o dos outros.
@@ -2371,11 +2372,15 @@ function cardHTML(c,L){
   if(c.ar)bg.push(`<span class="bg ar">☀ ao ar livre</span>`);
   const ant=diaAtivo>0,prox=diaAtivo<S.dias.length-1;
   const lk=[];
+  const ehLugar=!SEM_FOTO.test(c.t)&&limparBusca(c.t).length>=3;
   if(c.lat||c.end)lk.push(`<button class="lk" onclick="irMapa('${c.id}')">📍 Mapa</button>`);
-  if(c.gm||c.lat||c.end)lk.push(`<button class="lk gm" onclick="abrirGM('${c.id}')">Google Maps ↗</button>`);
+  /* o Google Maps busca pelo nome, então vale para qualquer lugar — sem precisar de coordenada */
+  if(c.gm||c.lat||c.end||ehLugar)lk.push(`<button class="lk gm" onclick="abrirGM('${c.id}')">Google Maps ↗</button>`);
   if(c.ig){
     const at=String(c.ig).replace(/^https?:\/\/(www\.)?instagram\.com\//i,'').replace(/^@|\/$/g,'');
     lk.push(`<button class="lk ig" onclick="abrirIG('${c.id}')">@${esc(at)} ↗</button>`);
+  }else if(ehLugar){
+    lk.push(`<button class="lk igb" onclick="acharIG('${c.id}')">Instagram ↗</button>`);
   }
   (c.docs||[]).forEach((d,k)=>lk.push(
     `<button class="lk doc" onclick="abrirDocCard('${c.id}',${k})">📎 ${esc(d.n.length>16?d.n.slice(0,14)+'…':d.n)}</button>`));
@@ -3049,7 +3054,7 @@ function renderDesc(){
     const longe=perto.length&&perto[0].km>80;
     document.getElementById('desc').innerHTML=
       (longe?`<div class="wcard" style="font-size:13.5px;font-weight:600;color:var(--ink2);line-height:1.5">
-        Você está a ${Math.round(perto[0].km)} km do lugar mais próximo do catálogo — provavelmente ainda não chegou à Colômbia. As distâncias vão fazer sentido lá.</div>`:'')+
+        Você está a ${Math.round(perto[0].km)} km do lugar mais próximo — provavelmente ainda não chegou ao destino. As distâncias vão fazer sentido lá.</div>`:'')+
       `<div class="sec">Perto de você</div>`+
       perto.map(p=>descCardHTML(p.x,p.i,
         `<div style="margin-top:8px"><span class="bg hora">📍 ${p.km<1?Math.round(p.km*1000)+' m':p.km.toFixed(1).replace('.',',')+' km'}</span>
@@ -3324,6 +3329,12 @@ function abrirGM(cid){
   if(c.bai)q+=', '+c.bai;
   q+=', '+nomeCid(r.d.cid)+', Colombia';
   abrirExterno('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q));
+}
+/* sem @ confirmado: leva à busca, que sempre acha o perfil certo */
+function acharIG(cid){
+  const r=achar(cid);if(!r)return;
+  const q=[limparBusca(r.c.t),r.c.bai,nomeCid(r.d.cid),'instagram'].filter(Boolean).join(' ');
+  abrirExterno('https://www.google.com/search?q='+encodeURIComponent(q));
 }
 function abrirIG(cid){
   const r=achar(cid);if(!r||!r.c.ig)return;
@@ -3862,7 +3873,7 @@ function retratoDoQuadro(){
       duracao:x.dur,bairro:x.bai||null,aoArLivre:!!x.ar}))
   };
 }
-const SISTEMA=`Você é a RutAI, assistente de um app de roteiro de viagem chamado Ruta, usado por um casal brasileiro viajando pela Colômbia. Fala português do Brasil, com tom próximo e direto, sem formalidade e sem emojis em excesso.
+const SISTEMA=`Você é a RutAI, assistente de um app de roteiro de viagem chamado Ruta, usado por viajantes brasileiros. Fala português do Brasil, com tom próximo e direto, sem formalidade e sem emojis em excesso. O DESTINO da viagem vem no quadro que você recebe — adapte tudo (dicas, idioma local, costumes) ao país e às cidades que estiverem lá.
 
 Você recebe o estado atual do quadro em JSON e o pedido dos viajantes. Você propõe ações, e o app mostra as propostas com caixas de confirmação para o usuário aplicar.
 
@@ -3892,10 +3903,10 @@ ALÉM das ações, você pode devolver "blocos" — cartões visuais que aparece
 
 QUANDO USAR CADA BLOCO:
 - Falou de um lugar específico (bar, restaurante, museu, passeio) → mande UM bloco "lugar" dele. O app desenha o mini-mapa sozinho; só preencha "lat"/"lng" se tiver certeza. Máximo 3 blocos "lugar" por resposta.
-- CONTATO PARA RESERVA — regra rígida: na Colômbia, restaurantes e bares recebem reserva principalmente pelo DIRECT DO INSTAGRAM. MAS só preencha "instagram" se você tiver certeza real de que aquele @ existe — nada de deduzir o perfil a partir do nome do lugar (tipo "@demente" para o bar Demente). Um @ inventado leva o viajante a uma página de erro. Na dúvida, OMITA o campo: o app oferece "Achar o Instagram" pela busca, que sempre funciona. A mesma regra vale, com rigor ainda maior, para telefone e WhatsApp: número errado faz o viajante escrever para um desconhecido. Só preencha "site" se souber o endereço real.
+- CONTATO PARA RESERVA — regra rígida: em boa parte da América Latina, restaurantes e bares recebem reserva principalmente pelo DIRECT DO INSTAGRAM. MAS só preencha "instagram" se você tiver certeza real de que aquele @ existe — nada de deduzir o perfil a partir do nome do lugar (tipo "@demente" para o bar Demente). Um @ inventado leva o viajante a uma página de erro. Na dúvida, OMITA o campo: o app oferece "Achar o Instagram" pela busca, que sempre funciona. A mesma regra vale, com rigor ainda maior, para telefone e WhatsApp: número errado faz o viajante escrever para um desconhecido. Só preencha "site" se souber o endereço real.
 - DOCUMENTO ANEXADO: depois de ler um voucher, bilhete ou reserva, além de criar/atualizar o cartão, ofereça guardar o arquivo dentro dele: {"tipo":"arquivar","cartaoId":"<id>","texto":"Guardar o arquivo no cartão X"}. Assim o comprovante fica junto do voo/hotel, acessível sem internet.
 - INSTAGRAM DOS CARTÕES JÁ EXISTENTES: cada cartão do quadro traz o campo "instagram" (null quando ainda não tem). Se o viajante pedir para achar/preencher os Instagram, devolva uma ação "editar" por cartão: {"tipo":"editar","cartaoId":"<id do cartão>","campos":{"instagram":"@perfil"}}. Só para lugares com perfil próprio de verdade (restaurante, bar, museu, agência do passeio) e só quando você tiver razoável certeza do @ — pule caminhadas, praças públicas, "manhã livre" e qualquer coisa sem perfil. É melhor preencher 4 com segurança do que 10 no chute. Diga em "fala" quantos preencheu e quais pulou.
-- Pediu ajuda para FALAR ESPANHOL, pedir algo, negociar, reservar, se virar numa situação → bloco "frases" com espanhol COLOMBIANO real e coloquial (usam "parcero", "¿qué más?", "a la orden", "regálame un...", "hágame el favor", "¡de una!"). Sempre em espanhol da Colômbia, não da Espanha (nada de "vosotros", nada de "coger" no sentido pegar). Explique diferenças que causam gafe.
+- Pediu ajuda para FALAR O IDIOMA LOCAL, pedir algo, negociar, reservar, se virar numa situação → bloco "frases" no idioma e no SOTAQUE DO PAÍS do destino, com expressões que as pessoas realmente usam ali (na Colômbia: "parcero", "¿qué más?", "a la orden", "regálame un..."; na Argentina: "che", "dale", "boludo" entre amigos; em Portugal: "se faz favor", "bica"). Nunca o genérico de outro país. Explique diferenças que causam gafe.
 - Ao escrever a mensagem de reserva, escreva um texto que sirva tanto para direct do Instagram quanto para WhatsApp.
 - Pediu para RESERVAR, marcar, entrar em contato, comprar ingresso → bloco "links" com os caminhos reais e uma "mensagem" já escrita em espanhol.
 
@@ -3992,7 +4003,7 @@ REGRAS DA CONVERSA:
 - Fale em português do Brasil, tom de amigo que viaja bem. Curto.
 
 QUANDO TIVER destino e as duas datas, devolva o bloco "viagem" com o roteiro JÁ MONTADO:
-{"tipo":"viagem","nome":"Colômbia 2026","cidades":["Medellín","Cartagena"],"inicio":"2026-08-28","fim":"2026-09-07","resumo":"11 dias · Medellín e Cartagena","dias":[{"data":"2026-08-28","cidade":"Medellín","cartoes":[{"titulo":"Nome próprio do lugar","lista":"l2","hora":"09:00","duracao":"2h","nota":"4,7","bairro":"El Poblado","descricao":"por que vale","aoArLivre":true}]}]}
+{"tipo":"viagem","nome":"Colômbia 2026","cidades":["Medellín","Cartagena"],"inicio":"2026-08-28","fim":"2026-09-07","resumo":"11 dias · Medellín e Cartagena","dias":[{"data":"2026-08-28","cidade":"Medellín","cartoes":[{"titulo":"Nome próprio do lugar","lista":"l2","hora":"09:00","duracao":"2h","nota":"4,7","bairro":"El Poblado","descricao":"por que vale","aoArLivre":true,"instagram":"@perfil"}]}]}
 
 REGRAS DO ROTEIRO:
 - Um objeto por dia, do primeiro ao último, sem pular datas. Formato de data AAAA-MM-DD.
@@ -4001,6 +4012,7 @@ REGRAS DO ROTEIRO:
 - Primeiro e último dia mais leves (chegada e partida).
 - Considere deslocamento real: não jogue no mesmo dia lugares em pontas opostas da cidade.
 - Marque aoArLivre:true no que depende do tempo.
+- Preencha "instagram" com o @ do lugar SÓ quando tiver certeza real de que o perfil existe (restaurante, bar, museu com perfil próprio). Nada de deduzir o @ pelo nome — um perfil inventado leva a uma página de erro. Na dúvida, omita: o app oferece a busca sozinho.
 - Se forem várias cidades, agrupe os dias por cidade em blocos contínuos, na ordem geográfica que faça sentido.
 
 Responda SEMPRE só com JSON: {"fala":"sua mensagem curta em português","blocos":[...]}
@@ -4045,7 +4057,11 @@ function criarViagemDoBloco(bid){
       id:id2(),tipo:'atividade',t:c.titulo||'Sem título',
       l:['l1','l2','l3','l4'].includes(c.lista)?c.lista:'l4',
       h:c.hora||'',dur:c.duracao||'',rate:c.nota||'',bai:c.bairro||'',
-      nota:c.descricao||'',ar:!!c.aoArLivre,ok:false,docs:[]}));
+      nota:c.descricao||'',ar:!!c.aoArLivre,ok:false,docs:[],
+      ig:c.instagram||'',gm:'',foto:'',
+      /* endereço aproximado já habilita Mapa e Google Maps no cartão */
+      end:[c.titulo,c.bairro,nomeC].filter(Boolean).join(', '),
+      lat:null,lng:null}));
     q.dias.push({id:'d'+i+Date.now().toString(36),cid:chave,cards});
   });
   q.n=1;q.v=Date.now();
@@ -4144,7 +4160,7 @@ function blocoLugar(b){
   ].filter(Boolean).join('');
   const aviso=ig
     ? `<div class="bnota">O @ acima é um palpite meu e pode não existir. Se der erro, use "Achar o perfil certo".</div>`
-    : `<div class="bnota">Sem perfil confirmado — na Colômbia, a reserva costuma sair pelo direct do Instagram.</div>`;
+    : `<div class="bnota">Sem perfil confirmado — em muitos lugares a reserva sai pelo direct do Instagram.</div>`;
   box.innerHTML=
     `<div class="bmapa" id="mm_${id}"></div>
      <div class="bcorpo">
@@ -4479,7 +4495,7 @@ function abrirGerar(){
     : '<b>Precisa da RutAI na nuvem.</b> Configure a Cloud Function no ☁ do topo.';
   abrir('gerar');
 }
-const SIS_GERA=`Você é a RutAI, especialista em roteiros pela Colômbia, montando a viagem de um casal brasileiro (Fernando e Manu).
+const SIS_GERA=`Você é a RutAI, especialista em montar roteiros de viagem para viajantes brasileiros. Adapte-se ao país e às cidades que receber.
 
 Você recebe: os TRECHOS da viagem (cidade, data de chegada e data de saída de cada uma), o ritmo, os interesses e observações. Monte um roteiro dia a dia, realista quanto a deslocamentos e cansaço.
 
@@ -4602,7 +4618,7 @@ function aplicarRoteiro(btn){
   });
   const novoCid={};
   const chave=nome=>{
-    const lim=String(nome||'Colômbia').replace(/\s*→.*$/,'').trim();  /* corta "A → B" */
+    const lim=String(nome||'').replace(/\s*→.*$/,'').trim();  /* corta "A → B" */
     const k=Object.keys(novoCid).find(k=>novoCid[k].toLowerCase()===lim.toLowerCase());
     if(k)return k;const nk='c'+(++uid);novoCid[nk]=lim;return nk;
   };
