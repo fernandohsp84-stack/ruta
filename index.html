@@ -2164,9 +2164,12 @@ let CLIMA={},climaCarregando=false;
 
 async function buscarClima(forcar){
   if(climaCarregando)return;
-  const cidades=[...new Set(S.dias.map(d=>nomeCid(d.cid)))].filter(n=>GEO[n]);
+  const todas=[...new Set(S.dias.map(d=>nomeCid(d.cid)))].filter(Boolean);
+  /* cidades fora do catálogo: descobre a coordenada uma vez e guarda */
+  for(const n of todas){if(!refCidade(n))await aprenderCidade(n);}
+  const cidades=todas.filter(n=>refCidade(n));
   if(!cidades.length){document.getElementById('clima-sub').textContent=
-    'Sem coordenadas para as cidades atuais.';renderClima();return;}
+    'Não consegui localizar as cidades desta viagem.';renderClima();return;}
   const agora=Date.now();
   if(!forcar){
     try{const c=JSON.parse(localStorage.getItem('ruta_clima'));
@@ -2176,11 +2179,11 @@ async function buscarClima(forcar){
   document.getElementById('clima-sub').textContent='Buscando a previsão…';
   try{
     for(const nome of cidades){
-      const [la,lo]=GEO[nome];
+      const [la,lo]=refCidade(nome);
       const url=`https://api.open-meteo.com/v1/forecast?latitude=${la}&longitude=${lo}`+
         `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum`+
         `&hourly=weather_code,temperature_2m,precipitation_probability`+
-        `&timezone=America%2FBogota&forecast_days=16`;
+        `&timezone=auto&forecast_days=16`;
       const r=await fetch(url);if(!r.ok)throw new Error('HTTP '+r.status);
       const j=await r.json();const dias={},horas={};
       (j.daily.time||[]).forEach((iso,i)=>{dias[iso]={cod:j.daily.weather_code[i],
@@ -2925,7 +2928,7 @@ function renderItin(){
   document.getElementById('it-cid').innerHTML=Object.entries(S.cid).map(([k,v])=>{
     const n=S.dias.filter(d=>d.cid===k).length;
     return `<div class="dline"><div class="n" style="background:var(--roxo-t);color:var(--roxo-d)">${n}</div>
-      <div class="info"><b>${esc(v)}</b><span>${n} dia(s)${GEO[v]?'':' · sem previsão'}</span></div>
+      <div class="info"><b>${esc(v)}</b><span>${n} dia(s)${refCidade(v)?'':' · localizando…'}</span></div>
       <button class="rm" onclick="removerCidade('${k}')">🗑</button></div>`;}).join('');
   document.getElementById('it-data').value=S.inicio||'';
   document.getElementById('it-quem').value=S.quem||'';
@@ -2961,7 +2964,7 @@ function addCidade(){
   const inp=document.getElementById('it-nova'),n=inp.value.trim();
   if(!n){toast('Escreva o nome da cidade.');return;}
   S.cid['c'+(++uid)]=n;inp.value='';salvar();renderItin();buscarClima(true);
-  toast(GEO[n]?`${n} adicionada, com previsão.`:`${n} adicionada. Sem previsão para esta cidade.`);
+  toast(`${n} adicionada.`);aprenderCidade(n).then(r=>{if(r)buscarClima(true);});
 }
 function removerCidade(k){
   const n=S.dias.filter(d=>d.cid===k).length;
@@ -2976,12 +2979,36 @@ function mudarFundo(v){
   S.fundo=v.trim();salvar();aplicarFundo();
   toast(S.fundo?'Fundo trocado.':'Fundo padrão restaurado.');
 }
+/* se a viagem ainda não tem imagem própria, busca uma foto do destino */
+let buscandoCapa=false;
+async function garantirFundoDoDestino(){
+  if(buscandoCapa)return;
+  if(S&&S.fundo)return;                      /* já tem imagem escolhida */
+  const v=acharViagem(viagemAtual);
+  if(v&&v.capa){S.fundo=v.capa;salvar(true);aplicarFundo();return;}
+  const cidade=(S&&S.dias&&S.dias.length)?nomeCid(S.dias[0].cid):'';
+  if(!cidade)return;
+  buscandoCapa=true;
+  try{
+    let u=await capaDoDestino(cidade);
+    if(!u&&paisViagem())u=await capaDoDestino(paisViagem());
+    if(u){
+      S.fundo=u;salvar(true);
+      if(v){v.capa=u;gravarViagens();}
+      aplicarFundo();
+      try{renderViagens();}catch(e){}
+    }
+  }catch(e){}
+  buscandoCapa=false;
+}
 function aplicarFundo(){
   const u=S.fundo||'fundo.jpeg';
   const el=document.getElementById('fundo');
   el.style.backgroundImage=`url('${u}')`;
   const ola=document.getElementById('ola');
   if(ola)ola.style.setProperty('--olabg',`url('${u}')`);
+  /* sem imagem própria: procura uma do destino em segundo plano */
+  if(!S.fundo)setTimeout(()=>{try{garantirFundoDoDestino();}catch(e){}},1200);
   /* testa se a imagem existe de verdade; se não, avisa no lugar de ficar só azul */
   const img=new Image();
   img.onload=()=>{el.dataset.ok='1';};
@@ -3242,7 +3269,7 @@ function pendentesGeo(){
 function limparPinosErrados(){
   let n=0;
   S.dias.forEach(d=>{
-    const ref=GEO[nomeCid(d.cid)];
+    const ref=refCidade(nomeCid(d.cid));
     if(!ref)return;
     d.cards.forEach(c=>{
       if(c.tipo==='voo'||c.tipo==='hotel')return;   /* logística pode ter coordenada própria */
@@ -3267,15 +3294,48 @@ function primeiroLugar(t){
   s=s.split(/,| e | и |\/| \+ | · /)[0].trim();
   return s;
 }
+/* país da viagem aberta — usado para desambiguar as buscas de lugar.
+   Vazio é aceitável: a busca por cidade já costuma bastar. */
+function paisViagem(){
+  if(S&&S.pais)return S.pais;
+  const v=acharViagem(viagemAtual);
+  return (v&&v.pais)||'';
+}
+/* referência de coordenada da cidade: catálogo fixo ou o que já descobrimos */
+function refCidade(nome){
+  if(!nome)return null;
+  if(GEO[nome])return GEO[nome];
+  try{
+    const c=(S&&S.geoCid)||{};
+    if(c[nome]&&isFinite(c[nome][0]))return c[nome];
+  }catch(e){}
+  return null;
+}
+/* descobre e guarda a coordenada de uma cidade nova (uma vez só) */
+async function aprenderCidade(nome){
+  if(!nome||refCidade(nome))return refCidade(nome);
+  try{
+    const r=await geocodificar([nome,paisViagem()].filter(Boolean).join(', '));
+    if(r){
+      const par=[parseFloat(r.lat),parseFloat(r.lon)];
+      if(isFinite(par[0])&&isFinite(par[1])){
+        if(!S.geoCid)S.geoCid={};
+        S.geoCid[nome]=par;salvar(true);
+        return par;
+      }
+    }
+  }catch(e){}
+  return null;
+}
 async function geocodificarPendentes(){
   if(geocodando)return 0;
   geocodando=true;
   let achou=0,bloqueado=false;
   const pend=pendentesGeo();
   for(const p of pend.slice(0,8)){
-    /* a cidade vem do DIA (p.cid), não do cartão — sem ela o pino cai em outra cidade */
-    const q=[primeiroLugar(p.c.t),p.c.bai,p.cid,'Colombia'].filter(Boolean).join(', ');
-    const ref=GEO[p.cid];
+    /* a cidade vem do DIA (p.cid); o país, da viagem — nada fixo aqui */
+    const q=[primeiroLugar(p.c.t),p.c.bai,p.cid,paisViagem()].filter(Boolean).join(', ');
+    const ref=refCidade(p.cid)||await aprenderCidade(p.cid);
     let ok=false,falhaServico=false;
     try{
       const r=await geocodificar(q);
@@ -4003,9 +4063,10 @@ REGRAS DA CONVERSA:
 - Fale em português do Brasil, tom de amigo que viaja bem. Curto.
 
 QUANDO TIVER destino e as duas datas, devolva o bloco "viagem" com o roteiro JÁ MONTADO:
-{"tipo":"viagem","nome":"Colômbia 2026","cidades":["Medellín","Cartagena"],"inicio":"2026-08-28","fim":"2026-09-07","resumo":"11 dias · Medellín e Cartagena","dias":[{"data":"2026-08-28","cidade":"Medellín","cartoes":[{"titulo":"Nome próprio do lugar","lista":"l2","hora":"09:00","duracao":"2h","nota":"4,7","bairro":"El Poblado","descricao":"por que vale","aoArLivre":true,"instagram":"@perfil"}]}]}
+{"tipo":"viagem","nome":"Colômbia 2026","pais":"Colômbia","cidades":["Medellín","Cartagena"],"inicio":"2026-08-28","fim":"2026-09-07","resumo":"11 dias · Medellín e Cartagena","dias":[{"data":"2026-08-28","cidade":"Medellín","cartoes":[{"titulo":"Nome próprio do lugar","lista":"l2","hora":"09:00","duracao":"2h","nota":"4,7","bairro":"El Poblado","descricao":"por que vale","aoArLivre":true,"instagram":"@perfil"}]}]}
 
 REGRAS DO ROTEIRO:
+- Sempre preencha "pais" com o país do destino — o app usa isso para localizar os lugares no mapa.
 - Um objeto por dia, do primeiro ao último, sem pular datas. Formato de data AAAA-MM-DD.
 - 3 a 5 cartões por dia. Listas: "l1" âncora do dia, "l2" passeios, "l3" comer e beber, "l4" flexível.
 - Título = nome próprio do lugar ("Museu de Antioquia"), nunca "Almoço no centro". Exceção: itens sem lugar definido ("Manhã livre", "Check-in").
@@ -4046,7 +4107,7 @@ function criarViagemDoBloco(bid){
   const id='v'+Date.now().toString(36);
   const q=semente();
   q.inicio=b.inicio||(dias[0]&&dias[0].data)||'';
-  q.quem='';q.dias=[];q.cid={};
+  q.quem='';q.dias=[];q.cid={};q.pais=b.pais||'';
   const mapaCid={};
   cidades.forEach((c,i)=>{mapaCid[c.toLowerCase()]='c'+i;q.cid['c'+i]=c;});
   dias.forEach((d,i)=>{
@@ -4145,7 +4206,7 @@ function blocoLugar(b){
     b.faixaPreco?`<span class="bc">${esc(b.faixaPreco)}</span>`:'',
     b.horario?`<span class="bc">${esc(b.horario)}</span>`:''
   ].filter(Boolean).join('');
-  const buscaGM=encodeURIComponent([nome,b.bairro,b.cidade,'Colombia'].filter(Boolean).join(', '));
+  const buscaGM=encodeURIComponent([nome,b.bairro,b.cidade,paisViagem()].filter(Boolean).join(', '));
   const ig=String(b.instagram||'').replace(/^@/,'').trim();
   /* busca de contato: o caminho honesto quando não temos perfil confirmado */
   const buscaContato=encodeURIComponent(`${nome} ${b.cidade||''} instagram reservas`);
@@ -4186,7 +4247,7 @@ async function miniMapa(el,b){
   if(!isFinite(lat)||!isFinite(lng)){
     el.classList.add('carregando');
     try{
-      const r=await geocodificar([b.nome,b.bairro,b.cidade,'Colombia'].filter(Boolean).join(', '));
+      const r=await geocodificar([b.nome,b.bairro,b.cidade,paisViagem()].filter(Boolean).join(', '));
       if(r){lat=parseFloat(r.lat);lng=parseFloat(r.lon);b.lat=lat;b.lng=lng;}
     }catch(e){}
     el.classList.remove('carregando');
