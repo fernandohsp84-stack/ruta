@@ -2379,11 +2379,11 @@ function cardHTML(c,L){
   if(c.lat||c.end)lk.push(`<button class="lk" onclick="irMapa('${c.id}')">📍 Mapa</button>`);
   /* o Google Maps busca pelo nome, então vale para qualquer lugar — sem precisar de coordenada */
   if(c.gm||c.lat||c.end||ehLugar)lk.push(`<button class="lk gm" onclick="abrirGM('${c.id}')">Google Maps ↗</button>`);
-  if(c.ig){
-    const at=String(c.ig).replace(/^https?:\/\/(www\.)?instagram\.com\//i,'').replace(/^@|\/$/g,'');
-    lk.push(`<button class="lk ig" onclick="abrirIG('${c.id}')">@${esc(at)} ↗</button>`);
+  if(c.ig&&igValido(c.ig)){
+    lk.push(`<button class="lk ig" onclick="abrirIG('${c.id}')">@${esc(igValido(c.ig))} ↗</button>`);
+    lk.push(`<button class="lk igb" onclick="acharIG('${c.id}')">🔎 IG</button>`);
   }else if(ehLugar){
-    lk.push(`<button class="lk igb" onclick="acharIG('${c.id}')">Instagram ↗</button>`);
+    lk.push(`<button class="lk igb" onclick="acharIG('${c.id}')">Buscar no Instagram ↗</button>`);
   }
   (c.docs||[]).forEach((d,k)=>lk.push(
     `<button class="lk doc" onclick="abrirDocCard('${c.id}',${k})">📎 ${esc(d.n.length>16?d.n.slice(0,14)+'…':d.n)}</button>`));
@@ -3390,17 +3390,37 @@ function abrirGM(cid){
   q+=', '+nomeCid(r.d.cid)+', Colombia';
   abrirExterno('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q));
 }
-/* sem @ confirmado: leva à busca, que sempre acha o perfil certo */
+/* @ do Instagram válido segundo as regras da própria plataforma:
+   1 a 30 caracteres, letras/números/ponto/underscore, sem ponto no início ou fim */
+function igValido(u){
+  const s=String(u||'').replace(/^https?:\/\/(www\.)?instagram\.com\//i,'')
+    .replace(/^@/,'').replace(/\/.*$/,'').trim();
+  if(!s||s.length>30)return '';
+  if(!/^[A-Za-z0-9._]+$/.test(s))return '';
+  if(/^\.|\.$|\.\./.test(s))return '';
+  if(/^[0-9]+$/.test(s))return '';          /* só números não é perfil de lugar */
+  return s;
+}
+/* busca dentro do Instagram: leva ao perfil certo mesmo quando não sabemos o @.
+   Aqui o nome vai INTEIRO — cortar palavras ("Casa do Saulo" → "Casa") atrapalha a busca. */
+function urlBuscaIG(nome,bairro,cidade){
+  const limpo=String(nome||'').replace(/\s+[—–]\s+.*$/,'').replace(/\s+-\s+.*$/,'').trim();
+  const termo=[limpo,cidade||''].filter(Boolean).join(' ');
+  return 'https://www.instagram.com/explore/search/keyword/?q='+encodeURIComponent(termo);
+}
+/* sem @ confirmado: leva à busca dentro do Instagram */
 function acharIG(cid){
   const r=achar(cid);if(!r)return;
-  const q=[limparBusca(r.c.t),r.c.bai,nomeCid(r.d.cid),'instagram'].filter(Boolean).join(' ');
-  abrirExterno('https://www.google.com/search?q='+encodeURIComponent(q));
+  abrirExterno(urlBuscaIG(r.c.t,r.c.bai,nomeCid(r.d.cid)));
 }
 function abrirIG(cid){
   const r=achar(cid);if(!r||!r.c.ig)return;
-  let u=r.c.ig.trim();
-  if(/^https?:\/\//i.test(u))abrirExterno(u);
-  else abrirExterno('https://instagram.com/'+u.replace(/^@/,''));
+  const u=String(r.c.ig).trim();
+  if(/^https?:\/\//i.test(u)){abrirExterno(u);return;}
+  const perfil=igValido(u);
+  /* @ malformado não abre página nenhuma: manda para a busca, que resolve */
+  if(!perfil){acharIG(cid);return;}
+  abrirExterno('https://instagram.com/'+perfil);
 }
 let geoRodou=false;  /* controla o encadeamento das levas */
 /* ---------- tela de entrada ---------- */
@@ -3963,7 +3983,8 @@ ALÉM das ações, você pode devolver "blocos" — cartões visuais que aparece
 
 QUANDO USAR CADA BLOCO:
 - Falou de um lugar específico (bar, restaurante, museu, passeio) → mande UM bloco "lugar" dele. O app desenha o mini-mapa sozinho; só preencha "lat"/"lng" se tiver certeza. Máximo 3 blocos "lugar" por resposta.
-- CONTATO PARA RESERVA — regra rígida: em boa parte da América Latina, restaurantes e bares recebem reserva principalmente pelo DIRECT DO INSTAGRAM. MAS só preencha "instagram" se você tiver certeza real de que aquele @ existe — nada de deduzir o perfil a partir do nome do lugar (tipo "@demente" para o bar Demente). Um @ inventado leva o viajante a uma página de erro. Na dúvida, OMITA o campo: o app oferece "Achar o Instagram" pela busca, que sempre funciona. A mesma regra vale, com rigor ainda maior, para telefone e WhatsApp: número errado faz o viajante escrever para um desconhecido. Só preencha "site" se souber o endereço real.
+- INSTAGRAM — regra rígida: NÃO tente adivinhar o @. Perfis não seguem padrão previsível (o bar "Demente" pode ser @demente.cartagena, @dementectg ou nada disso), e um @ errado leva o viajante a uma página de erro. Só preencha "instagram" se aquele perfil específico for algo que você realmente conhece — tipo perfil de museu ou rede famosa. Em caso de QUALQUER dúvida, OMITA o campo: o app abre a busca dentro do Instagram, que sempre encontra o perfil certo. Omitir é a resposta correta e esperada na maioria das vezes — não é falha sua.
+- A mesma regra, com rigor ainda maior, para telefone e WhatsApp: número errado faz o viajante escrever para um desconhecido. Só preencha "site" se souber o endereço real.
 - DOCUMENTO ANEXADO: depois de ler um voucher, bilhete ou reserva, além de criar/atualizar o cartão, ofereça guardar o arquivo dentro dele: {"tipo":"arquivar","cartaoId":"<id>","texto":"Guardar o arquivo no cartão X"}. Assim o comprovante fica junto do voo/hotel, acessível sem internet.
 - INSTAGRAM DOS CARTÕES JÁ EXISTENTES: cada cartão do quadro traz o campo "instagram" (null quando ainda não tem). Se o viajante pedir para achar/preencher os Instagram, devolva uma ação "editar" por cartão: {"tipo":"editar","cartaoId":"<id do cartão>","campos":{"instagram":"@perfil"}}. Só para lugares com perfil próprio de verdade (restaurante, bar, museu, agência do passeio) e só quando você tiver razoável certeza do @ — pule caminhadas, praças públicas, "manhã livre" e qualquer coisa sem perfil. É melhor preencher 4 com segurança do que 10 no chute. Diga em "fala" quantos preencheu e quais pulou.
 - Pediu ajuda para FALAR O IDIOMA LOCAL, pedir algo, negociar, reservar, se virar numa situação → bloco "frases" no idioma e no SOTAQUE DO PAÍS do destino, com expressões que as pessoas realmente usam ali (na Colômbia: "parcero", "¿qué más?", "a la orden", "regálame un..."; na Argentina: "che", "dale", "boludo" entre amigos; em Portugal: "se faz favor", "bica"). Nunca o genérico de outro país. Explique diferenças que causam gafe.
@@ -4073,7 +4094,7 @@ REGRAS DO ROTEIRO:
 - Primeiro e último dia mais leves (chegada e partida).
 - Considere deslocamento real: não jogue no mesmo dia lugares em pontas opostas da cidade.
 - Marque aoArLivre:true no que depende do tempo.
-- Preencha "instagram" com o @ do lugar SÓ quando tiver certeza real de que o perfil existe (restaurante, bar, museu com perfil próprio). Nada de deduzir o @ pelo nome — um perfil inventado leva a uma página de erro. Na dúvida, omita: o app oferece a busca sozinho.
+- NÃO adivinhe o @ do Instagram. Perfis não seguem padrão previsível e um @ errado leva a uma página de erro. Omita "instagram" salvo se conhecer aquele perfil de fato — o app abre a busca dentro do Instagram sozinho, e ela sempre acha. Omitir é o comportamento correto na maioria dos casos.
 - Se forem várias cidades, agrupe os dias por cidade em blocos contínuos, na ordem geográfica que faça sentido.
 
 Responda SEMPRE só com JSON: {"fala":"sua mensagem curta em português","blocos":[...]}
@@ -4207,21 +4228,22 @@ function blocoLugar(b){
     b.horario?`<span class="bc">${esc(b.horario)}</span>`:''
   ].filter(Boolean).join('');
   const buscaGM=encodeURIComponent([nome,b.bairro,b.cidade,paisViagem()].filter(Boolean).join(', '));
-  const ig=String(b.instagram||'').replace(/^@/,'').trim();
+  const ig=igValido(b.instagram);
   /* busca de contato: o caminho honesto quando não temos perfil confirmado */
-  const buscaContato=encodeURIComponent(`${nome} ${b.cidade||''} instagram reservas`);
+  const urlIG=urlBuscaIG(nome,b.bairro,b.cidade);
   const bts=[
-    /* o @ vem da RutAI e pode estar errado — mostramos qual é, para você conferir antes */
-    ig?`<button class="bb ig" onclick="abrirExterno(this.dataset.u)" data-u="https://instagram.com/${esc(ig)}">📷 @${esc(ig)}</button>`:'',
-    `<button class="bb ${ig?'':'ig'}" onclick="abrirExterno(this.dataset.u)" data-u="https://www.google.com/search?q=${buscaContato}">🔎 ${ig?'Achar o perfil certo':'Achar o Instagram'}</button>`,
+    /* a busca DENTRO do Instagram sempre leva a algum lugar — por isso vem primeiro */
+    `<button class="bb ig" onclick="abrirExterno(this.dataset.u)" data-u="${esc(urlIG)}">📷 Buscar no Instagram</button>`,
+    /* o @ sugerido aparece escrito, para conferir antes de tocar */
+    ig?`<button class="bb" onclick="abrirExterno(this.dataset.u)" data-u="https://instagram.com/${esc(ig)}">@${esc(ig)}</button>`:'',
     `<button class="bb gm" onclick="abrirExterno(this.dataset.u)" data-u="https://www.google.com/maps/search/?api=1&query=${buscaGM}">📍 Google Maps</button>`,
     b.site?`<button class="bb" onclick="abrirExterno(this.dataset.u)" data-u="${esc(b.site)}">🌐 Site</button>`:'',
     (b.whatsapp||b.telefone)
       ? `<button class="bb wa" onclick="abrirExterno(this.dataset.u)" data-u="${urlWhats(b.whatsapp||b.telefone,b.mensagemReserva||'')}">💬 WhatsApp</button>`:''
   ].filter(Boolean).join('');
   const aviso=ig
-    ? `<div class="bnota">O @ acima é um palpite meu e pode não existir. Se der erro, use "Achar o perfil certo".</div>`
-    : `<div class="bnota">Sem perfil confirmado — em muitos lugares a reserva sai pelo direct do Instagram.</div>`;
+    ? `<div class="bnota">O @ é um palpite meu e pode não existir. Se der erro, use "Buscar no Instagram".</div>`
+    : `<div class="bnota">Em muitos lugares a reserva sai pelo direct do Instagram — a busca acima leva ao perfil.</div>`;
   box.innerHTML=
     `<div class="bmapa" id="mm_${id}"></div>
      <div class="bcorpo">
