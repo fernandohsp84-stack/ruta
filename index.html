@@ -353,8 +353,10 @@ body.arrastando .board{overflow:hidden!important}
 .fh{font-size:13px;font-weight:800;color:var(--ink);margin-bottom:9px}
 .fr{padding:9px 0;border-top:1px solid #F0F0EC}
 .fr:first-of-type{border-top:none;padding-top:0}
-.fes{font-size:15.5px;font-weight:700;color:var(--ink);line-height:1.4;padding-right:30px;position:relative}
+.fes{font-size:15.5px;font-weight:700;color:var(--ink);line-height:1.4;padding-right:62px;position:relative}
 .fcop{position:absolute;right:0;top:0;background:none;border:none;color:var(--ink3);font-size:15px;padding:2px 4px}
+.fouv{position:absolute;right:28px;top:0;background:none;border:none;color:var(--azul);font-size:15px;padding:2px 4px}
+.fouv:active{opacity:.5}
 .fpt{font-size:12.5px;color:var(--ink2);font-weight:600;margin-top:3px}
 .fdica{font-size:12px;color:var(--ink3);font-weight:600;margin-top:4px;line-height:1.45}
 .bviagem{margin-top:12px;border:1px solid #D6E4F0;border-radius:14px;background:#F7FBFF;padding:13px}
@@ -1212,6 +1214,15 @@ textarea.fi{min-height:66px;resize:vertical;line-height:1.45}
     <label class="fl">Versões salvas neste aparelho</label>
     <div id="sy-backups" style="font-size:12.5px;line-height:1.5"></div>
 
+    <label class="fl">Voz do idioma local</label>
+    <p style="font-size:12.5px;color:var(--ink2);font-weight:600;line-height:1.5;margin:0 0 8px">
+      A RutAI lê as frases em voz alta para você ouvir a pronúncia. Funciona sem configurar nada,
+      com a voz do próprio aparelho. Com a Cloud Function preparada, a voz fica bem mais natural.</p>
+    <div class="fbtns" style="margin-top:0">
+      <button class="cn" onclick="testarVoz()">🔊 Testar a voz</button>
+      <button class="cn" id="cfg-neural" onclick="alternarVozNeural()">🎧 Voz neural: ligada</button>
+    </div>
+
     <label class="fl">Backup na nuvem <span style="font-weight:600;color:var(--ink3)">— recomendado</span></label>
     <p style="font-size:12.5px;color:var(--ink2);font-weight:600;line-height:1.5;margin:0 0 8px">
       Guarda o roteiro completo, com anexos, no seu Firebase. É o backup mais seguro e não trava nada.</p>
@@ -2065,6 +2076,8 @@ function abrirSync(){
   document.getElementById('sy-cod').value=SY.cod||'';
   document.getElementById('sy-url').value=SY.url||'';
   document.getElementById('sy-fn').value=SY.fn||'';
+  const bn=document.getElementById('cfg-neural');
+  if(bn)bn.textContent=(S&&S.vozNeural===false)?'🎧 Voz neural: desligada':'🎧 Voz neural: ligada';
   document.getElementById('sy-est').innerHTML=SY.ligado
     ? `Sincronia <b>ligada</b> no código <b>${esc(SY.cod)}</b>. As mudanças chegam a cada 8 segundos.`
     : `Sincronia <b>desligada</b>. O quadro está guardado só neste aparelho.`;
@@ -2381,9 +2394,8 @@ function cardHTML(c,L){
   if(c.gm||c.lat||c.end||ehLugar)lk.push(`<button class="lk gm" onclick="abrirGM('${c.id}')">Google Maps ↗</button>`);
   if(c.ig&&igValido(c.ig)){
     lk.push(`<button class="lk ig" onclick="abrirIG('${c.id}')">@${esc(igValido(c.ig))} ↗</button>`);
-    lk.push(`<button class="lk igb" onclick="acharIG('${c.id}')">🔎 IG</button>`);
   }else if(ehLugar){
-    lk.push(`<button class="lk igb" onclick="acharIG('${c.id}')">Buscar no Instagram ↗</button>`);
+    lk.push(`<button class="lk igb" onclick="acharIG('${c.id}')">Instagram 🔎</button>`);
   }
   (c.docs||[]).forEach((d,k)=>lk.push(
     `<button class="lk doc" onclick="abrirDocCard('${c.id}',${k})">📎 ${esc(d.n.length>16?d.n.slice(0,14)+'…':d.n)}</button>`));
@@ -3288,10 +3300,13 @@ function kmEntre(a,b,c,d){
   const x=Math.sin(dl/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(dg/2)**2;
   return 2*R*Math.asin(Math.min(1,Math.sqrt(x)));
 }
-/* "Plaza Botero, Museu de Antioquia e Palácio da Cultura" -> "Plaza Botero" */
+/* "Plaza Botero, Museu de Antioquia e Palácio da Cultura" -> "Plaza Botero"
+   "Dona Onete — Cozinha Amazônica" -> "Dona Onete" */
 function primeiroLugar(t){
-  let s=limparBusca(t||'');
-  s=s.split(/,| e | и |\/| \+ | · /)[0].trim();
+  let s=String(t||'');
+  s=s.replace(/\s+[—–]\s+.*$/,'').replace(/\s+-\s+.*$/,'');   /* corta a descrição após travessão */
+  s=limparBusca(s);
+  s=s.split(/,| e |\/| \+ | · /)[0].trim();
   return s;
 }
 /* país da viagem aberta — usado para desambiguar as buscas de lugar.
@@ -3983,7 +3998,7 @@ ALÉM das ações, você pode devolver "blocos" — cartões visuais que aparece
 
 QUANDO USAR CADA BLOCO:
 - Falou de um lugar específico (bar, restaurante, museu, passeio) → mande UM bloco "lugar" dele. O app desenha o mini-mapa sozinho; só preencha "lat"/"lng" se tiver certeza. Máximo 3 blocos "lugar" por resposta.
-- INSTAGRAM — regra rígida: NÃO tente adivinhar o @. Perfis não seguem padrão previsível (o bar "Demente" pode ser @demente.cartagena, @dementectg ou nada disso), e um @ errado leva o viajante a uma página de erro. Só preencha "instagram" se aquele perfil específico for algo que você realmente conhece — tipo perfil de museu ou rede famosa. Em caso de QUALQUER dúvida, OMITA o campo: o app abre a busca dentro do Instagram, que sempre encontra o perfil certo. Omitir é a resposta correta e esperada na maioria das vezes — não é falha sua.
+- INSTAGRAM — você TEM busca na web disponível. Ao sugerir um lugar, USE A BUSCA para descobrir o perfil real do Instagram (procure por: nome do lugar + cidade + instagram) e preencha "instagram" com o @ que você VIU no resultado da busca. Nunca deduza o @ a partir do nome — se a busca não trouxer o perfil, OMITA o campo, e o app oferece a busca dentro do Instagram. Vale o mesmo para "site": use a busca, e só preencha o que confirmou.
 - A mesma regra, com rigor ainda maior, para telefone e WhatsApp: número errado faz o viajante escrever para um desconhecido. Só preencha "site" se souber o endereço real.
 - DOCUMENTO ANEXADO: depois de ler um voucher, bilhete ou reserva, além de criar/atualizar o cartão, ofereça guardar o arquivo dentro dele: {"tipo":"arquivar","cartaoId":"<id>","texto":"Guardar o arquivo no cartão X"}. Assim o comprovante fica junto do voo/hotel, acessível sem internet.
 - INSTAGRAM DOS CARTÕES JÁ EXISTENTES: cada cartão do quadro traz o campo "instagram" (null quando ainda não tem). Se o viajante pedir para achar/preencher os Instagram, devolva uma ação "editar" por cartão: {"tipo":"editar","cartaoId":"<id do cartão>","campos":{"instagram":"@perfil"}}. Só para lugares com perfil próprio de verdade (restaurante, bar, museu, agência do passeio) e só quando você tiver razoável certeza do @ — pule caminhadas, praças públicas, "manhã livre" e qualquer coisa sem perfil. É melhor preencher 4 com segurança do que 10 no chute. Diga em "fala" quantos preencheu e quais pulou.
@@ -4067,6 +4082,122 @@ Sua tarefa: identificar os LUGARES REAIS citados e devolvê-los de forma aprovei
 - Se não der para identificar nenhum lugar com segurança, diga com franqueza o que faltou (ex.: a legenda só tem hashtags; peça um print onde apareça o nome ou a marcação de local).
 - Nunca invente um lugar que não está na legenda nem nas imagens.`;
 let blocoSeq=0;
+/* ======= VOZ: lê em voz alta as frases do idioma local =======
+   Duas camadas: a voz do próprio aparelho (funciona sempre, sem
+   configurar nada) e, se houver Cloud Function com TTS, uma voz
+   neural bem mais natural. */
+const IDIOMA_POR_PAIS={
+  'colômbia':'es-CO','colombia':'es-CO','méxico':'es-MX','mexico':'es-MX',
+  'argentina':'es-AR','chile':'es-CL','peru':'es-PE','perú':'es-PE',
+  'uruguai':'es-UY','uruguay':'es-UY','paraguai':'es-PY','bolívia':'es-BO',
+  'equador':'es-EC','ecuador':'es-EC','venezuela':'es-VE','cuba':'es-CU',
+  'costa rica':'es-CR','panamá':'es-PA','panama':'es-PA','espanha':'es-ES','españa':'es-ES',
+  'portugal':'pt-PT','brasil':'pt-BR',
+  'frança':'fr-FR','france':'fr-FR','itália':'it-IT','italia':'it-IT',
+  'alemanha':'de-DE','estados unidos':'en-US','eua':'en-US','reino unido':'en-GB',
+  'japão':'ja-JP','japao':'ja-JP','china':'zh-CN','tailândia':'th-TH','grécia':'el-GR'
+};
+function idiomaDestino(){
+  const p=String(paisViagem()||'').toLowerCase().trim();
+  if(IDIOMA_POR_PAIS[p])return IDIOMA_POR_PAIS[p];
+  /* sem país definido: deduz pela primeira cidade do roteiro */
+  const cid=(S&&S.dias&&S.dias.length)?String(nomeCid(S.dias[0].cid)).toLowerCase():'';
+  if(/medell|bogot|cartagena|cali|santa marta/.test(cid))return 'es-CO';
+  if(/lisboa|porto|faro/.test(cid))return 'pt-PT';
+  if(/buenos aires|mendoza|bariloche/.test(cid))return 'es-AR';
+  if(/santiago|valpara/.test(cid))return 'es-CL';
+  if(/paris|lyon|nice/.test(cid))return 'fr-FR';
+  if(/roma|milão|milano|veneza|floren/.test(cid))return 'it-IT';
+  if(/belém|belem|rio de|são paulo|salvador/.test(cid))return 'pt-BR';
+  return 'es-419';
+}
+let VOZES=[];
+function carregarVozes(){
+  if(!('speechSynthesis' in window))return;
+  VOZES=speechSynthesis.getVoices()||[];
+}
+if('speechSynthesis' in window){
+  carregarVozes();
+  speechSynthesis.onvoiceschanged=carregarVozes;
+}
+function melhorVoz(lang){
+  if(!VOZES.length)carregarVozes();
+  const base=lang.split('-')[0];
+  const exata=VOZES.filter(v=>String(v.lang).replace('_','-').toLowerCase()===lang.toLowerCase());
+  const mesmo=VOZES.filter(v=>String(v.lang).toLowerCase().startsWith(base));
+  const premium=arr=>arr.find(v=>/(enhanced|premium|neural|siri|natural)/i.test(v.name))||arr[0];
+  return premium(exata)||premium(mesmo)||null;
+}
+/* o iOS só libera áudio depois de um toque do usuário */
+let vozLiberada=false;
+function liberarVoz(){
+  if(vozLiberada||!('speechSynthesis' in window))return;
+  try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u);vozLiberada=true;}catch(e){}
+}
+document.addEventListener('touchend',liberarVoz,{once:true});
+document.addEventListener('click',liberarVoz,{once:true});
+
+function falarLocal(texto,lang){
+  if(!('speechSynthesis' in window)){toast('Este navegador não fala em voz alta.');return;}
+  try{
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(texto);
+    const v=melhorVoz(lang);
+    u.lang=v?v.lang:lang;
+    if(v)u.voice=v;
+    u.rate=0.92;u.pitch=1;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+const AUDIO_CACHE={};
+/* fala neural pela Cloud Function; se falhar, a voz local já cobriu */
+function falarNeural(texto,lang){
+  const chave=lang+'|'+texto;
+  if(AUDIO_CACHE[chave]){
+    try{speechSynthesis.cancel();}catch(e){}
+    AUDIO_CACHE[chave].currentTime=0;AUDIO_CACHE[chave].play().catch(()=>{});return;
+  }
+  falarLocal(texto,lang);              /* toca já, sem esperar a rede */
+  if(!SY.fn)return;
+  fetch(SY.fn,{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({tts:texto,voz:lang})})
+    .then(r=>r.ok?r.json():Promise.reject(new Error('http')))
+    .then(d=>{
+      if(!d||!d.audio)return;          /* função sem TTS: segue na voz local */
+      const a=new Audio('data:audio/mp3;base64,'+d.audio);
+      AUDIO_CACHE[chave]=a;
+      try{speechSynthesis.cancel();}catch(e){}
+      a.play().catch(()=>{});
+    })
+    .catch(()=>{});
+}
+function falar(texto,lang){
+  const t=String(texto||'').trim();
+  if(!t)return;
+  const idioma=lang||idiomaDestino();
+  if(S&&S.vozNeural===false)falarLocal(t,idioma);
+  else falarNeural(t,idioma);
+}
+function falarDe(btn){
+  if(!btn)return;
+  falar(btn.dataset.t||'',btn.dataset.l||'');
+}
+function alternarVozNeural(){
+  if(!S)return;
+  S.vozNeural=(S.vozNeural===false);
+  salvar(true);
+  const b=document.getElementById('cfg-neural');
+  if(b)b.textContent=(S.vozNeural===false)?'🎧 Voz neural: desligada':'🎧 Voz neural: ligada';
+  toast((S.vozNeural===false)?'Usando a voz do aparelho.':'Voz neural ligada.');
+}
+function testarVoz(){
+  const l=idiomaDestino();
+  const f={es:'¡Hola! ¿Me regala la carta, por favor?',pt:'Olá! Pode trazer o cardápio, por favor?',
+    fr:"Bonjour ! La carte, s'il vous plaît.",it:'Buongiorno! Il menu, per favore.',
+    en:'Hello! Could I see the menu, please?',de:'Guten Tag! Die Karte, bitte.'};
+  falar(f[l.split('-')[0]]||f.es,l);
+  toast('Falando em '+l);
+}
 /* ---------- planejar viagem nova conversando ---------- */
 let modoNovaViagem=false;
 const SIS_NOVA=`Você é a RutAI ajudando alguém a planejar uma viagem NOVA, do zero, numa conversa.
@@ -4094,7 +4225,7 @@ REGRAS DO ROTEIRO:
 - Primeiro e último dia mais leves (chegada e partida).
 - Considere deslocamento real: não jogue no mesmo dia lugares em pontas opostas da cidade.
 - Marque aoArLivre:true no que depende do tempo.
-- NÃO adivinhe o @ do Instagram. Perfis não seguem padrão previsível e um @ errado leva a uma página de erro. Omita "instagram" salvo se conhecer aquele perfil de fato — o app abre a busca dentro do Instagram sozinho, e ela sempre acha. Omitir é o comportamento correto na maioria dos casos.
+- INSTAGRAM: você tem busca na web. Use-a para achar o perfil real dos lugares principais (nome + cidade + instagram) e preencha "instagram" com o @ que apareceu no resultado. Não deduza pelo nome; se a busca não achar, omita o campo.
 - Se forem várias cidades, agrupe os dias por cidade em blocos contínuos, na ordem geográfica que faça sentido.
 
 Responda SEMPRE só com JSON: {"fala":"sua mensagem curta em português","blocos":[...]}
@@ -4232,17 +4363,17 @@ function blocoLugar(b){
   /* busca de contato: o caminho honesto quando não temos perfil confirmado */
   const urlIG=urlBuscaIG(nome,b.bairro,b.cidade);
   const bts=[
-    /* a busca DENTRO do Instagram sempre leva a algum lugar — por isso vem primeiro */
-    `<button class="bb ig" onclick="abrirExterno(this.dataset.u)" data-u="${esc(urlIG)}">📷 Buscar no Instagram</button>`,
-    /* o @ sugerido aparece escrito, para conferir antes de tocar */
-    ig?`<button class="bb" onclick="abrirExterno(this.dataset.u)" data-u="https://instagram.com/${esc(ig)}">@${esc(ig)}</button>`:'',
+    /* perfil confirmado pela busca vem primeiro; a busca fica como reserva */
+    ig?`<button class="bb ig" onclick="abrirExterno(this.dataset.u)" data-u="https://instagram.com/${esc(ig)}">📷 @${esc(ig)}</button>`
+      :`<button class="bb ig" onclick="abrirExterno(this.dataset.u)" data-u="${esc(urlIG)}">📷 Buscar no Instagram</button>`,
+    ig?`<button class="bb igb" onclick="abrirExterno(this.dataset.u)" data-u="${esc(urlIG)}">🔎</button>`:'',
     `<button class="bb gm" onclick="abrirExterno(this.dataset.u)" data-u="https://www.google.com/maps/search/?api=1&query=${buscaGM}">📍 Google Maps</button>`,
     b.site?`<button class="bb" onclick="abrirExterno(this.dataset.u)" data-u="${esc(b.site)}">🌐 Site</button>`:'',
     (b.whatsapp||b.telefone)
       ? `<button class="bb wa" onclick="abrirExterno(this.dataset.u)" data-u="${urlWhats(b.whatsapp||b.telefone,b.mensagemReserva||'')}">💬 WhatsApp</button>`:''
   ].filter(Boolean).join('');
   const aviso=ig
-    ? `<div class="bnota">O @ é um palpite meu e pode não existir. Se der erro, use "Buscar no Instagram".</div>`
+    ? `<div class="bnota">Perfil encontrado na busca. Se não abrir, o 🔎 ao lado procura de novo.</div>`
     : `<div class="bnota">Em muitos lugares a reserva sai pelo direct do Instagram — a busca acima leva ao perfil.</div>`;
   box.innerHTML=
     `<div class="bmapa" id="mm_${id}"></div>
@@ -4268,10 +4399,28 @@ async function miniMapa(el,b){
   let lat=parseFloat(b.lat),lng=parseFloat(b.lng);
   if(!isFinite(lat)||!isFinite(lng)){
     el.classList.add('carregando');
-    try{
-      const r=await geocodificar([b.nome,b.bairro,b.cidade,paisViagem()].filter(Boolean).join(', '));
-      if(r){lat=parseFloat(r.lat);lng=parseFloat(r.lon);b.lat=lat;b.lng=lng;}
-    }catch(e){}
+    /* "Dona Onete — Cozinha Amazônica" não existe como endereço: tenta do mais
+       específico ao mais simples, até alguma variação ser encontrada */
+    const limpo=primeiroLugar(b.nome||'');
+    const tentativas=[
+      [limpo,b.bairro,b.cidade,paisViagem()],
+      [limpo,b.cidade,paisViagem()],
+      [b.nome,b.cidade,paisViagem()]
+    ].map(p=>p.filter(Boolean).join(', ')).filter((v,i,a)=>v&&a.indexOf(v)===i);
+    const ref=refCidade(b.cidade);
+    for(const q of tentativas){
+      try{
+        const r=await geocodificar(q);
+        if(r){
+          const la=parseFloat(r.lat),ln=parseFloat(r.lon);
+          /* descarta resultado que caiu longe da cidade indicada */
+          if(isFinite(la)&&isFinite(ln)&&(!ref||kmEntre(ref[0],ref[1],la,ln)<=60)){
+            lat=la;lng=ln;b.lat=la;b.lng=ln;break;
+          }
+        }
+      }catch(e){break;}   /* serviço fora do ar: não insiste */
+      await new Promise(r=>setTimeout(r,700));
+    }
     el.classList.remove('carregando');
   }
   if(!isFinite(lat)||!isFinite(lng)){el.classList.add('semmapa');return;}
@@ -4303,11 +4452,13 @@ function addLugarAoRoteiro(id){
 function blocoFrases(b){
   const box=document.createElement('div');
   box.className='bfrases';
+  const lang=idiomaDestino();
   const itens=(b.itens||[]).slice(0,8).map(f=>{
     const es=f.es||f.espanhol||'';
     const pt=f.pt||f.portugues||'';
     return `<div class="fr">
       <div class="fes">${esc(es)}
+        <button class="fouv" onclick="falarDe(this)" data-t="${esc(es)}" data-l="${lang}" title="Ouvir">🔊</button>
         <button class="fcop" onclick="copiarFrase(this)" data-t="${esc(es)}">⧉</button></div>
       ${pt?`<div class="fpt">${esc(pt)}</div>`:''}
       ${f.dica?`<div class="fdica">💡 ${esc(f.dica)}</div>`:''}
@@ -4319,7 +4470,9 @@ function blocoFrases(b){
     ${zap?`<a class="bb wa" style="margin-top:8px;display:inline-block"
       href="${urlWhats(zap,b.mensagemPronta||msg)}" target="_blank" rel="noopener">💬 Enviar no WhatsApp</a>`:''}
     ${b.mensagemPronta?`<button class="bb" style="margin-top:8px"
-      onclick="copiarTexto(this.dataset.t,this,'Mensagem copiada.')" data-t="${esc(b.mensagemPronta)}">⧉ Copiar mensagem inteira</button>`:''}`;
+      onclick="copiarTexto(this.dataset.t,this,'Mensagem copiada.')" data-t="${esc(b.mensagemPronta)}">⧉ Copiar mensagem inteira</button>
+      <button class="bb" style="margin-top:8px" onclick="falarDe(this)"
+      data-t="${esc(b.mensagemPronta)}" data-l="${lang}">🔊 Ouvir</button>`:''}`;
   return box;
 }
 function copiarFrase(btn){copiarTexto(btn.dataset.t||'',null,'Frase copiada.');}
@@ -4369,7 +4522,10 @@ async function chamarIA(pedido){
   if(/^MODO REELS:/m.test(String(pedido)))sys=SISTEMA+'\n\n'+EXTRA_REELS;
   if(modoNovaViagem)sys=SIS_NOVA;   /* planejando uma viagem do zero */
   const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({system:sys,messages:hist,max_tokens:8000})});
+    body:JSON.stringify({system:sys,messages:hist,max_tokens:8000,
+      /* busca na web: deixa a RutAI achar o perfil real do Instagram e dados
+         atuais do lugar, em vez de deduzir. A função só aceita esta ferramenta. */
+      tools:[{type:'web_search_20250305',name:'web_search'}]})});
   /* guarda os arquivos (menos os de texto) para poder anexá-los a um cartão depois */
   ULTIMOS_ANEXOS=ANEXOS.filter(a=>a.tipo!=='txt'&&a.dados).map(a=>({n:a.nome,m:a.media,d:a.dados}));
   ANEXOS=[];renderAnexos();
